@@ -1,4 +1,4 @@
-const CACHE = 'parkit-v1';
+const CACHE = 'parkit-v2';
 const ASSETS = [
   '/parkit/',
   '/parkit/index.html',
@@ -30,13 +30,18 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   // Map tiles — network first (always fresh)
   if (e.request.url.includes('tile.openstreetmap') || e.request.url.includes('cartocdn')) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
     return;
   }
-  // Everything else — cache first
+  // App files — network first, fallback to cache
+  // This means: always try to get fresh version, use cache only if offline
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
