@@ -39,7 +39,14 @@ function showPage(name) {
   currentPage = name;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  if (name === 'search') renderSearchResults(filteredListings);
+  if (name === 'search') {
+    renderSearchResults(filteredListings);
+    setTimeout(() => {
+      initLeafletMap();
+      renderLeafletMarkers(filteredListings);
+      if (leafletMap) leafletMap.invalidateSize();
+    }, 50);
+  }
   if (name === 'host') renderHostSummary();
 }
 
@@ -102,6 +109,9 @@ function doSearch() {
   } else {
     filteredListings = [...PARKINGS];
   }
+  // Copy query to inline search bar too
+  const inline = document.getElementById('searchInline');
+  if (inline) inline.value = document.getElementById('searchLocation')?.value || '';
   showPage('search');
 }
 
@@ -179,95 +189,159 @@ function renderSearchResults(list, rentalType = 'all', ltPeriod = 'month') {
   el.innerHTML = list.map(p => {
     const lt = ltPrice(p);
     return `
-    <div class="listing-card-horizontal" onclick="openDetail(${p.id})">
-      <div class="listing-card-h-img">
-        ${p.emoji}
-        <div class="listing-badge" style="position:absolute;top:10px;right:10px">${p.type}</div>
-        ${p.ev_charger ? '<div class="ev-badge" style="position:absolute;bottom:10px;right:10px">⚡ EV</div>' : ''}
+    <div class="search-card" id="card-${p.id}"
+         onclick="openDetail(${p.id})"
+         onmouseenter="hoverMarker(${p.id},true)"
+         onmouseleave="hoverMarker(${p.id},false)">
+      <div class="sc-img">
+        <span class="sc-emoji">${p.emoji}</span>
+        <span class="sc-type">${p.type}</span>
+        ${p.ev_charger ? '<span class="sc-ev">⚡ EV</span>' : ''}
       </div>
-      <div class="listing-card-h-body">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-          <div class="listing-title">${p.title}</div>
-          <div class="listing-price">
-            ${isLongTerm
-              ? `₪${lt.price.toLocaleString()}<span>/${lt.label}</span>`
-              : `₪${p.price_hour}<span>/שעה</span>`
-            }
-          </div>
+      <div class="sc-body">
+        <div class="sc-top">
+          <div class="sc-title">${p.title}</div>
+          <div class="sc-price">${isLongTerm
+            ? `₪${lt.price.toLocaleString()}<span>/${lt.label}</span>`
+            : `₪${p.price_hour}<span>/שעה</span>`}</div>
         </div>
-        <div class="listing-location">📍 ${p.address}</div>
-        <div class="listing-rating" style="margin:8px 0">
-          <span class="stars">★★★★★</span>
-          <span style="font-size:.82rem;color:var(--gray-600)">${p.rating} · ${p.reviews_count} ביקורות</span>
+        <div class="sc-loc">📍 ${p.address}</div>
+        <div class="sc-rating">
+          <span class="sc-stars">★★★★★</span>
+          <span class="sc-rating-num">${p.rating}</span>
+          <span class="sc-reviews">(${p.reviews_count})</span>
+          ${p.ev_charger ? '<span class="sc-ev-chip">⚡</span>' : ''}
         </div>
-        <div class="listing-tags">
-          ${p.tags.map(t => `<span class="listing-tag">${t === 'טעינת חשמל' ? '⚡ ' + t : t}</span>`).join('')}
-          ${p.ev_charger ? '<span class="listing-tag ev-tag">⚡ עמדת טעינה</span>' : ''}
-        </div>
-        <div class="listing-card-h-footer">
-          <div style="font-size:.85rem;color:var(--gray-400)">
-            ${isLongTerm
-              ? `💰 ${lt.sub}`
-              : `📅 יום: ₪${p.price_day} · 🗓️ חודשי: ₪${p.price_month}`
-            }
-          </div>
-          <button class="btn-view">הזמן</button>
+        <div class="sc-footer">
+          <span class="sc-sub">${isLongTerm ? `💰 ${lt.sub}` : `יום ₪${p.price_day} · חודש ₪${p.price_month}`}</span>
+          <button class="sc-btn">הזמן →</button>
         </div>
       </div>
     </div>
   `}).join('');
 
-  renderMapPins(list);
+  setTimeout(() => renderLeafletMarkers(list), 10);
 }
 
-let currentView = 'list';
-function setView(view, btn) {
-  currentView = view;
-  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('search-results').style.display = view === 'list' ? '' : 'none';
-  document.getElementById('map-view').style.display = view === 'map' ? '' : 'none';
-  if (view === 'map') renderMapPins(filteredListings);
+function hoverMarker(id, on) {
+  if (!leafletMap) return;
+  leafletMarkers.forEach((m, i) => {
+    const el = m.getElement();
+    if (!el) return;
+    const marker = el.querySelector('.lf-host-marker');
+    if (!marker) return;
+    const pid = PARKINGS[i]?.id;
+    if (pid === id) marker.classList.toggle('hovered', on);
+  });
 }
 
-function renderMapPins(list) {
-  const pinsEl = document.getElementById('map-pins');
-  const sideList = document.getElementById('map-side-list');
-  if (!pinsEl) return;
+// ===== LEAFLET MAP =====
+let leafletMap = null;
+let leafletMarkers = [];
 
-  // Render host avatar circles — click goes straight to detail
-  pinsEl.innerHTML = list.map(p => `
-    <div class="map-host-pin" style="top:${p.lat_pct}%;right:${p.lng_pct}%"
-         onclick="openDetail(${p.id})"
-         title="${p.title} · ₪${p.price_hour}/שעה">
-      <div class="map-host-avatar" style="background:${p.host.avatar}">
-        ${p.host.letter}
-      </div>
-      <div class="map-host-tooltip">
-        <strong>${p.title}</strong>
-        <span>₪${p.price_hour}/שעה · ★${p.rating}</span>
-        ${p.ev_charger ? '<span class="map-ev-badge">⚡ EV</span>' : ''}
-      </div>
-      <div class="map-host-price">₪${p.price_hour}</div>
-    </div>
-  `).join('');
+// Real GPS coords for each parking
+const PARKING_COORDS = {
+  1: [32.0853, 34.7818],  // Tel Aviv, Hayarkon
+  2: [32.0800, 34.8100],  // Ramat Gan, Jabotinsky
+  3: [32.0791, 34.7676],  // Tel Aviv, Herbert Samuel
+  4: [32.1640, 34.8440],  // Herzliya
+  5: [31.7767, 35.2345],  // Jerusalem, Mamilla
+  6: [32.8154, 34.9890],  // Haifa, Ben Gurion
+};
 
-  if (sideList) {
-    sideList.innerHTML = list.map(p => `
-      <div class="map-side-card" onclick="openDetail(${p.id})">
-        <div class="map-side-emoji">${p.emoji}</div>
-        <div class="map-side-info">
-          <div class="map-side-title">${p.title}</div>
-          <div class="map-side-loc">📍 ${p.city}</div>
-          <div class="map-side-meta">
-            <span class="map-side-price">₪${p.price_hour}/שעה</span>
-            <span class="map-side-rating">★${p.rating}</span>
-            ${p.ev_charger ? '<span class="map-ev-badge">⚡</span>' : ''}
+function initLeafletMap() {
+  if (leafletMap) return;
+  const el = document.getElementById('leaflet-map');
+  if (!el || typeof L === 'undefined') return;
+
+  leafletMap = L.map('leaflet-map', {
+    center: [32.0853, 34.8000],
+    zoom: 11,
+    zoomControl: false,
+  });
+
+  // OpenStreetMap tiles — free, no API key
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19,
+  }).addTo(leafletMap);
+
+  // Zoom control on left
+  L.control.zoom({ position: 'topleft' }).addTo(leafletMap);
+}
+
+function renderLeafletMarkers(list) {
+  if (!leafletMap) initLeafletMap();
+  if (!leafletMap) return;
+
+  // Clear old markers
+  leafletMarkers.forEach(m => leafletMap.removeLayer(m));
+  leafletMarkers = [];
+
+  const bounds = [];
+
+  list.forEach(p => {
+    const coords = PARKING_COORDS[p.id];
+    if (!coords) return;
+    bounds.push(coords);
+
+    // Custom circular host avatar icon
+    const html = `
+      <div class="lf-host-marker" onclick="openDetail(${p.id})" id="lf-marker-${p.id}">
+        <div class="lf-avatar" style="background:${p.host.avatar}">${p.host.letter}</div>
+        <div class="lf-price">₪${p.price_hour}</div>
+        ${p.ev_charger ? '<div class="lf-ev">⚡</div>' : ''}
+      </div>`;
+
+    const icon = L.divIcon({ html, className: '', iconSize: [56, 66], iconAnchor: [28, 66] });
+    const marker = L.marker(coords, { icon })
+      .addTo(leafletMap)
+      .bindPopup(`
+        <div class="lf-popup" onclick="openDetail(${p.id})" style="cursor:pointer;min-width:180px">
+          <div style="font-size:1.8rem;text-align:center;margin-bottom:8px">${p.emoji}</div>
+          <div style="font-weight:800;font-size:.95rem;margin-bottom:4px">${p.title}</div>
+          <div style="font-size:.8rem;color:#64748b;margin-bottom:8px">📍 ${p.address}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="color:#e91e8c;font-weight:800;font-size:1.1rem">₪${p.price_hour}<small style="font-weight:400">/שעה</small></span>
+            <span style="color:#f59e0b;font-size:.9rem">★ ${p.rating}</span>
           </div>
+          ${p.ev_charger ? '<div style="margin-top:8px;background:#dcfce7;color:#15803d;border-radius:8px;padding:4px 10px;font-size:.78rem;font-weight:700;text-align:center">⚡ עמדת טעינה</div>' : ''}
+          <div style="margin-top:10px;background:linear-gradient(135deg,#e91e8c,#764ba2);color:white;border-radius:10px;padding:8px;text-align:center;font-weight:700;font-size:.88rem">פרטים והזמנה →</div>
         </div>
-      </div>
-    `).join('');
+      `, { direction: 'top', className: 'lf-popup-wrap' });
+
+    marker.on('click', () => {
+      highlightCard(p.id);
+    });
+
+    leafletMarkers.push(marker);
+  });
+
+  if (bounds.length) leafletMap.fitBounds(bounds, { padding: [60, 60] });
+}
+
+function highlightCard(id) {
+  document.querySelectorAll('.search-card').forEach(c => c.classList.remove('highlighted'));
+  const card = document.getElementById('card-' + id);
+  if (card) {
+    card.classList.add('highlighted');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+}
+
+function doSearchInline() {
+  const q = document.getElementById('searchInline').value.trim().toLowerCase();
+  if (q) {
+    filteredListings = PARKINGS.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.address.toLowerCase().includes(q) ||
+      p.city.toLowerCase().includes(q)
+    );
+  } else {
+    filteredListings = [...PARKINGS];
+  }
+  renderSearchResults(filteredListings);
+  renderLeafletMarkers(filteredListings);
 }
 
 // ===== DETAIL PAGE =====

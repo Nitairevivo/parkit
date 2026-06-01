@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -333,123 +334,61 @@
 
 <!-- ========== SEARCH PAGE ========== -->
 <div id="page-search" class="page">
-  <div class="search-page-header">
-    <div class="container">
-      <h1>חפש חניה</h1>
-      <div class="search-bar-inline">
-        <input type="text" id="searchInline" placeholder="עיר, רחוב, אזור..." />
-        <button onclick="filterListings()">חפש</button>
+
+  <!-- TOP BAR -->
+  <div class="search-topbar">
+    <div class="search-topbar-inner">
+      <div class="search-topbar-input">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInline" placeholder="עיר, רחוב, אזור..." onkeydown="if(event.key==='Enter')doSearchInline()" />
+        <button class="search-topbar-btn" onclick="doSearchInline()">חפש</button>
       </div>
-    </div>
-  </div>
 
-  <div class="search-layout container">
-    <!-- FILTERS -->
-    <aside class="filters-panel">
-      <h3>סינון תוצאות</h3>
-
-      <div class="filter-group">
-        <label class="filter-label">סוג השכרה</label>
+      <!-- QUICK FILTERS (pill buttons) -->
+      <div class="search-quick-filters">
         <div class="rental-type-btns">
           <label class="rental-type-btn">
             <input type="radio" name="rental-type" value="all" checked onchange="filterListings()" />
-            <span>🕐 שעתי/יומי</span>
+            <span>🕐 שעתי</span>
           </label>
           <label class="rental-type-btn">
             <input type="radio" name="rental-type" value="longterm" onchange="filterListings()" />
             <span>📅 טווח ארוך</span>
           </label>
         </div>
-        <div id="longterm-options" class="longterm-options" style="display:none">
-          <label class="checkbox-label"><input type="radio" name="lt-period" value="week" onchange="filterListings()"> שבוע</label>
-          <label class="checkbox-label"><input type="radio" name="lt-period" value="twoweeks" onchange="filterListings()"> שבועיים</label>
-          <label class="checkbox-label"><input type="radio" name="lt-period" value="month" checked onchange="filterListings()"> חודש</label>
-          <label class="checkbox-label"><input type="radio" name="lt-period" value="year" onchange="filterListings()"> שנה</label>
+        <div id="longterm-options" class="longterm-options-inline" style="display:none">
+          <label class="lt-pill"><input type="radio" name="lt-period" value="week" onchange="filterListings()"><span>שבוע</span></label>
+          <label class="lt-pill"><input type="radio" name="lt-period" value="twoweeks" onchange="filterListings()"><span>שבועיים</span></label>
+          <label class="lt-pill active"><input type="radio" name="lt-period" value="month" checked onchange="filterListings()"><span>חודש</span></label>
+          <label class="lt-pill"><input type="radio" name="lt-period" value="year" onchange="filterListings()"><span>שנה</span></label>
         </div>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">⚡ EV / טעינה חשמלית</label>
-        <label class="ev-filter-toggle">
+        <label class="ev-pill">
           <input type="checkbox" id="filter-ev" onchange="filterListings()" />
-          <span>הצג רק חניות עם עמדת טעינה</span>
+          <span>⚡ EV בלבד</span>
         </label>
+        <select class="sort-pill" onchange="sortListings(this.value)">
+          <option value="rating">★ דירוג</option>
+          <option value="price_asc">₪ מחיר עולה</option>
+          <option value="price_desc">₪ מחיר יורד</option>
+        </select>
+        <span id="results-count" class="results-count-pill">טוען...</span>
       </div>
+    </div>
+  </div>
 
-      <div class="filter-group">
-        <label class="filter-label">מחיר לשעה (₪)</label>
-        <div class="price-range">
-          <input type="number" id="priceMin" placeholder="מינ׳" value="0" min="0" />
-          <span>—</span>
-          <input type="number" id="priceMax" placeholder="מקס׳" value="50" min="0" />
-        </div>
-      </div>
+  <!-- MAIN: MAP + SIDEBAR -->
+  <div class="search-map-layout">
 
-      <div class="filter-group">
-        <label class="filter-label">סוג חניה</label>
-        <div class="checkbox-group">
-          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> פרטית בבניין</label>
-          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> תת-קרקעית</label>
-          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> חיצונית</label>
-          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> חצר פרטית</label>
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">מאפיינים</label>
-        <div class="checkbox-group">
-          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> מקורה</label>
-          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> שמירה 24/7</label>
-          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> נגיש לנכים</label>
-        </div>
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">דירוג מינימלי</label>
-        <div class="star-filter">
-          <button class="star-btn active" onclick="setMinRating(0,this)">הכל</button>
-          <button class="star-btn" onclick="setMinRating(4,this)">4★+</button>
-          <button class="star-btn" onclick="setMinRating(4.5,this)">4.5★+</button>
-        </div>
-      </div>
-
-      <button class="btn-apply-filters" onclick="filterListings()">החל סינון</button>
+    <!-- SIDEBAR: cards list -->
+    <aside class="search-sidebar" id="search-sidebar">
+      <div id="search-results" class="search-cards-list"></div>
     </aside>
 
-    <!-- RESULTS -->
-    <main class="results-panel">
-      <div class="results-toolbar">
-        <span id="results-count">טוען...</span>
-        <div class="sort-options">
-          <label>מיין לפי:</label>
-          <select onchange="sortListings(this.value)">
-            <option value="rating">דירוג</option>
-            <option value="price_asc">מחיר: נמוך לגבוה</option>
-            <option value="price_desc">מחיר: גבוה לנמוך</option>
-            <option value="distance">מרחק</option>
-          </select>
-        </div>
-        <div class="view-toggle">
-          <button class="view-btn active" onclick="setView('list',this)" title="רשימה">☰</button>
-          <button class="view-btn" onclick="setView('map',this)" title="מפה">🗺</button>
-        </div>
-      </div>
+    <!-- MAP: takes the rest -->
+    <div class="search-map-area">
+      <div id="leaflet-map"></div>
+    </div>
 
-      <div id="search-results" class="listings-list"></div>
-
-      <!-- MAP VIEW -->
-      <div id="map-view" class="map-container" style="display:none">
-        <div class="map-placeholder">
-          <div class="map-inner">
-            <div class="map-bg-text">🗺️</div>
-            <p>מפה אינטראקטיבית</p>
-            <small>נדרש Google Maps API Key להפעלה מלאה</small>
-            <div class="map-pins" id="map-pins"></div>
-          </div>
-        </div>
-        <div class="map-side-list" id="map-side-list"></div>
-      </div>
-    </main>
   </div>
 </div>
 
@@ -934,6 +873,7 @@
 </div>
 <div id="booking-overlay" class="booking-overlay" onclick="closeBooking()"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
