@@ -1204,6 +1204,81 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--pink); outl
   font-size: .83rem; color: #1e40af; border-right: 3px solid #3b82f6;
 }
 
+/* ===== GATE CODE — HOST FORM ===== */
+.gate-code-wrap { border: 1.5px solid var(--gray-200); border-radius: 16px; padding: 18px; background: var(--gray-50); }
+
+.gate-code-type-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.gate-type-opt {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border: 1.5px solid var(--gray-200); border-radius: 10px;
+  cursor: pointer; font-size: .85rem; font-weight: 600; color: var(--gray-600);
+  background: white; transition: all .2s;
+}
+.gate-type-opt:hover { border-color: var(--pink); }
+.gate-type-opt.selected { border-color: var(--pink); background: var(--pink-light); color: var(--pink); }
+
+.gate-fields { animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+.gate-pin-row { display: flex; gap: 10px; margin-bottom: 12px; }
+.gate-pin-input {
+  flex: 1; padding: 14px 18px; border: 2px solid var(--gray-200); border-radius: 12px;
+  font-size: 1.5rem; font-weight: 800; letter-spacing: 8px; text-align: center;
+  background: white; color: var(--text);
+  transition: border-color .2s;
+}
+.gate-pin-input:focus { border-color: var(--pink); outline: none; }
+.gate-show-btn {
+  padding: 12px 16px; background: white; border: 1.5px solid var(--gray-200);
+  border-radius: 12px; font-size: .85rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: all .2s;
+}
+.gate-show-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+.gate-code-note {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+  padding: 10px 14px; font-size: .82rem; color: #92400e; margin-bottom: 12px;
+}
+.gate-code-note.success { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+
+.gate-security-tips { font-size: .8rem; color: var(--gray-600); }
+.gate-security-tips strong { display: block; margin-bottom: 6px; }
+.gate-security-tips ul { padding-right: 18px; }
+.gate-security-tips li { padding: 2px 0; }
+
+/* ===== GATE CODE — BOOKING CONFIRMATION ===== */
+.gate-code-card {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-radius: 20px; padding: 24px 20px; margin-bottom: 16px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.gate-code-card::before {
+  content: ''; position: absolute; top: -30px; right: -30px;
+  width: 120px; height: 120px; background: rgba(233,30,140,.15);
+  border-radius: 50%;
+}
+.gcc-header { display: flex; align-items: center; justify-content: center; gap: 8px; color: rgba(255,255,255,.6); font-size: .82rem; font-weight: 600; margin-bottom: 12px; letter-spacing: .5px; text-transform: uppercase; }
+.gcc-code {
+  font-size: 3rem; font-weight: 900; color: white; letter-spacing: 10px;
+  font-variant-numeric: tabular-nums; margin-bottom: 6px;
+  text-shadow: 0 0 20px rgba(233,30,140,.5);
+}
+@keyframes gateFlash { 0%,100%{color:white} 50%{color:#4ade80} }
+.gcc-validity { font-size: .75rem; color: rgba(255,255,255,.45); margin-bottom: 18px; }
+.gcc-open-btn {
+  width: 100%; padding: 13px; background: linear-gradient(135deg, var(--pink), var(--purple));
+  color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: all .3s; box-shadow: 0 4px 16px rgba(233,30,140,.4);
+}
+.gcc-open-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(233,30,140,.5); }
+.gcc-tip { font-size: .73rem; color: rgba(255,255,255,.35); margin-top: 10px; }
+
+.booking-confirm-info { background: var(--gray-50); border-radius: 14px; padding: 14px 16px; margin-bottom: 4px; }
+.bci-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: .85rem; border-bottom: 1px solid var(--gray-100); }
+.bci-row:last-child { border-bottom: none; }
+.bci-row span:first-child { color: var(--gray-500); }
+.bci-row span:last-child { font-weight: 600; }
+
 /* ===== EV HOST FORM ===== */
 .ev-toggle-label {
   display: flex; align-items: center; gap: 10px; cursor: pointer;

@@ -520,6 +520,69 @@
           </div>
 
           <div class="form-group full">
+            <label>קוד פתיחת שער / דלת</label>
+            <div class="gate-code-wrap">
+              <div class="gate-code-type-row">
+                <label class="gate-type-opt selected" id="gtype-pin" onclick="selectGateType(this,'pin')">
+                  <span>🔢 קוד PIN</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-intercom" onclick="selectGateType(this,'intercom')">
+                  <span>📞 אינטרקום</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-key" onclick="selectGateType(this,'key')">
+                  <span>🔑 מפתח פיזי</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-none" onclick="selectGateType(this,'none')">
+                  <span>🚗 ללא שער</span>
+                </label>
+              </div>
+
+              <div id="gate-pin-fields" class="gate-fields">
+                <div class="gate-pin-row">
+                  <input type="text" id="h-gate-code" class="gate-pin-input"
+                    placeholder="1234" maxlength="8"
+                    oninput="this.value=this.value.replace(/[^0-9#*]/g,'')"
+                    autocomplete="off" />
+                  <button type="button" class="gate-show-btn" onclick="toggleGateCode(this)">👁 הצג</button>
+                </div>
+                <div class="gate-code-note">
+                  <span>💡 הקוד ישלח אוטומטית לשוכר לאחר הזמנה מאושרת</span>
+                </div>
+                <div class="gate-security-tips">
+                  <strong>טיפים לאבטחה:</strong>
+                  <ul>
+                    <li>השתמש ב-4–6 ספרות</li>
+                    <li>שנה את הקוד אחת לכמה חודשים</li>
+                    <li>לא לשתף את הקוד מחוץ לפלטפורמה</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div id="gate-intercom-fields" class="gate-fields" style="display:none">
+                <div class="form-group">
+                  <label>מספר דירה / כפתור אינטרקום</label>
+                  <input type="text" id="h-intercom" class="modal-input" placeholder="לדוגמה: דירה 5, כפתור 12" />
+                </div>
+                <div class="gate-code-note">
+                  <span>📞 השוכר יצלצל על האינטרקום — בעל החניה יפתח מרחוק</span>
+                </div>
+              </div>
+
+              <div id="gate-key-fields" class="gate-fields" style="display:none">
+                <div class="gate-code-note">
+                  <span>🔑 יש לתאם מסירת מפתח עם השוכר לפני ההזמנה</span>
+                </div>
+              </div>
+
+              <div id="gate-none-fields" class="gate-fields" style="display:none">
+                <div class="gate-code-note success">
+                  <span>✅ החניה פתוחה לכניסה ישירה — לא נדרש קוד</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group full">
             <label>עמדת טעינת רכב חשמלי (EV)</label>
             <label class="ev-toggle-label">
               <input type="checkbox" id="has-ev" onchange="toggleEVFields(this)" />

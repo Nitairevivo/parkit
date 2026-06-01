@@ -869,26 +869,105 @@ function closeBooking() {
 
 function confirmBooking() {
   closeBooking();
+  const p = currentParking;
+  // Generate random PIN for demo (in production: comes from host's saved code)
+  const gateCode = p?.gate_code || Math.floor(1000 + Math.random() * 9000).toString();
+  const gateIcon = p?.gate_type === 'intercom' ? '📞' : p?.gate_type === 'none' ? '🚗' : '🔢';
+
   setTimeout(() => {
     openModal('success');
     document.getElementById('modal-content').innerHTML = `
-      <div style="text-align:center;padding:20px 0">
-        <div style="font-size:4rem;margin-bottom:20px">🎉</div>
-        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:10px">ההזמנה אושרה!</h2>
-        <p style="color:var(--gray-600);line-height:1.7;margin-bottom:24px">
-          ה${currentParking?.title} הוזמנה בהצלחה.<br/>
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:3.5rem;margin-bottom:12px">🎉</div>
+        <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:8px">ההזמנה אושרה!</h2>
+        <p style="color:var(--gray-600);font-size:.92rem;line-height:1.6;margin-bottom:20px">
+          ${p?.title || 'החניה'} הוזמנה בהצלחה.<br/>
           שלחנו לך אישור + קוד גישה ב-SMS.
         </p>
-        <div style="background:var(--gray-50);border-radius:14px;padding:20px;margin-bottom:24px;text-align:center">
-          <div style="font-size:.8rem;color:var(--gray-600);margin-bottom:8px">קוד גישה לשער</div>
-          <div style="font-size:2.5rem;font-weight:900;color:var(--pink);letter-spacing:6px">4721</div>
+
+        <!-- GATE CODE CARD -->
+        <div class="gate-code-card">
+          <div class="gcc-header">
+            <span>${gateIcon}</span>
+            <span>קוד פתיחת שער</span>
+          </div>
+          <div class="gcc-code" id="gcc-display">${gateCode}</div>
+          <div class="gcc-validity">תקף להזמנה זו בלבד</div>
+          <button class="gcc-open-btn" onclick="animateGateOpen(this)">
+            🚪 פתח שער עכשיו
+          </button>
+          <div class="gcc-tip">
+            לחץ "פתח שער" כשאתה ממש ליד הכניסה
+          </div>
         </div>
-        <button class="btn-primary" style="width:100%;padding:14px;font-size:1rem" onclick="closeModal();showPage('home')">
-          לדף הבית
+
+        <!-- BOOKING INFO -->
+        <div class="booking-confirm-info">
+          <div class="bci-row">
+            <span>📍 כתובת</span>
+            <span>${p?.address || '—'}</span>
+          </div>
+          <div class="bci-row">
+            <span>📱 SMS נשלח ל</span>
+            <span>מספרך הרשום</span>
+          </div>
+          <div class="bci-row">
+            <span>🛡️ ביטוח</span>
+            <span style="color:#16a34a;font-weight:600">פעיל ✓</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width:100%;padding:13px;font-size:.98rem;margin-top:16px"
+          onclick="closeModal();showPage('home')">
+          סיום
         </button>
+        <p style="font-size:.75rem;color:var(--gray-400);margin-top:10px">
+          לתמיכה: *6060 או support@parkit.co.il
+        </p>
       </div>
     `;
   }, 300);
+}
+
+function animateGateOpen(btn) {
+  btn.textContent = '⏳ פותח...';
+  btn.disabled = true;
+  btn.style.background = '#94a3b8';
+  setTimeout(() => {
+    btn.textContent = '✅ השער פתוח!';
+    btn.style.background = '#16a34a';
+    const codeEl = document.getElementById('gcc-display');
+    if (codeEl) {
+      codeEl.style.animation = 'gateFlash 0.6s ease';
+    }
+    setTimeout(() => {
+      btn.textContent = '🚪 פתח שער שוב';
+      btn.disabled = false;
+      btn.style.background = '';
+    }, 4000);
+  }, 1500);
+}
+
+// ===== GATE CODE =====
+let gateType = 'pin';
+
+function selectGateType(el, type) {
+  gateType = type;
+  document.querySelectorAll('.gate-type-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.querySelectorAll('.gate-fields').forEach(f => f.style.display = 'none');
+  const f = document.getElementById('gate-' + type + '-fields');
+  if (f) f.style.display = 'block';
+}
+
+function toggleGateCode(btn) {
+  const inp = document.getElementById('h-gate-code');
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text'; btn.textContent = '🙈 הסתר';
+  } else {
+    inp.type = 'password'; btn.textContent = '👁 הצג';
+  }
 }
 
 // ===== EV FIELDS TOGGLE =====
