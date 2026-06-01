@@ -775,6 +775,73 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--pink); outl
 .toast.success { background: linear-gradient(135deg, #16a34a, #15803d); }
 .toast.error { background: linear-gradient(135deg, #dc2626, #b91c1c); }
 
+/* ===== PAYMENT SHEET ===== */
+.bs-title { font-size:1.25rem; font-weight:800; margin-bottom:18px; }
+
+.bs-parking-row { display:flex; gap:14px; align-items:center; background:var(--gray-50); border-radius:14px; padding:14px; margin-bottom:18px; }
+.bs-parking-emoji { font-size:2.4rem; flex-shrink:0; }
+.bs-parking-name { font-weight:700; font-size:.98rem; margin-bottom:3px; }
+.bs-parking-addr { font-size:.8rem; color:var(--gray-400); margin-bottom:5px; }
+.bs-parking-price { font-size:1rem; font-weight:800; color:var(--pink); }
+
+.bs-breakdown { background:var(--gray-50); border-radius:12px; padding:14px 16px; margin-bottom:20px; }
+.bsb-row { display:flex; justify-content:space-between; padding:5px 0; font-size:.88rem; color:var(--gray-600); border-bottom:1px solid var(--gray-100); }
+.bsb-row:last-child { border-bottom:none; }
+.bsb-row.total { font-weight:800; color:var(--text); font-size:.98rem; padding-top:10px; }
+
+.pay-section { }
+.pay-label { font-size:.78rem; font-weight:700; color:var(--gray-600); text-transform:uppercase; letter-spacing:.6px; margin-bottom:10px; }
+
+.pay-methods { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+.pay-methods::-webkit-scrollbar { display:none; }
+
+.pay-method {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:10px 14px; border:2px solid var(--gray-200); border-radius:14px;
+  background:white; cursor:pointer; min-width:70px; flex-shrink:0;
+  transition:all .2s;
+}
+.pay-method:hover { border-color:var(--pink); }
+.pay-method.active { border-color:var(--pink); background:var(--pink-light); box-shadow:0 2px 8px rgba(233,30,140,.2); }
+.pm-logo { font-size:.85rem; font-weight:900; height:24px; display:flex; align-items:center; justify-content:center; }
+.pm-name { font-size:.7rem; font-weight:600; color:var(--gray-600); }
+.pay-method.active .pm-name { color:var(--pink); }
+
+.pm-bit { color:#0033cc; font-size:1.1rem; letter-spacing:-1px; }
+.pm-paybox { color:#ff6b00; font-size:.9rem; }
+.pm-apple { color:#1a1a1a; font-size:1rem; }
+.pm-google { background:linear-gradient(135deg,#4285f4,#34a853,#fbbc05,#ea4335); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:1.1rem; }
+.pm-card { font-size:1.2rem; }
+
+.pay-form { display:none; }
+.pay-form.active { display:block; }
+.pay-form-center { display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px 0; text-align:center; }
+.pf-icon { width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1rem; }
+.pf-bit { background:#e8f0ff; color:#0033cc; font-size:1.2rem; }
+.pf-paybox { background:#fff0e6; color:#ff6b00; font-size:1.3rem; }
+.pf-apple { background:#1a1a1a; color:white; font-size:1.4rem; }
+.pf-google { background:white; border:1.5px solid var(--gray-200); font-size:1.3rem; font-weight:900; background:linear-gradient(135deg,#4285f4,#34a853); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.pf-desc { font-size:.88rem; color:var(--gray-600); max-width:260px; line-height:1.5; }
+
+.apple-pay-btn {
+  background:#1a1a1a; color:white; border:none; border-radius:12px;
+  padding:14px 32px; font-size:1rem; font-weight:700; cursor:pointer;
+  min-width:200px; transition:opacity .2s;
+}
+.apple-pay-btn:hover { opacity:.85; }
+
+.google-pay-btn {
+  background:white; color:#1a1a1a; border:1.5px solid var(--gray-200); border-radius:12px;
+  padding:14px 32px; font-size:1rem; font-weight:700; cursor:pointer;
+  min-width:200px; transition:all .2s; box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+.google-pay-btn:hover { box-shadow:0 4px 16px rgba(0,0,0,.15); }
+
+.pay-security-row {
+  display:flex; gap:8px; justify-content:center; align-items:center;
+  font-size:.75rem; color:var(--gray-400); margin-top:12px; flex-wrap:wrap;
+}
+
 /* ===== BOOKING SHEET ===== */
 .booking-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1500; }
 .booking-overlay.open { display: block; }

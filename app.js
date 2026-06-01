@@ -749,42 +749,117 @@ function openBookingSheet() {
   const total = subtotal + Math.round(subtotal * 0.15);
 
   document.getElementById('booking-sheet-content').innerHTML = `
-    <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:20px">אישור הזמנה · ${typeLabel}</h2>
-    <div style="display:flex;gap:16px;align-items:center;background:var(--gray-50);border-radius:14px;padding:16px;margin-bottom:24px">
-      <div style="font-size:2.5rem">${p.emoji}</div>
-      <div>
-        <div style="font-weight:700;font-size:1rem">${p.title}</div>
-        <div style="font-size:.85rem;color:var(--gray-600)">📍 ${p.address}</div>
-        <div style="font-size:.85rem;color:var(--pink);font-weight:700;margin-top:4px">₪${total.toLocaleString()} לתשלום</div>
+    <h2 class="bs-title">הזמנה · ${typeLabel}</h2>
+
+    <div class="bs-parking-row">
+      <div class="bs-parking-emoji">${p.emoji}</div>
+      <div class="bs-parking-info">
+        <div class="bs-parking-name">${p.title}</div>
+        <div class="bs-parking-addr">📍 ${p.address}</div>
+        <div class="bs-parking-price">סה"כ ₪${total.toLocaleString()}</div>
       </div>
     </div>
 
-    <div style="margin-bottom:20px">
-      <label style="font-size:.8rem;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">פרטי תשלום</label>
-      <input class="modal-input" placeholder="שם על הכרטיס" style="margin-bottom:10px" />
-      <input class="modal-input" placeholder="מספר כרטיס אשראי" style="margin-bottom:10px" />
-      <div style="display:flex;gap:10px">
-        <input class="modal-input" placeholder="MM/YY" style="flex:1" />
-        <input class="modal-input" placeholder="CVV" style="flex:1" />
+    <div class="bs-breakdown">
+      <div class="bsb-row"><span>${summaryLine}</span><span>₪${subtotal.toLocaleString()}</span></div>
+      <div class="bsb-row"><span>עמלת שירות (15%)</span><span>₪${Math.round(subtotal*0.15).toLocaleString()}</span></div>
+      <div class="bsb-row total"><span>סה"כ לתשלום</span><span>₪${total.toLocaleString()}</span></div>
+    </div>
+
+    <div class="pay-section">
+      <div class="pay-label">בחר אמצעי תשלום</div>
+      <div class="pay-methods">
+        <button class="pay-method active" onclick="selectPayMethod(this,'bit')">
+          <span class="pm-logo pm-bit">bit</span><span class="pm-name">Bit</span>
+        </button>
+        <button class="pay-method" onclick="selectPayMethod(this,'paybox')">
+          <span class="pm-logo pm-paybox">Pay</span><span class="pm-name">PayBox</span>
+        </button>
+        <button class="pay-method" onclick="selectPayMethod(this,'apple')">
+          <span class="pm-logo pm-apple"> Pay</span><span class="pm-name">Apple Pay</span>
+        </button>
+        <button class="pay-method" onclick="selectPayMethod(this,'google')">
+          <span class="pm-logo pm-google">G</span><span class="pm-name">Google Pay</span>
+        </button>
+        <button class="pay-method" onclick="selectPayMethod(this,'card')">
+          <span class="pm-logo pm-card">💳</span><span class="pm-name">כרטיס</span>
+        </button>
+      </div>
+
+      <div id="pay-form-bit" class="pay-form active">
+        <div class="pay-form-center">
+          <div class="pf-icon pf-bit">bit</div>
+          <p class="pf-desc">נשלח לך בקשת תשלום ב-Bit</p>
+          <input class="modal-input" type="tel" placeholder="05X-XXXXXXX" style="text-align:center;font-size:1.1rem;letter-spacing:3px;font-weight:700" />
+        </div>
+      </div>
+
+      <div id="pay-form-paybox" class="pay-form">
+        <div class="pay-form-center">
+          <div class="pf-icon pf-paybox">P</div>
+          <p class="pf-desc">נשלח לך בקשת תשלום ב-PayBox</p>
+          <input class="modal-input" type="tel" placeholder="05X-XXXXXXX" style="text-align:center;font-size:1.1rem;letter-spacing:3px;font-weight:700" />
+        </div>
+      </div>
+
+      <div id="pay-form-apple" class="pay-form">
+        <div class="pay-form-center">
+          <div class="pf-icon pf-apple"> </div>
+          <p class="pf-desc">תשלום מאובטח עם Face ID / Touch ID</p>
+          <button class="apple-pay-btn" onclick="confirmBooking()"> Pay · ₪${total.toLocaleString()}</button>
+        </div>
+      </div>
+
+      <div id="pay-form-google" class="pay-form">
+        <div class="pay-form-center">
+          <div class="pf-icon pf-google">G</div>
+          <p class="pf-desc">תשלום מהיר עם חשבון Google</p>
+          <button class="google-pay-btn" onclick="confirmBooking()">G Pay · ₪${total.toLocaleString()}</button>
+        </div>
+      </div>
+
+      <div id="pay-form-card" class="pay-form">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <input class="modal-input" placeholder="שם על הכרטיס" />
+          <div style="position:relative">
+            <input class="modal-input" placeholder="1234  5678  9012  3456" maxlength="19"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim()" style="width:100%;padding-left:44px" />
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.2rem">💳</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <input class="modal-input" placeholder="MM/YY" style="flex:1" maxlength="5" />
+            <input class="modal-input" placeholder="CVV" style="flex:1;max-width:90px" maxlength="4" type="password" />
+          </div>
+        </div>
       </div>
     </div>
 
-    <div style="background:var(--gray-50);border-radius:12px;padding:16px;margin-bottom:20px">
-      <div class="bs-row"><span>פירוט</span><span style="font-size:.82rem">${summaryLine}</span></div>
-      <div class="bs-row"><span>עמלת שירות (15%)</span><span>₪${Math.round(subtotal * 0.15).toLocaleString()}</span></div>
-      <div class="bs-row total"><span><strong>סה"כ</strong></span><span><strong>₪${total.toLocaleString()}</strong></span></div>
-    </div>
-
-    <button class="btn-book" onclick="confirmBooking()">
-      🔒 אשר תשלום ₪${total.toLocaleString()}
+    <button class="btn-book" onclick="confirmBooking()" style="margin-top:18px">
+      🔒 שלם ₪${total.toLocaleString()}
     </button>
-    <p style="text-align:center;font-size:.78rem;color:var(--gray-400);margin-top:12px">
-      🔒 מאובטח ע"י Stripe · לא נשמר מידע כרטיס
-    </p>
+    <div class="pay-security-row">
+      <span>🔒 מוצפן</span><span>·</span>
+      <span>Stripe PCI DSS</span><span>·</span>
+      <span>לא נשמר מידע כרטיס</span>
+    </div>
   `;
 
   document.getElementById('booking-sheet').classList.add('open');
   document.getElementById('booking-overlay').classList.add('open');
+}
+
+function selectPayMethod(btn, method) {
+  document.querySelectorAll('.pay-method').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.pay-form').forEach(f => f.classList.remove('active'));
+  const form = document.getElementById('pay-form-' + method);
+  if (form) form.classList.add('active');
+  // Update pay button text
+  const payBtn = document.getElementById('confirm-pay-btn');
+  if (payBtn) {
+    const labels = { bit:'שלח בקשה ב-Bit', paybox:'שלח בקשה ב-PayBox', apple:' Pay', google:'G Pay', card:'שלם עם כרטיס' };
+    payBtn.textContent = '🔒 ' + (labels[method] || 'שלם');
+  }
 }
 
 function closeBooking() {
