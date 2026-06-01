@@ -349,6 +349,34 @@
       <h3>סינון תוצאות</h3>
 
       <div class="filter-group">
+        <label class="filter-label">סוג השכרה</label>
+        <div class="rental-type-btns">
+          <label class="rental-type-btn">
+            <input type="radio" name="rental-type" value="all" checked onchange="filterListings()" />
+            <span>🕐 שעתי/יומי</span>
+          </label>
+          <label class="rental-type-btn">
+            <input type="radio" name="rental-type" value="longterm" onchange="filterListings()" />
+            <span>📅 טווח ארוך</span>
+          </label>
+        </div>
+        <div id="longterm-options" class="longterm-options" style="display:none">
+          <label class="checkbox-label"><input type="radio" name="lt-period" value="week" onchange="filterListings()"> שבוע</label>
+          <label class="checkbox-label"><input type="radio" name="lt-period" value="twoweeks" onchange="filterListings()"> שבועיים</label>
+          <label class="checkbox-label"><input type="radio" name="lt-period" value="month" checked onchange="filterListings()"> חודש</label>
+          <label class="checkbox-label"><input type="radio" name="lt-period" value="year" onchange="filterListings()"> שנה</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">⚡ EV / טעינה חשמלית</label>
+        <label class="ev-filter-toggle">
+          <input type="checkbox" id="filter-ev" onchange="filterListings()" />
+          <span>הצג רק חניות עם עמדת טעינה</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
         <label class="filter-label">מחיר לשעה (₪)</label>
         <div class="price-range">
           <input type="number" id="priceMin" placeholder="מינ׳" value="0" min="0" />
@@ -373,7 +401,16 @@
           <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> מקורה</label>
           <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> שמירה 24/7</label>
           <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> נגיש לנכים</label>
-          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> טעינת חשמל</label>
+          <label class="checkbox-label"><input id="filter-ev" type="checkbox" onchange="filterListings()"> ⚡ טעינת חשמל (EV)</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">סוג השכרה</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label"><input type="radio" name="rental-type" value="all" checked onchange="filterListings()"> הכל</label>
+          <label class="checkbox-label"><input type="radio" name="rental-type" value="hourly" onchange="filterListings()"> שעתי / יומי</label>
+          <label class="checkbox-label"><input type="radio" name="rental-type" value="longterm" onchange="filterListings()"> 📅 טווח ארוך (חודשי/שנתי)</label>
         </div>
       </div>
 
@@ -515,10 +552,80 @@
               <label class="tag-opt"><input type="checkbox" value="מאובטח"> שמירה 24/7</label>
               <label class="tag-opt"><input type="checkbox" value="מצלמות"> מצלמות</label>
               <label class="tag-opt"><input type="checkbox" value="גישה 24/7"> גישה 24/7</label>
-              <label class="tag-opt"><input type="checkbox" value="טעינת חשמל"> עמדת טעינה</label>
+              <label class="tag-opt"><input type="checkbox" value="טעינת חשמל" id="host-ev-check" onchange="toggleEVFields(this)"> ⚡ עמדת טעינה (EV)</label>
               <label class="tag-opt"><input type="checkbox" value="נגיש"> נגיש לנכים</label>
             </div>
           </div>
+          <div class="form-group full ev-fields" id="ev-fields" style="display:none">
+            <label>פרטי עמדת הטעינה</label>
+            <div class="ev-host-grid">
+              <div class="ev-host-field">
+                <label class="ev-sub-label">סוג עמדה</label>
+                <select id="h-ev-type">
+                  <option>AC Type 2 (ביתי · עד 22kW)</option>
+                  <option>DC Fast Charge (מהיר · עד 50kW)</option>
+                  <option>AC שקע רגיל (3.7kW)</option>
+                </select>
+              </div>
+              <div class="ev-host-field">
+                <label class="ev-sub-label">הספק (kW)</label>
+                <input type="number" id="h-ev-kw" value="7" min="2" max="150" />
+              </div>
+              <div class="ev-host-field">
+                <label class="ev-sub-label">מחיר לkWh (₪) — 0 = כלול</label>
+                <input type="number" id="h-ev-price" value="0.85" min="0" step="0.05" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group full">
+            <label>עמדת טעינת רכב חשמלי (EV)</label>
+            <label class="ev-toggle-label">
+              <input type="checkbox" id="has-ev" onchange="toggleEVFields(this)" />
+              <span class="ev-toggle-text">יש לי עמדת טעינה בחניה ⚡</span>
+            </label>
+            <div id="ev-fields" class="ev-fields-group" style="display:none">
+              <div class="ev-fields-inner">
+                <div class="form-group">
+                  <label>סוג עמדה</label>
+                  <select id="h-ev-type">
+                    <option>AC Type 2 (רגיל)</option>
+                    <option>DC Fast Charge (מהיר)</option>
+                    <option>שקע ביתי רגיל (Schuko)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>עוצמה (kW)</label>
+                  <select id="h-ev-kw">
+                    <option value="2.3">2.3 kW (שקע ביתי)</option>
+                    <option value="7" selected>7 kW</option>
+                    <option value="11">11 kW</option>
+                    <option value="22">22 kW</option>
+                    <option value="50">50 kW (DC מהיר)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>תמחור טעינה</label>
+                  <select id="h-ev-pricing">
+                    <option value="free">כלול במחיר החניה</option>
+                    <option value="per_kwh">לפי kWh</option>
+                    <option value="flat">תוספת קבועה</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>מחיר (₪/kWh או ₪/הזמנה)</label>
+                  <div class="price-input-wrap">
+                    <span>₪</span>
+                    <input type="number" id="h-ev-price" placeholder="0.85" step="0.05" min="0" />
+                  </div>
+                </div>
+              </div>
+              <div class="ev-info-note">
+                💡 חניות עם עמדת טעינה מרוויחות בממוצע 35% יותר ומופיעות גבוה יותר בחיפוש.
+              </div>
+            </div>
+          </div>
+
           <div class="form-group full">
             <label>תמונות החניה</label>
             <div class="upload-area" onclick="this.querySelector('input').click()">

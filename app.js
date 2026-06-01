@@ -5,6 +5,7 @@ let filteredListings = [...PARKINGS];
 let minRating = 0;
 let selectedType = 'פרטית בבניין';
 let hostStep = 1;
+let bookingType = 'hourly';
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -61,6 +62,7 @@ function renderCard(p) {
       <div class="listing-img">
         <div class="listing-img-bg">${p.emoji}</div>
         <div class="listing-badge">${p.type}</div>
+        ${p.ev_charger ? '<div class="ev-badge">⚡ EV</div>' : ''}
       </div>
       <div class="listing-body">
         <div class="listing-rating">
@@ -70,7 +72,7 @@ function renderCard(p) {
         <div class="listing-title">${p.title}</div>
         <div class="listing-location">📍 ${p.address}</div>
         <div class="listing-tags">
-          ${p.tags.map(t => `<span class="listing-tag">${t}</span>`).join('')}
+          ${p.tags.map(t => `<span class="listing-tag">${t === 'טעינת חשמל' ? '⚡ ' + t : t}</span>`).join('')}
         </div>
         <div class="listing-footer">
           <div class="listing-price">₪${p.price_hour}<span>/שעה</span></div>
@@ -106,10 +108,31 @@ function doSearch() {
 function filterListings() {
   const min = parseFloat(document.getElementById('priceMin')?.value || 0);
   const max = parseFloat(document.getElementById('priceMax')?.value || 9999);
-  filteredListings = PARKINGS.filter(p =>
-    p.price_hour >= min && p.price_hour <= max && p.rating >= minRating
-  );
-  renderSearchResults(filteredListings);
+  const evOnly = document.getElementById('filter-ev')?.checked;
+  const rentalType = document.querySelector('input[name="rental-type"]:checked')?.value || 'all';
+
+  // Show/hide long-term sub-options
+  const ltOptions = document.getElementById('longterm-options');
+  if (ltOptions) ltOptions.style.display = rentalType === 'longterm' ? 'flex' : 'none';
+
+  const ltPeriod = document.querySelector('input[name="lt-period"]:checked')?.value || 'month';
+
+  filteredListings = PARKINGS.filter(p => {
+    if (p.price_hour < min || p.price_hour > max) return false;
+    if (p.rating < minRating) return false;
+    if (evOnly && !p.ev_charger) return false;
+    if (rentalType === 'longterm' && !p.price_month) return false;
+    return true;
+  });
+
+  const countEl = document.getElementById('results-count');
+  const ltLabels = { week: 'שבועי', twoweeks: 'דו-שבועי', month: 'חודשי', year: 'שנתי' };
+  const label = rentalType === 'longterm'
+    ? `חניות לטווח ארוך (${ltLabels[ltPeriod]}) נמצאו`
+    : 'חניות נמצאו';
+  if (countEl) countEl.textContent = `${filteredListings.length} ${label}`;
+
+  renderSearchResults(filteredListings, rentalType, ltPeriod);
 }
 
 function setMinRating(r, btn) {
@@ -129,25 +152,48 @@ function sortListings(by) {
   renderSearchResults(arr);
 }
 
-function renderSearchResults(list) {
+function renderSearchResults(list, rentalType = 'all', ltPeriod = 'month') {
   const el = document.getElementById('search-results');
   const countEl = document.getElementById('results-count');
-  if (countEl) countEl.textContent = `${list.length} חניות נמצאו`;
+  if (countEl && countEl.textContent === 'טוען...') countEl.textContent = `${list.length} חניות נמצאו`;
   if (!el) return;
   if (list.length === 0) {
     el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--gray-400)"><div style="font-size:3rem;margin-bottom:16px">🔍</div><p>לא נמצאו חניות. נסה חיפוש אחר.</p></div>';
     return;
   }
-  el.innerHTML = list.map(p => `
+
+  const isLongTerm = rentalType === 'longterm';
+
+  // Compute displayed price based on period
+  function ltPrice(p) {
+    const week = Math.round(p.price_day * 6.5);
+    const twoweeks = Math.round(p.price_day * 12);
+    switch(ltPeriod) {
+      case 'week':      return { price: week, label: 'שבוע', sub: `חיסכון לעומת יומי: ₪${p.price_day * 7 - week}` };
+      case 'twoweeks':  return { price: twoweeks, label: 'שבועיים', sub: `חיסכון לעומת יומי: ₪${p.price_day * 14 - twoweeks}` };
+      case 'year':      return { price: p.price_year || p.price_month * 11, label: 'שנה', sub: `חיסכון: ₪${Math.round(p.price_month * 12 - (p.price_year || p.price_month * 11))}` };
+      default:          return { price: p.price_month, label: 'חודש', sub: `שנתי: ₪${(p.price_year || p.price_month * 11).toLocaleString()}` };
+    }
+  }
+
+  el.innerHTML = list.map(p => {
+    const lt = ltPrice(p);
+    return `
     <div class="listing-card-horizontal" onclick="openDetail(${p.id})">
       <div class="listing-card-h-img">
         ${p.emoji}
         <div class="listing-badge" style="position:absolute;top:10px;right:10px">${p.type}</div>
+        ${p.ev_charger ? '<div class="ev-badge" style="position:absolute;bottom:10px;right:10px">⚡ EV</div>' : ''}
       </div>
       <div class="listing-card-h-body">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
           <div class="listing-title">${p.title}</div>
-          <div class="listing-price">₪${p.price_hour}<span>/שעה</span></div>
+          <div class="listing-price">
+            ${isLongTerm
+              ? `₪${lt.price.toLocaleString()}<span>/${lt.label}</span>`
+              : `₪${p.price_hour}<span>/שעה</span>`
+            }
+          </div>
         </div>
         <div class="listing-location">📍 ${p.address}</div>
         <div class="listing-rating" style="margin:8px 0">
@@ -155,17 +201,22 @@ function renderSearchResults(list) {
           <span style="font-size:.82rem;color:var(--gray-600)">${p.rating} · ${p.reviews_count} ביקורות</span>
         </div>
         <div class="listing-tags">
-          ${p.tags.map(t => `<span class="listing-tag">${t}</span>`).join('')}
+          ${p.tags.map(t => `<span class="listing-tag">${t === 'טעינת חשמל' ? '⚡ ' + t : t}</span>`).join('')}
+          ${p.ev_charger ? '<span class="listing-tag ev-tag">⚡ עמדת טעינה</span>' : ''}
         </div>
         <div class="listing-card-h-footer">
-          <div style="font-size:.85rem;color:var(--gray-400)">📅 יום: ₪${p.price_day} · 🗓️ חודשי: ₪${p.price_month}</div>
+          <div style="font-size:.85rem;color:var(--gray-400)">
+            ${isLongTerm
+              ? `💰 ${lt.sub}`
+              : `📅 יום: ₪${p.price_day} · 🗓️ חודשי: ₪${p.price_month}`
+            }
+          </div>
           <button class="btn-view">הזמן</button>
         </div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 
-  // Map pins
   renderMapPins(list);
 }
 
@@ -183,19 +234,36 @@ function renderMapPins(list) {
   const pinsEl = document.getElementById('map-pins');
   const sideList = document.getElementById('map-side-list');
   if (!pinsEl) return;
+
+  // Render host avatar circles — click goes straight to detail
   pinsEl.innerHTML = list.map(p => `
-    <div class="map-pin" style="top:${p.lat_pct}%;right:${p.lng_pct}%" onclick="openDetail(${p.id})">
-      ₪${p.price_hour}
+    <div class="map-host-pin" style="top:${p.lat_pct}%;right:${p.lng_pct}%"
+         onclick="openDetail(${p.id})"
+         title="${p.title} · ₪${p.price_hour}/שעה">
+      <div class="map-host-avatar" style="background:${p.host.avatar}">
+        ${p.host.letter}
+      </div>
+      <div class="map-host-tooltip">
+        <strong>${p.title}</strong>
+        <span>₪${p.price_hour}/שעה · ★${p.rating}</span>
+        ${p.ev_charger ? '<span class="map-ev-badge">⚡ EV</span>' : ''}
+      </div>
+      <div class="map-host-price">₪${p.price_hour}</div>
     </div>
   `).join('');
+
   if (sideList) {
     sideList.innerHTML = list.map(p => `
-      <div class="listing-card" onclick="openDetail(${p.id})" style="margin:0">
-        <div class="listing-img" style="height:120px"><div class="listing-img-bg">${p.emoji}</div></div>
-        <div class="listing-body" style="padding:12px">
-          <div class="listing-title" style="font-size:.9rem">${p.title}</div>
-          <div class="listing-location" style="font-size:.8rem">📍 ${p.city}</div>
-          <div class="listing-price" style="font-size:1rem;margin-top:8px">₪${p.price_hour}<span>/שעה</span></div>
+      <div class="map-side-card" onclick="openDetail(${p.id})">
+        <div class="map-side-emoji">${p.emoji}</div>
+        <div class="map-side-info">
+          <div class="map-side-title">${p.title}</div>
+          <div class="map-side-loc">📍 ${p.city}</div>
+          <div class="map-side-meta">
+            <span class="map-side-price">₪${p.price_hour}/שעה</span>
+            <span class="map-side-rating">★${p.rating}</span>
+            ${p.ev_charger ? '<span class="map-ev-badge">⚡</span>' : ''}
+          </div>
         </div>
       </div>
     `).join('');
@@ -245,6 +313,20 @@ function openDetail(id) {
           <div class="amenities-grid">
             ${p.amenities.map(a => `<div class="amenity-item">${a}</div>`).join('')}
           </div>
+          ${p.ev_charger ? `
+          <div class="ev-charger-card">
+            <div class="ev-charger-icon">⚡</div>
+            <div class="ev-charger-info">
+              <div class="ev-charger-title">עמדת טעינת רכב חשמלי</div>
+              <div class="ev-charger-details">
+                <span class="ev-detail-chip">${p.ev_charger.type}</span>
+                <span class="ev-detail-chip">${p.ev_charger.speed_kw} kW</span>
+                <span class="ev-detail-chip">${p.ev_charger.price_per_kwh > 0 ? '₪' + p.ev_charger.price_per_kwh + '/kWh' : 'טעינה כלולה'}</span>
+              </div>
+              <div class="ev-charger-note">זמן טעינה משוער: ${Math.round(60 / p.ev_charger.speed_kw * 40)} דקות ל-40kWh</div>
+            </div>
+          </div>
+          ` : ''}
         </div>
 
         <div class="detail-section">
@@ -279,6 +361,52 @@ function openDetail(id) {
         </div>
 
         <div class="detail-section">
+          <h3>🛡️ ביטוח וכיסוי</h3>
+          <div class="insurance-card">
+            <div class="insurance-header">
+              <div class="insurance-shield">🛡️</div>
+              <div>
+                <div class="insurance-title">כיסוי ביטוחי מלא — כולל בכל הזמנה</div>
+                <div class="insurance-sub">מופעל אוטומטית · ללא תוספת תשלום</div>
+              </div>
+            </div>
+            <div class="insurance-grid">
+              <div class="insurance-item">
+                <span class="ins-icon">🚗</span>
+                <div>
+                  <strong>נזקי רכב</strong>
+                  <p>כיסוי עד ₪50,000 לנזק ישיר לרכב בזמן חניה</p>
+                </div>
+              </div>
+              <div class="insurance-item">
+                <span class="ins-icon">🔒</span>
+                <div>
+                  <strong>גניבה ופריצה</strong>
+                  <p>כיסוי חלקי לנזקי פריצה לרכב במהלך ההזמנה</p>
+                </div>
+              </div>
+              <div class="insurance-item">
+                <span class="ins-icon">⚖️</span>
+                <div>
+                  <strong>אחריות כלפי צד שלישי</strong>
+                  <p>הגנה משפטית בסכסוכים הנוגעים להזמנה</p>
+                </div>
+              </div>
+              <div class="insurance-item">
+                <span class="ins-icon">📞</span>
+                <div>
+                  <strong>תמיכה 24/7</strong>
+                  <p>קו חירום לדיווח על נזק — תוך שעה</p>
+                </div>
+              </div>
+            </div>
+            <div class="insurance-note">
+              לדיווח על נזק: <strong>*6060</strong> או דרך האפליקציה תוך 24 שעות מסיום ההזמנה.
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
           <h3>מדיניות ביטול</h3>
           <p style="color:var(--gray-600);line-height:1.8">ביטול עד 24 שעות לפני ההזמנה — החזר מלא. ביטול בפחות מ-24 שעות — החזר 50%. ביטול לאחר תחילת ההזמנה — ללא החזר.</p>
         </div>
@@ -286,10 +414,19 @@ function openDetail(id) {
 
       <div class="detail-sidebar">
         <div class="booking-card" id="booking-card">
-          <div class="booking-price">₪${p.price_hour} <span>לשעה</span></div>
+          <div class="booking-price" id="booking-price-display">₪${p.price_hour} <span>לשעה</span></div>
           <div class="booking-rating">★ ${p.rating} · ${p.reviews_count} ביקורות</div>
 
-          <div class="booking-form">
+          <!-- Booking type tabs -->
+          <div class="booking-type-tabs">
+            <button class="bt-tab active" id="btab-hourly" onclick="setBookingType('hourly',this)">שעתי</button>
+            <button class="bt-tab" id="btab-daily" onclick="setBookingType('daily',this)">יומי</button>
+            <button class="bt-tab" id="btab-monthly" onclick="setBookingType('monthly',this)">חודשי</button>
+            <button class="bt-tab" id="btab-yearly" onclick="setBookingType('yearly',this)">שנתי</button>
+          </div>
+
+          <!-- Hourly form -->
+          <div id="bform-hourly" class="booking-type-form active">
             <div class="booking-field">
               <label>תאריך ושעת כניסה</label>
               <input type="datetime-local" id="book-start" onchange="calcTotal()" />
@@ -300,10 +437,63 @@ function openDetail(id) {
             </div>
           </div>
 
+          <!-- Daily form -->
+          <div id="bform-daily" class="booking-type-form">
+            <div class="booking-field">
+              <label>יום כניסה</label>
+              <input type="date" id="book-start-day" onchange="calcTotal()" />
+            </div>
+            <div class="booking-field">
+              <label>מספר ימים</label>
+              <select id="book-days" onchange="calcTotal()">
+                <option value="1">יום 1</option>
+                <option value="2">2 ימים</option>
+                <option value="3">3 ימים</option>
+                <option value="7" selected>שבוע</option>
+                <option value="14">שבועיים</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Monthly form -->
+          <div id="bform-monthly" class="booking-type-form">
+            <div class="booking-field">
+              <label>תאריך התחלה</label>
+              <input type="date" id="book-start-month" onchange="calcTotal()" />
+            </div>
+            <div class="booking-field">
+              <label>מספר חודשים</label>
+              <select id="book-months" onchange="calcTotal()">
+                <option value="1">חודש 1</option>
+                <option value="3" selected>3 חודשים</option>
+                <option value="6">6 חודשים</option>
+                <option value="12">שנה (12 חודשים)</option>
+              </select>
+            </div>
+            <div class="longterm-saving" id="monthly-saving"></div>
+          </div>
+
+          <!-- Yearly form -->
+          <div id="bform-yearly" class="booking-type-form">
+            <div class="booking-field">
+              <label>תאריך התחלה</label>
+              <input type="date" id="book-start-year" onchange="calcTotal()" />
+            </div>
+            <div class="booking-field">
+              <label>מספר שנים</label>
+              <select id="book-years" onchange="calcTotal()">
+                <option value="1" selected>שנה</option>
+                <option value="2">2 שנים</option>
+                <option value="3">3 שנים</option>
+              </select>
+            </div>
+            <div class="longterm-saving" id="yearly-saving"></div>
+          </div>
+
           <div class="booking-summary" id="booking-summary">
-            <div class="bs-row"><span>מחיר לשעה</span><span>₪${p.price_hour}</span></div>
-            <div class="bs-row"><span>מספר שעות</span><span id="bs-hours">—</span></div>
-            <div class="bs-row"><span>עמלת שירות</span><span id="bs-fee">—</span></div>
+            <div class="bs-row"><span id="bs-rate-label">מחיר לשעה</span><span id="bs-rate">₪${p.price_hour}</span></div>
+            <div class="bs-row"><span id="bs-qty-label">מספר שעות</span><span id="bs-hours">—</span></div>
+            <div class="bs-row"><span>עמלת שירות (15%)</span><span id="bs-fee">—</span></div>
             <div class="bs-row total"><span>סה"כ לתשלום</span><span id="bs-total">—</span></div>
           </div>
 
@@ -322,48 +512,165 @@ function openDetail(id) {
   `;
 
   // Set default booking times
+  bookingType = 'hourly';
   const now = new Date();
   const end = new Date(now.getTime() + 7200000);
   const startEl = document.getElementById('book-start');
   const endEl = document.getElementById('book-end');
   if (startEl) startEl.value = now.toISOString().slice(0,16);
   if (endEl) endEl.value = end.toISOString().slice(0,16);
-  calcTotal();
 
+  const today = now.toISOString().slice(0,10);
+  const smEl = document.getElementById('book-start-month');
+  const syEl = document.getElementById('book-start-year');
+  const sdEl = document.getElementById('book-start-day');
+  if (smEl) smEl.value = today;
+  if (syEl) syEl.value = today;
+  if (sdEl) sdEl.value = today;
+
+  calcTotal();
   showPage('detail');
 }
 
+function setBookingType(type, btn) {
+  bookingType = type;
+  document.querySelectorAll('.bt-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.booking-type-form').forEach(f => f.classList.remove('active'));
+  const form = document.getElementById('bform-' + type);
+  if (form) form.classList.add('active');
+
+  const priceDisplay = document.getElementById('booking-price-display');
+  const p = currentParking;
+  if (!p || !priceDisplay) return;
+
+  if (type === 'hourly') priceDisplay.innerHTML = `₪${p.price_hour} <span>לשעה</span>`;
+  else if (type === 'daily') priceDisplay.innerHTML = `₪${p.price_day} <span>ליום</span>`;
+  else if (type === 'monthly') priceDisplay.innerHTML = `₪${p.price_month} <span>לחודש</span>`;
+  else if (type === 'yearly') priceDisplay.innerHTML = `₪${p.price_year?.toLocaleString() || '—'} <span>לשנה</span>`;
+
+  calcTotal();
+}
+
 function calcTotal() {
-  const start = new Date(document.getElementById('book-start')?.value);
-  const end = new Date(document.getElementById('book-end')?.value);
-  if (!start || !end || isNaN(start) || isNaN(end) || end <= start) return;
-  const hours = Math.max(1, Math.ceil((end - start) / 3600000));
-  const rate = currentParking?.price_hour || 15;
-  const subtotal = hours * rate;
+  const p = currentParking;
+  if (!p) return;
+
+  let subtotal = 0;
+  let qtyText = '—';
+  let rateText = '—';
+  let rateLabel = 'מחיר';
+  let qtyLabel = 'כמות';
+
+  if (bookingType === 'hourly') {
+    const start = new Date(document.getElementById('book-start')?.value);
+    const end = new Date(document.getElementById('book-end')?.value);
+    if (!start || !end || isNaN(start) || isNaN(end) || end <= start) return;
+    const hours = Math.max(1, Math.ceil((end - start) / 3600000));
+    subtotal = hours * p.price_hour;
+    qtyText = hours + ' שעות';
+    rateText = '₪' + p.price_hour;
+    rateLabel = 'מחיר לשעה';
+    qtyLabel = 'מספר שעות';
+
+  } else if (bookingType === 'daily') {
+    const days = parseInt(document.getElementById('book-days')?.value || 7);
+    subtotal = days * p.price_day;
+    qtyText = days + ' ימים';
+    rateText = '₪' + p.price_day;
+    rateLabel = 'מחיר ליום';
+    qtyLabel = 'מספר ימים';
+
+  } else if (bookingType === 'monthly') {
+    const months = parseInt(document.getElementById('book-months')?.value || 3);
+    subtotal = months * p.price_month;
+    qtyText = months + ' חודשים';
+    rateText = '₪' + p.price_month;
+    rateLabel = 'מחיר לחודש';
+    qtyLabel = 'מספר חודשים';
+    const saving = document.getElementById('monthly-saving');
+    if (saving && months >= 3) {
+      const discount = months >= 12 ? 10 : months >= 6 ? 5 : months >= 3 ? 3 : 0;
+      if (discount > 0) {
+        const saved = Math.round(subtotal * discount / 100);
+        saving.innerHTML = `🎉 חיסכון של ${discount}% על מנוי ארוך — חוסך ₪${saved}`;
+        subtotal = subtotal - saved;
+      } else { saving.innerHTML = ''; }
+    } else if (saving) { saving.innerHTML = ''; }
+
+  } else if (bookingType === 'yearly') {
+    const years = parseInt(document.getElementById('book-years')?.value || 1);
+    const priceYear = p.price_year || p.price_month * 11;
+    subtotal = years * priceYear;
+    qtyText = years + (years === 1 ? ' שנה' : ' שנים');
+    rateText = '₪' + priceYear.toLocaleString();
+    rateLabel = 'מחיר לשנה';
+    qtyLabel = 'מספר שנים';
+    const saving = document.getElementById('yearly-saving');
+    if (saving) {
+      const monthlyEquiv = p.price_month * 12 * years;
+      const saved = monthlyEquiv - subtotal;
+      saving.innerHTML = `🎉 חיסכון של ₪${saved.toLocaleString()} לעומת תשלום חודשי!`;
+    }
+  }
+
   const fee = Math.round(subtotal * 0.15);
   const total = subtotal + fee;
-  document.getElementById('bs-hours').textContent = hours + ' שעות';
-  document.getElementById('bs-fee').textContent = '₪' + fee;
-  document.getElementById('bs-total').textContent = '₪' + total;
+
+  const rateEl = document.getElementById('bs-rate');
+  const rateLabelEl = document.getElementById('bs-rate-label');
+  const qtyEl = document.getElementById('bs-hours');
+  const qtyLabelEl = document.getElementById('bs-qty-label');
+  if (rateEl) rateEl.textContent = rateText;
+  if (rateLabelEl) rateLabelEl.textContent = rateLabel;
+  if (qtyEl) qtyEl.textContent = qtyText;
+  if (qtyLabelEl) qtyLabelEl.textContent = qtyLabel;
+  document.getElementById('bs-fee').textContent = '₪' + fee.toLocaleString();
+  document.getElementById('bs-total').textContent = '₪' + total.toLocaleString();
 }
 
 // ===== BOOKING SHEET =====
 function openBookingSheet() {
   const p = currentParking;
   if (!p) return;
-  const start = document.getElementById('book-start')?.value;
-  const end = document.getElementById('book-end')?.value;
-  const hours = start && end ? Math.max(1, Math.ceil((new Date(end) - new Date(start)) / 3600000)) : 2;
-  const total = hours * p.price_hour + Math.round(hours * p.price_hour * 0.15);
+
+  let subtotal = 0, summaryLine = '', typeLabel = '';
+  if (bookingType === 'hourly') {
+    const start = document.getElementById('book-start')?.value;
+    const end = document.getElementById('book-end')?.value;
+    const hours = start && end ? Math.max(1, Math.ceil((new Date(end) - new Date(start)) / 3600000)) : 2;
+    subtotal = hours * p.price_hour;
+    summaryLine = `${hours} שעות × ₪${p.price_hour}`;
+    typeLabel = 'שעתי';
+  } else if (bookingType === 'daily') {
+    const days = parseInt(document.getElementById('book-days')?.value || 7);
+    subtotal = days * p.price_day;
+    summaryLine = `${days} ימים × ₪${p.price_day}`;
+    typeLabel = 'יומי';
+  } else if (bookingType === 'monthly') {
+    const months = parseInt(document.getElementById('book-months')?.value || 3);
+    const discount = months >= 12 ? 10 : months >= 6 ? 5 : months >= 3 ? 3 : 0;
+    subtotal = Math.round(months * p.price_month * (1 - discount / 100));
+    summaryLine = `${months} חודשים × ₪${p.price_month}${discount ? ` (${discount}% הנחה)` : ''}`;
+    typeLabel = 'חודשי';
+  } else if (bookingType === 'yearly') {
+    const years = parseInt(document.getElementById('book-years')?.value || 1);
+    const priceYear = p.price_year || p.price_month * 11;
+    subtotal = years * priceYear;
+    summaryLine = `${years} ${years === 1 ? 'שנה' : 'שנים'} × ₪${priceYear.toLocaleString()}`;
+    typeLabel = 'שנתי';
+  }
+
+  const total = subtotal + Math.round(subtotal * 0.15);
 
   document.getElementById('booking-sheet-content').innerHTML = `
-    <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:20px">אישור הזמנה</h2>
+    <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:20px">אישור הזמנה · ${typeLabel}</h2>
     <div style="display:flex;gap:16px;align-items:center;background:var(--gray-50);border-radius:14px;padding:16px;margin-bottom:24px">
       <div style="font-size:2.5rem">${p.emoji}</div>
       <div>
         <div style="font-weight:700;font-size:1rem">${p.title}</div>
         <div style="font-size:.85rem;color:var(--gray-600)">📍 ${p.address}</div>
-        <div style="font-size:.85rem;color:var(--pink);font-weight:700;margin-top:4px">₪${total} לתשלום</div>
+        <div style="font-size:.85rem;color:var(--pink);font-weight:700;margin-top:4px">₪${total.toLocaleString()} לתשלום</div>
       </div>
     </div>
 
@@ -378,14 +685,13 @@ function openBookingSheet() {
     </div>
 
     <div style="background:var(--gray-50);border-radius:12px;padding:16px;margin-bottom:20px">
-      <div class="bs-row"><span>שעות</span><span>${hours}</span></div>
-      <div class="bs-row"><span>מחיר לשעה</span><span>₪${p.price_hour}</span></div>
-      <div class="bs-row"><span>עמלת שירות (15%)</span><span>₪${Math.round(hours * p.price_hour * 0.15)}</span></div>
-      <div class="bs-row total"><span><strong>סה"כ</strong></span><span><strong>₪${total}</strong></span></div>
+      <div class="bs-row"><span>פירוט</span><span style="font-size:.82rem">${summaryLine}</span></div>
+      <div class="bs-row"><span>עמלת שירות (15%)</span><span>₪${Math.round(subtotal * 0.15).toLocaleString()}</span></div>
+      <div class="bs-row total"><span><strong>סה"כ</strong></span><span><strong>₪${total.toLocaleString()}</strong></span></div>
     </div>
 
     <button class="btn-book" onclick="confirmBooking()">
-      🔒 אשר תשלום ₪${total}
+      🔒 אשר תשלום ₪${total.toLocaleString()}
     </button>
     <p style="text-align:center;font-size:.78rem;color:var(--gray-400);margin-top:12px">
       🔒 מאובטח ע"י Stripe · לא נשמר מידע כרטיס
@@ -423,6 +729,12 @@ function confirmBooking() {
       </div>
     `;
   }, 300);
+}
+
+// ===== EV FIELDS TOGGLE =====
+function toggleEVFields(checkbox) {
+  const fields = document.getElementById('ev-fields');
+  if (fields) fields.style.display = checkbox.checked ? 'flex' : 'none';
 }
 
 // ===== HOST FORM =====

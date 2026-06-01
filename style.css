@@ -788,6 +788,201 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--pink); outl
 .booking-sheet.open { display: block; }
 .booking-sheet-handle { width: 40px; height: 4px; background: var(--gray-200); border-radius: 4px; margin: 0 auto 20px; }
 
+/* ===== EV BADGE on cards ===== */
+.ev-badge {
+  position: absolute; bottom: 10px; left: 10px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white; padding: 4px 10px; border-radius: 100px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+/* ===== EV CHARGER CARD in detail ===== */
+.ev-charger-card {
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1.5px solid #86efac; border-radius: 14px;
+  padding: 18px 20px; margin-top: 16px;
+}
+.ev-charger-icon { font-size: 2rem; flex-shrink: 0; }
+.ev-charger-title { font-weight: 700; font-size: .95rem; margin-bottom: 8px; color: #14532d; }
+.ev-charger-details { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.ev-detail-chip {
+  background: #16a34a; color: white;
+  padding: 3px 10px; border-radius: 100px; font-size: .75rem; font-weight: 600;
+}
+.ev-charger-note { font-size: .8rem; color: #166534; }
+
+/* ===== EV HOST FORM FIELDS ===== */
+.ev-fields {
+  flex-direction: column; gap: 12px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1.5px solid #86efac; border-radius: 14px; padding: 20px;
+}
+.ev-host-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.ev-host-field { display: flex; flex-direction: column; gap: 6px; }
+.ev-sub-label { font-size: .78rem; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: .4px; }
+.ev-host-field input, .ev-host-field select {
+  padding: 10px 12px; border: 1.5px solid #86efac; border-radius: 10px;
+  font-size: .9rem; background: white;
+}
+
+/* ===== BOOKING TYPE TABS ===== */
+.booking-type-tabs {
+  display: flex; gap: 4px; background: var(--gray-100);
+  border-radius: 12px; padding: 4px; margin-bottom: 16px;
+}
+.bt-tab {
+  flex: 1; padding: 8px 6px; border-radius: 8px; background: none;
+  font-size: .82rem; font-weight: 600; color: var(--gray-600);
+  transition: all var(--transition); white-space: nowrap;
+}
+.bt-tab.active { background: white; color: var(--pink); box-shadow: var(--shadow-sm); }
+.bt-tab:hover:not(.active) { color: var(--pink); }
+
+/* ===== BOOKING TYPE FORM VISIBILITY ===== */
+.booking-type-form { display: none; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+.booking-type-form.active { display: flex; }
+
+/* ===== LONG TERM SAVING BANNER ===== */
+.longterm-saving {
+  background: linear-gradient(135deg, #fef9c3, #fef08a);
+  border: 1.5px solid #fde047; border-radius: 10px;
+  padding: 10px 14px; font-size: .82rem; font-weight: 600; color: #713f12;
+  min-height: 0; margin-top: 4px;
+}
+.longterm-saving:empty { display: none; }
+
+/* ===== MAP HOST CIRCLES ===== */
+.map-host-pin {
+  position: absolute; transform: translate(50%, -50%);
+  cursor: pointer; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.map-host-pin:hover { z-index: 20; }
+.map-host-pin:hover .map-host-tooltip { opacity: 1; transform: translateY(0) translateX(50%); pointer-events: all; }
+
+.map-host-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 1.1rem;
+  border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  transition: transform .2s, box-shadow .2s;
+  animation: pinBounce .4s ease;
+}
+.map-host-pin:hover .map-host-avatar { transform: scale(1.15); box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+
+.map-host-price {
+  background: var(--pink); color: white;
+  padding: 2px 8px; border-radius: 10px;
+  font-size: .72rem; font-weight: 700;
+  box-shadow: 0 2px 6px rgba(233,30,140,.4);
+  white-space: nowrap;
+}
+
+.map-host-tooltip {
+  position: absolute; bottom: calc(100% + 8px); right: 50%; transform: translateY(4px) translateX(50%);
+  background: #1a1a2e; color: white; border-radius: 12px; padding: 10px 14px;
+  white-space: nowrap; opacity: 0; pointer-events: none; transition: all .2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  display: flex; flex-direction: column; gap: 4px; min-width: 160px;
+}
+.map-host-tooltip::after {
+  content: ''; position: absolute; top: 100%; right: 50%; transform: translateX(50%);
+  border: 6px solid transparent; border-top-color: #1a1a2e;
+}
+.map-host-tooltip strong { font-size: .88rem; }
+.map-host-tooltip span { font-size: .78rem; opacity: .8; }
+.map-ev-badge {
+  display: inline-block; background: #4ade80; color: #14532d;
+  padding: 1px 6px; border-radius: 6px; font-size: .7rem; font-weight: 700;
+}
+
+/* MAP SIDE CARDS */
+.map-side-card {
+  background: white; border-radius: 12px; padding: 12px;
+  display: flex; gap: 12px; cursor: pointer; border: 1px solid var(--gray-200);
+  transition: all .2s; flex-shrink: 0;
+}
+.map-side-card:hover { border-color: var(--pink); box-shadow: var(--shadow); transform: translateX(-2px); }
+.map-side-emoji { font-size: 2rem; flex-shrink: 0; width: 48px; height: 48px; background: var(--gray-100); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.map-side-info { flex: 1; min-width: 0; }
+.map-side-title { font-size: .88rem; font-weight: 700; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-side-loc { font-size: .78rem; color: var(--gray-400); margin-bottom: 6px; }
+.map-side-meta { display: flex; gap: 8px; align-items: center; }
+.map-side-price { font-size: .88rem; font-weight: 800; color: var(--pink); }
+.map-side-rating { font-size: .78rem; color: #f59e0b; font-weight: 700; }
+
+/* ===== INSURANCE CARD ===== */
+.insurance-card {
+  background: linear-gradient(135deg, #eff6ff, #f0f9ff);
+  border: 1.5px solid #bfdbfe; border-radius: 16px; padding: 24px;
+  overflow: hidden; position: relative;
+}
+.insurance-card::before {
+  content: '🛡️'; position: absolute; top: -10px; left: -10px;
+  font-size: 5rem; opacity: .06;
+}
+.insurance-header { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+.insurance-shield { font-size: 2rem; flex-shrink: 0; }
+.insurance-title { font-weight: 800; font-size: 1rem; color: #1e40af; margin-bottom: 4px; }
+.insurance-sub { font-size: .82rem; color: #3b82f6; }
+.insurance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.insurance-item { display: flex; gap: 10px; align-items: flex-start; }
+.ins-icon { font-size: 1.3rem; flex-shrink: 0; }
+.insurance-item strong { display: block; font-size: .88rem; color: #1e293b; margin-bottom: 2px; }
+.insurance-item p { font-size: .8rem; color: var(--gray-600); line-height: 1.5; margin: 0; }
+.insurance-note {
+  background: #dbeafe; border-radius: 10px; padding: 12px 14px;
+  font-size: .83rem; color: #1e40af; border-right: 3px solid #3b82f6;
+}
+
+/* ===== EV HOST FORM ===== */
+.ev-toggle-label {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 12px 16px; border: 1.5px solid var(--gray-200); border-radius: 12px;
+  margin-bottom: 12px; transition: all .2s;
+}
+.ev-toggle-label:hover { border-color: #4ade80; background: #f0fdf4; }
+.ev-toggle-label input { width: 18px; height: 18px; accent-color: #16a34a; }
+.ev-toggle-text { font-weight: 600; font-size: .95rem; }
+
+.ev-fields-group { border: 1.5px solid #86efac; border-radius: 14px; padding: 20px; background: #f0fdf4; }
+.ev-fields-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
+.ev-info-note {
+  background: #dcfce7; border-radius: 10px; padding: 12px 14px;
+  font-size: .83rem; color: #15803d; border-right: 3px solid #4ade80;
+}
+
+/* ===== FILTER EXTRAS ===== */
+.rental-type-btns { display: flex; gap: 8px; margin-bottom: 10px; }
+.rental-type-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 10px 8px; border: 1.5px solid var(--gray-200);
+  border-radius: 10px; cursor: pointer; font-size: .83rem; font-weight: 600;
+  color: var(--gray-600); transition: all .2s; text-align: center;
+}
+.rental-type-btn input { display: none; }
+.rental-type-btn:has(input:checked) { border-color: var(--pink); background: var(--pink-light); color: var(--pink); }
+
+.longterm-options { display: flex; flex-direction: column; gap: 6px; padding: 10px; background: var(--gray-50); border-radius: 10px; }
+
+.ev-filter-toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: 10px;
+  font-size: .88rem; color: var(--gray-600); transition: all .2s;
+}
+.ev-filter-toggle:hover { border-color: #4ade80; }
+.ev-filter-toggle input { width: 16px; height: 16px; accent-color: #16a34a; }
+.ev-filter-toggle:has(input:checked) { border-color: #4ade80; background: #f0fdf4; color: #15803d; }
+
+.ev-tag { background: #dcfce7 !important; color: #15803d !important; border: 1px solid #86efac; }
+.ev-badge {
+  position: absolute; bottom: 10px; right: 10px;
+  background: #16a34a; color: white;
+  padding: 3px 10px; border-radius: 100px; font-size: .72rem; font-weight: 700;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
   .nav-links, .nav-actions { display: none; }
