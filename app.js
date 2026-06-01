@@ -40,34 +40,68 @@ function formatAuthPhone(inp) {
   inp.value = v;
 }
 
-function submitAuth(method) {
+// Firebase auth state
+let fbConfirmationResult = null;
+let fbRecaptchaVerifier = null;
+
+function initRecaptcha() {
+  if (fbRecaptchaVerifier) return;
+  fbRecaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+    size: 'invisible',
+    callback: () => {}
+  });
+}
+
+async function submitAuth(method) {
   if (method === 'google') { fakeGoogleLogin(); return; }
-  if (method === 'apple') { fakeAppleLogin(); return; }
+  if (method === 'apple')  { fakeAppleLogin();  return; }
+
   if (method === 'phone') {
-    const phone = document.getElementById('auth-phone').value;
-    if (!phone || phone.replace(/\D/g,'').length < 9) {
-      shakeInput('auth-phone'); return;
+    const raw = document.getElementById('auth-phone').value.replace(/\D/g,'');
+    if (raw.length < 9) { shakeInput('auth-phone'); return; }
+
+    // Convert to international format +972
+    let intl = raw.startsWith('0') ? '+972' + raw.slice(1) : '+972' + raw;
+    userPhone = document.getElementById('auth-phone').value;
+
+    const btn = document.querySelector('#auth-form-phone .auth-submit-btn');
+    btn.textContent = '📤 שולח קוד...';
+    btn.disabled = true;
+
+    try {
+      initRecaptcha();
+      fbConfirmationResult = await firebase.auth().signInWithPhoneNumber(intl, fbRecaptchaVerifier);
+      showOtpStep(`שלחנו SMS עם קוד ל-${userPhone} 📱`);
+    } catch (err) {
+      btn.textContent = 'המשך עם SMS ←';
+      btn.disabled = false;
+      fbRecaptchaVerifier = null; // reset for retry
+      if (err.code === 'auth/invalid-phone-number') {
+        showToast('מספר טלפון לא תקין', 'error');
+      } else if (err.code === 'auth/too-many-requests') {
+        showToast('יותר מדי ניסיונות — נסה מאוחר יותר', 'error');
+      } else {
+        showToast('שגיאה בשליחת SMS: ' + err.message, 'error');
+      }
     }
-    userPhone = phone;
-    document.getElementById('auth-form-phone').style.display = 'none';
-    document.getElementById('auth-form-email').style.display = 'none';
-    document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
-    document.getElementById('otp-desc').textContent = `שלחנו קוד ל-${phone}`;
-    document.getElementById('auth-otp-step').style.display = 'block';
-    document.querySelector('.otp-box').focus();
+
   } else if (method === 'email') {
     const email = document.getElementById('auth-email').value;
-    if (!email || !email.includes('@')) {
-      shakeInput('auth-email'); return;
-    }
+    if (!email || !email.includes('@')) { shakeInput('auth-email'); return; }
     userEmail = email;
-    document.getElementById('auth-form-phone').style.display = 'none';
-    document.getElementById('auth-form-email').style.display = 'none';
-    document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
-    document.getElementById('otp-desc').textContent = `שלחנו קוד ל-${email}`;
-    document.getElementById('auth-otp-step').style.display = 'block';
-    document.querySelector('.otp-box').focus();
+    // Email: use link/OTP simulation (Firebase email link needs extra setup)
+    showOtpStep(`שלחנו קוד לאימייל ${email} 📧`);
+    showToast('בדמו — הכנס כל 4 ספרות', '');
   }
+}
+
+function showOtpStep(desc) {
+  document.getElementById('auth-form-phone').style.display = 'none';
+  document.getElementById('auth-form-email').style.display = 'none';
+  document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+  document.getElementById('otp-desc').textContent = desc;
+  document.getElementById('auth-otp-step').style.display = 'block';
+  document.querySelector('.otp-box').focus();
 }
 
 function shakeInput(id) {
@@ -85,32 +119,89 @@ function otpNext(inp, idx) {
   if (idx === 3 && v) verifyOtp();
 }
 
-function resendOtp() {
+async function resendOtp() {
   document.querySelectorAll('.otp-box').forEach(b => b.value = '');
   document.querySelector('.otp-box').focus();
-  showToast('קוד חדש נשלח 📱', 'success');
+  if (userPhone) {
+    fbRecaptchaVerifier = null;
+    fbConfirmationResult = null;
+    try {
+      initRecaptcha();
+      const raw = userPhone.replace(/\D/g,'');
+      const intl = raw.startsWith('0') ? '+972' + raw.slice(1) : '+972' + raw;
+      fbConfirmationResult = await firebase.auth().signInWithPhoneNumber(intl, fbRecaptchaVerifier);
+      showToast('קוד חדש נשלח 📱', 'success');
+    } catch(e) {
+      showToast('שגיאה בשליחה חוזרת', 'error');
+    }
+  } else {
+    showToast('קוד חדש נשלח 📧', 'success');
+  }
 }
 
-function verifyOtp() {
+async function verifyOtp() {
   const boxes = document.querySelectorAll('.otp-box');
   const code = Array.from(boxes).map(b => b.value).join('');
   if (code.length < 4) { showToast('הכנס 4 ספרות', 'error'); return; }
-  // Demo: any 4-digit code works
-  sessionStorage.setItem('parkit_user', userPhone || userEmail);
-  isLoggedIn = true;
-  document.getElementById('auth-screen').style.display = 'none';
-  startOnboarding();
+
+  const btn = document.querySelector('#auth-otp-step .auth-submit-btn');
+  btn.textContent = '⏳ מאמת...';
+  btn.disabled = true;
+
+  try {
+    if (fbConfirmationResult) {
+      // Real Firebase SMS verification
+      const result = await fbConfirmationResult.confirm(code);
+      const user = result.user;
+      sessionStorage.setItem('parkit_user', user.uid);
+      sessionStorage.setItem('parkit_phone', user.phoneNumber || userPhone);
+    } else {
+      // Email / demo fallback — accept any 4-digit code
+      sessionStorage.setItem('parkit_user', userEmail || 'demo');
+    }
+
+    isLoggedIn = true;
+    document.getElementById('auth-screen').style.display = 'none';
+    startOnboarding();
+
+  } catch (err) {
+    btn.textContent = 'אמת קוד ✓';
+    btn.disabled = false;
+    if (err.code === 'auth/invalid-verification-code') {
+      showToast('קוד שגוי — נסה שוב', 'error');
+      boxes.forEach(b => { b.value = ''; b.style.borderColor = '#ef4444'; });
+      boxes[0].focus();
+      setTimeout(() => boxes.forEach(b => b.style.borderColor = ''), 1500);
+    } else {
+      showToast('שגיאה: ' + err.message, 'error');
+    }
+  }
 }
 
 function fakeGoogleLogin() {
   sessionStorage.setItem('parkit_user', 'google');
+  sessionStorage.setItem('parkit_name', 'משתמש Google');
+  userName = 'משתמש Google';
+  isLoggedIn = true;
   document.getElementById('auth-screen').style.display = 'none';
   startOnboarding();
 }
 function fakeAppleLogin() {
   sessionStorage.setItem('parkit_user', 'apple');
+  sessionStorage.setItem('parkit_name', 'משתמש Apple');
+  userName = 'משתמש Apple';
+  isLoggedIn = true;
   document.getElementById('auth-screen').style.display = 'none';
   startOnboarding();
+}
+function fakeGoogleModalLogin() {
+  userName = 'משתמש Google';
+  sessionStorage.setItem('parkit_user', 'google');
+  sessionStorage.setItem('parkit_name', userName);
+  isLoggedIn = true;
+  closeModal();
+  updateNavbar();
+  showToast('ברוך הבא ל-ParkIt! 👋', 'success');
 }
 
 // ===== ONBOARDING BOT =====
@@ -1457,8 +1548,7 @@ function openModal(type) {
       <h2 class="modal-title">ברוך הבא חזרה</h2>
       <p class="modal-subtitle">התחבר לחשבון ParkIt שלך</p>
       <div class="modal-form">
-        <button class="btn-social-login">🌐 המשך עם Google</button>
-        <button class="btn-social-login">🔵 המשך עם Facebook</button>
+        <button class="btn-social-login" onclick="fakeGoogleModalLogin()">🌐 המשך עם Google</button>
         <div class="modal-divider">או</div>
         <input class="modal-input" type="email" placeholder="כתובת אימייל" />
         <input class="modal-input" type="password" placeholder="סיסמה" />
@@ -1473,7 +1563,7 @@ function openModal(type) {
       <h2 class="modal-title">הצטרף ל-ParkIt</h2>
       <p class="modal-subtitle">הרשמה חינמית · בלי כרטיס אשראי</p>
       <div class="modal-form">
-        <button class="btn-social-login">🌐 הרשמה עם Google</button>
+        <button class="btn-social-login" onclick="fakeGoogleModalLogin()">🌐 הרשמה עם Google</button>
         <div class="modal-divider">או</div>
         <div style="display:flex;gap:10px">
           <input class="modal-input" placeholder="שם פרטי" style="flex:1" />
@@ -1518,8 +1608,56 @@ function closeModal() {
 }
 
 function fakeLogin() {
+  const overlay = document.getElementById('modal-overlay');
+  const inputs = overlay.querySelectorAll('input');
+  let firstName = '', email = '', password = '';
+  inputs.forEach(inp => {
+    if (inp.placeholder === 'שם פרטי') firstName = inp.value.trim();
+    if (inp.type === 'email') email = inp.value.trim();
+    if (inp.type === 'password') password = inp.value;
+  });
+  // Validate signup form if in signup mode
+  if (firstName !== undefined && overlay.querySelector('[placeholder="שם פרטי"]')) {
+    if (!firstName) { showToast('נא להכניס שם פרטי', 'error'); return; }
+    if (!email || !email.includes('@')) { showToast('נא להכניס אימייל תקין', 'error'); return; }
+    if (!password || password.length < 8) { showToast('הסיסמה חייבת להכיל לפחות 8 תווים', 'error'); return; }
+    userName = firstName;
+  } else {
+    if (!email || !email.includes('@')) { showToast('נא להכניס אימייל תקין', 'error'); return; }
+    if (!password) { showToast('נא להכניס סיסמה', 'error'); return; }
+    userName = email.split('@')[0];
+  }
+  sessionStorage.setItem('parkit_user', email || 'user');
+  sessionStorage.setItem('parkit_name', userName);
+  isLoggedIn = true;
   closeModal();
+  updateNavbar();
   showToast('ברוך הבא ל-ParkIt! 👋', 'success');
+}
+
+function updateNavbar() {
+  const actions = document.querySelector('.nav-actions');
+  if (!actions) return;
+  if (isLoggedIn) {
+    actions.innerHTML = `
+      <span style="font-weight:600;color:var(--primary)">שלום, ${userName || 'משתמש'} 👋</span>
+      <button class="btn-ghost" onclick="logoutUser()">יציאה</button>
+    `;
+  } else {
+    actions.innerHTML = `
+      <button class="btn-ghost" onclick="openModal('login')">התחברות</button>
+      <button class="btn-primary" onclick="openModal('signup')">הצטרפות חינם</button>
+    `;
+  }
+}
+
+function logoutUser() {
+  sessionStorage.removeItem('parkit_user');
+  sessionStorage.removeItem('parkit_name');
+  isLoggedIn = false;
+  userName = '';
+  updateNavbar();
+  showToast('התנתקת בהצלחה', 'success');
 }
 
 // ===== TOAST =====

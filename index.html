@@ -61,10 +61,10 @@
     <div id="auth-otp-step" class="auth-otp-step" style="display:none">
       <p class="otp-desc" id="otp-desc">שלחנו קוד לטלפון שלך</p>
       <div class="otp-inputs">
-        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,0)" />
-        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,1)" />
-        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,2)" />
-        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,3)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,0)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,1)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,2)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,3)" />
       </div>
       <button class="auth-submit-btn" onclick="verifyOtp()">אמת קוד ✓</button>
       <button class="auth-resend-btn" onclick="resendOtp()">שלח שוב</button>
@@ -1055,9 +1055,25 @@
 </div>
 <div id="booking-overlay" class="booking-overlay" onclick="closeBooking()"></div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    apiKey: "AIzaSyC4lgkPwQWLBDPWEGComfS636oLlIJAgZY",
+    authDomain: "prkint-749da.firebaseapp.com",
+    projectId: "prkint-749da",
+    storageBucket: "prkint-749da.firebasestorage.app",
+    messagingSenderId: "789519548650",
+    appId: "1:789519548650:web:8930690887d3a86bf2d793"
+  });
+</script>
+<!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
+<!-- reCAPTCHA container (invisible) -->
+<div id="recaptcha-container"></div>
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/parkit/sw.js')
