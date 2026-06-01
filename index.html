@@ -7,6 +7,10 @@
   <meta name="description" content="ParkIt — פלטפורמת החניה הפרטית מס׳ 1 בישראל. מצא חניה או הרוויח מהחניה שלך." />
   <title>ParkIt — חניה פרטית בקלות</title>
   <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ParkIt" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -951,5 +955,12 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/parkit/sw.js')
+      .then(() => console.log('ParkIt SW registered'))
+      .catch(e => console.log('SW error:', e));
+  }
+</script>
 </body>
 </html>
