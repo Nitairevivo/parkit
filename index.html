@@ -96,34 +96,71 @@
   <div class="ob-options" id="ob-options"></div>
 </div>
 
-<!-- ========== NAVBAR ========== -->
-<nav class="navbar" id="navbar">
-  <div class="container nav-inner">
-    <a href="#" class="logo" onclick="showPage('home')">
-      <span class="logo-icon">P</span>
-      <span class="logo-text">ParkIt</span>
-    </a>
-    <div class="nav-links">
-      <a href="#" onclick="showPage('search')">חפש חניה</a>
-      <a href="#" onclick="showPage('how')">איך זה עובד</a>
-      <a href="#" onclick="showPage('host')">פרסם חניה</a>
+<!-- ========== TOPBAR (mobile header) ========== -->
+<header class="topbar" id="topbar">
+  <button class="topbar-hamburger" onclick="toggleSidebar()" aria-label="תפריט">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="#" class="topbar-logo" onclick="showPage('home')">
+    <span class="logo-icon">P</span>
+    <span class="logo-text">ParkIt</span>
+  </a>
+  <div class="topbar-actions" id="topbar-actions"></div>
+</header>
+
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+
+    <!-- Header -->
+    <div class="sidebar-header">
+      <a href="#" class="sidebar-logo" onclick="showPage('home');closeSidebar()">
+        <span class="logo-icon">P</span>
+        <span class="logo-text">ParkIt</span>
+      </a>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
     </div>
-    <div class="nav-actions">
-      <button class="btn-ghost" onclick="openModal('login')">התחברות</button>
-      <button class="btn-primary" onclick="openModal('signup')">הצטרפות חינם</button>
+
+    <!-- User Card -->
+    <div class="sidebar-user-card" id="sidebar-user-card">
+      <!-- מתעדכן ע"י JS -->
     </div>
-    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
-      <span></span><span></span><span></span>
-    </button>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" id="slink-home" href="#" onclick="sidebarNav('home')">
+        <span class="slink-icon">🏠</span><span class="slink-text">בית</span>
+      </a>
+      <a class="sidebar-link" id="slink-search" href="#" onclick="sidebarNav('search')">
+        <span class="slink-icon">🔍</span><span class="slink-text">חיפוש חניה</span>
+      </a>
+      <a class="sidebar-link" id="slink-host" href="#" onclick="sidebarNav('host')">
+        <span class="slink-icon">➕</span><span class="slink-text">פרסם חניה</span>
+      </a>
+      <a class="sidebar-link" id="slink-bookings" href="#" onclick="sidebarNav('bookings')">
+        <span class="slink-icon">📋</span><span class="slink-text">ההזמנות שלי</span>
+      </a>
+      <a class="sidebar-link" id="slink-profile" href="#" onclick="sidebarNav('profile')">
+        <span class="slink-icon">👤</span><span class="slink-text">הפרופיל שלי</span>
+      </a>
+    </nav>
+
+    <!-- Divider -->
+    <div class="sidebar-divider"></div>
+
+    <!-- Auth Footer -->
+    <div class="sidebar-auth" id="sidebar-auth">
+      <!-- מתעדכן ע"י JS -->
+    </div>
+
   </div>
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="#" onclick="showPage('search');toggleMenu()">חפש חניה</a>
-    <a href="#" onclick="showPage('how');toggleMenu()">איך זה עובד</a>
-    <a href="#" onclick="showPage('host');toggleMenu()">פרסם חניה</a>
-    <a href="#" onclick="openModal('login');toggleMenu()">התחברות</a>
-    <a href="#" class="btn-primary-mobile" onclick="openModal('signup');toggleMenu()">הצטרפות חינם</a>
-  </div>
-</nav>
+</aside>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Legacy navbar (hidden, kept for JS references) -->
+<nav class="navbar" id="navbar" style="display:none!important"></nav>
 
 <!-- ========== HOME PAGE ========== -->
 <div id="page-home" class="page active">
@@ -1019,31 +1056,31 @@
   </div>
 </div>
 
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mobile-bottom-nav" id="bottomNav">
-  <div class="mbn-inner">
-    <button class="mbn-btn active" id="mbn-home" onclick="mbnNav('home')">
-      <span class="mbn-icon">🏠</span>
-      <span class="mbn-label">בית</span>
-    </button>
-    <button class="mbn-btn" id="mbn-search" onclick="mbnNav('search')">
-      <span class="mbn-icon">🔍</span>
-      <span class="mbn-label">חפש</span>
-    </button>
-    <button class="mbn-btn" id="mbn-host" onclick="mbnNav('host')">
-      <span class="mbn-icon">➕</span>
-      <span class="mbn-label">פרסם</span>
-    </button>
-    <button class="mbn-btn" id="mbn-how" onclick="mbnNav('how')">
-      <span class="mbn-icon">❓</span>
-      <span class="mbn-label">מידע</span>
-    </button>
-    <button class="mbn-btn" id="mbn-profile" onclick="openModal('login')">
-      <span class="mbn-icon">👤</span>
-      <span class="mbn-label">פרופיל</span>
-    </button>
+<!-- ========== BOOKINGS PAGE ========== -->
+<div id="page-bookings" class="page">
+  <div class="container" style="padding:40px 20px;max-width:700px">
+    <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:8px">📋 ההזמנות שלי</h2>
+    <p style="color:var(--gray-500);margin-bottom:32px">כל ההזמנות הפעילות והעבר שלך</p>
+    <div id="bookings-list">
+      <div style="text-align:center;padding:60px 20px;background:var(--gray-50);border-radius:20px;border:2px dashed var(--gray-200)">
+        <div style="font-size:3rem;margin-bottom:16px">🅿️</div>
+        <h3 style="font-weight:700;margin-bottom:8px">עדיין אין הזמנות</h3>
+        <p style="color:var(--gray-500);margin-bottom:24px">הזמנות שתבצע יופיעו כאן</p>
+        <button class="btn-primary" style="padding:12px 28px" onclick="sidebarNav('search')">חפש חניה עכשיו</button>
+      </div>
+    </div>
   </div>
-</nav>
+</div>
+
+<!-- ========== PROFILE PAGE ========== -->
+<div id="page-profile" class="page">
+  <div class="container" style="padding:40px 20px;max-width:600px">
+    <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:32px">👤 הפרופיל שלי</h2>
+    <div id="profile-content">
+      <!-- מתעדכן ע"י JS -->
+    </div>
+  </div>
+</div>
 
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
