@@ -344,34 +344,46 @@
         <button class="search-topbar-btn" onclick="doSearchInline()">חפש</button>
       </div>
 
-      <!-- QUICK FILTERS (pill buttons) -->
+      <!-- QUICK FILTERS -->
       <div class="search-quick-filters">
-        <div class="rental-type-btns">
-          <label class="rental-type-btn">
-            <input type="radio" name="rental-type" value="all" checked onchange="filterListings()" />
-            <span>🕐 שעתי</span>
-          </label>
-          <label class="rental-type-btn">
-            <input type="radio" name="rental-type" value="longterm" onchange="filterListings()" />
-            <span>📅 טווח ארוך</span>
-          </label>
+        <!-- Categories -->
+        <div class="cat-pills" id="cat-pills">
+          <button class="cat-pill active" onclick="filterByCategory('all',this)">🅰️ הכל</button>
+          <button class="cat-pill" onclick="filterByCategory('beach',this)">🏖️ חוף ים</button>
+          <button class="cat-pill" onclick="filterByCategory('hospital',this)">🏥 בית חולים</button>
+          <button class="cat-pill" onclick="filterByCategory('mall',this)">🛍️ קניון</button>
+          <button class="cat-pill" onclick="filterByCategory('events',this)">🎭 אירועים</button>
+          <button class="cat-pill" onclick="filterByCategory('office',this)">🏢 אזור עסקים</button>
+          <button class="cat-pill" onclick="filterByCategory('restaurant',this)">🍽️ מסעדות</button>
+          <button class="cat-pill" onclick="filterByCategory('university',this)">🎓 אוניברסיטה</button>
+          <button class="cat-pill" onclick="filterByCategory('ev',this)">⚡ EV</button>
         </div>
-        <div id="longterm-options" class="longterm-options-inline" style="display:none">
-          <label class="lt-pill"><input type="radio" name="lt-period" value="week" onchange="filterListings()"><span>שבוע</span></label>
-          <label class="lt-pill"><input type="radio" name="lt-period" value="twoweeks" onchange="filterListings()"><span>שבועיים</span></label>
-          <label class="lt-pill active"><input type="radio" name="lt-period" value="month" checked onchange="filterListings()"><span>חודש</span></label>
-          <label class="lt-pill"><input type="radio" name="lt-period" value="year" onchange="filterListings()"><span>שנה</span></label>
+
+        <!-- Rental type + period -->
+        <div class="filter-row2">
+          <div class="rental-type-btns">
+            <label class="rental-type-btn">
+              <input type="radio" name="rental-type" value="all" checked onchange="filterListings()" />
+              <span>🕐 שעתי</span>
+            </label>
+            <label class="rental-type-btn">
+              <input type="radio" name="rental-type" value="longterm" onchange="filterListings()" />
+              <span>📅 טווח ארוך</span>
+            </label>
+          </div>
+          <div id="longterm-options" class="longterm-options-inline" style="display:none">
+            <label class="lt-pill"><input type="radio" name="lt-period" value="week" onchange="filterListings()"><span>שבוע</span></label>
+            <label class="lt-pill"><input type="radio" name="lt-period" value="twoweeks" onchange="filterListings()"><span>שבועיים</span></label>
+            <label class="lt-pill"><input type="radio" name="lt-period" value="month" checked onchange="filterListings()"><span>חודש</span></label>
+            <label class="lt-pill"><input type="radio" name="lt-period" value="year" onchange="filterListings()"><span>שנה</span></label>
+          </div>
+          <select class="sort-pill" onchange="sortListings(this.value)">
+            <option value="rating">★ דירוג</option>
+            <option value="price_asc">₪ מחיר עולה</option>
+            <option value="price_desc">₪ מחיר יורד</option>
+          </select>
+          <span id="results-count" class="results-count-pill">טוען...</span>
         </div>
-        <label class="ev-pill">
-          <input type="checkbox" id="filter-ev" onchange="filterListings()" />
-          <span>⚡ EV בלבד</span>
-        </label>
-        <select class="sort-pill" onchange="sortListings(this.value)">
-          <option value="rating">★ דירוג</option>
-          <option value="price_asc">₪ מחיר עולה</option>
-          <option value="price_desc">₪ מחיר יורד</option>
-        </select>
-        <span id="results-count" class="results-count-pill">טוען...</span>
       </div>
     </div>
   </div>

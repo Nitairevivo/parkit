@@ -132,6 +132,8 @@ function filterListings() {
     if (p.rating < minRating) return false;
     if (evOnly && !p.ev_charger) return false;
     if (rentalType === 'longterm' && !p.price_month) return false;
+    if (activeCategory === 'ev' && !p.ev_charger) return false;
+    if (activeCategory !== 'all' && activeCategory !== 'ev' && !(p.categories || []).includes(activeCategory)) return false;
     return true;
   });
 
@@ -143,6 +145,14 @@ function filterListings() {
   if (countEl) countEl.textContent = `${filteredListings.length} ${label}`;
 
   renderSearchResults(filteredListings, rentalType, ltPeriod);
+}
+
+let activeCategory = 'all';
+function filterByCategory(cat, btn) {
+  activeCategory = cat;
+  document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterListings();
 }
 
 function setMinRating(r, btn) {
@@ -260,9 +270,10 @@ function initLeafletMap() {
     zoomControl: false,
   });
 
-  // OpenStreetMap tiles — free, no API key
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
+  // CartoDB Positron — light gray minimal style (like Pink Park)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO',
+    subdomains: 'abcd',
     maxZoom: 19,
   }).addTo(leafletMap);
 

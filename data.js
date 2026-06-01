@@ -2,6 +2,7 @@
 const PARKINGS = [
   {
     id: 1,
+    categories: ['beach', 'restaurant'],
     title: "חניה פרטית מול הים",
     address: "הירקון 80, תל אביב",
     city: "תל אביב",
@@ -28,6 +29,7 @@ const PARKINGS = [
   },
   {
     id: 2,
+    categories: ['office', 'mall'],
     title: "חניה תת-קרקעית מקורה",
     address: "ז׳בוטינסקי 2, רמת גן",
     city: "רמת גן",
@@ -52,6 +54,7 @@ const PARKINGS = [
   },
   {
     id: 3,
+    categories: ['beach', 'restaurant', 'events'],
     title: "חניה ליד הטיילת",
     address: "הרברט סמואל 40, תל אביב",
     city: "תל אביב",
@@ -75,6 +78,7 @@ const PARKINGS = [
   },
   {
     id: 4,
+    categories: ['office', 'ev'],
     title: "חניה במגדל יוקרתי",
     address: "אבן גבירול 99, הרצליה",
     city: "הרצליה",
@@ -100,6 +104,7 @@ const PARKINGS = [
   },
   {
     id: 5,
+    categories: ['mall', 'restaurant', 'events', 'university'],
     title: "חניה במרכז ירושלים",
     address: "ממילא 5, ירושלים",
     city: "ירושלים",
@@ -123,6 +128,7 @@ const PARKINGS = [
   },
   {
     id: 6,
+    categories: ['beach', 'hospital'],
     title: "חניה ליד הים — חיפה",
     address: "שדרות בן גוריון 12, חיפה",
     city: "חיפה",
