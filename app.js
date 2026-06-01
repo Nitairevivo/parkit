@@ -1,3 +1,335 @@
+// ===== AUTH & ONBOARDING =====
+let userName = '';
+let userPhone = '';
+let userEmail = '';
+let isLoggedIn = false;
+
+function initApp() {
+  const loggedIn = sessionStorage.getItem('parkit_user');
+  if (loggedIn) {
+    isLoggedIn = true;
+    userName = sessionStorage.getItem('parkit_name') || '';
+    hideAuthScreens();
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('navbar').style.display = 'none';
+    document.getElementById('bottomNav').style.display = 'none';
+  }
+}
+
+function hideAuthScreens() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('onboarding-screen').style.display = 'none';
+  document.getElementById('navbar').style.display = '';
+  document.getElementById('bottomNav').style.display = '';
+}
+
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('atab-' + tab).classList.add('active');
+  document.getElementById('auth-form-phone').style.display = tab === 'phone' ? '' : 'none';
+  document.getElementById('auth-form-email').style.display = tab === 'email' ? '' : 'none';
+  document.getElementById('auth-otp-step').style.display = 'none';
+}
+
+function formatAuthPhone(inp) {
+  let v = inp.value.replace(/\D/g, '');
+  if (v.startsWith('972')) v = '0' + v.slice(3);
+  if (v.length > 3 && v.length <= 7) v = v.slice(0,3) + '-' + v.slice(3);
+  else if (v.length > 7) v = v.slice(0,3) + '-' + v.slice(3,10);
+  inp.value = v;
+}
+
+function submitAuth(method) {
+  if (method === 'google') { fakeGoogleLogin(); return; }
+  if (method === 'apple') { fakeAppleLogin(); return; }
+  if (method === 'phone') {
+    const phone = document.getElementById('auth-phone').value;
+    if (!phone || phone.replace(/\D/g,'').length < 9) {
+      shakeInput('auth-phone'); return;
+    }
+    userPhone = phone;
+    document.getElementById('auth-form-phone').style.display = 'none';
+    document.getElementById('auth-form-email').style.display = 'none';
+    document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+    document.getElementById('otp-desc').textContent = `שלחנו קוד ל-${phone}`;
+    document.getElementById('auth-otp-step').style.display = 'block';
+    document.querySelector('.otp-box').focus();
+  } else if (method === 'email') {
+    const email = document.getElementById('auth-email').value;
+    if (!email || !email.includes('@')) {
+      shakeInput('auth-email'); return;
+    }
+    userEmail = email;
+    document.getElementById('auth-form-phone').style.display = 'none';
+    document.getElementById('auth-form-email').style.display = 'none';
+    document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+    document.getElementById('otp-desc').textContent = `שלחנו קוד ל-${email}`;
+    document.getElementById('auth-otp-step').style.display = 'block';
+    document.querySelector('.otp-box').focus();
+  }
+}
+
+function shakeInput(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.animation = 'shake .4s ease';
+  setTimeout(() => el.style.animation = '', 400);
+}
+
+function otpNext(inp, idx) {
+  const boxes = document.querySelectorAll('.otp-box');
+  const v = inp.value.replace(/\D/g,'').slice(-1);
+  inp.value = v;
+  if (v && idx < 3) boxes[idx + 1].focus();
+  if (idx === 3 && v) verifyOtp();
+}
+
+function resendOtp() {
+  document.querySelectorAll('.otp-box').forEach(b => b.value = '');
+  document.querySelector('.otp-box').focus();
+  showToast('קוד חדש נשלח 📱', 'success');
+}
+
+function verifyOtp() {
+  const boxes = document.querySelectorAll('.otp-box');
+  const code = Array.from(boxes).map(b => b.value).join('');
+  if (code.length < 4) { showToast('הכנס 4 ספרות', 'error'); return; }
+  // Demo: any 4-digit code works
+  sessionStorage.setItem('parkit_user', userPhone || userEmail);
+  isLoggedIn = true;
+  document.getElementById('auth-screen').style.display = 'none';
+  startOnboarding();
+}
+
+function fakeGoogleLogin() {
+  sessionStorage.setItem('parkit_user', 'google');
+  document.getElementById('auth-screen').style.display = 'none';
+  startOnboarding();
+}
+function fakeAppleLogin() {
+  sessionStorage.setItem('parkit_user', 'apple');
+  document.getElementById('auth-screen').style.display = 'none';
+  startOnboarding();
+}
+
+// ===== ONBOARDING BOT =====
+const BOT_FLOW = [
+  {
+    id: 'welcome',
+    msg: ['שלום! ברוך הבא ל-ParkIt 🚗', 'אני ParkBot — אעזור לך להתחיל תוך דקה.', 'מה שמך?'],
+    type: 'input',
+    placeholder: 'הכנס שם...',
+    next: 'role'
+  },
+  {
+    id: 'role',
+    msg: ['נעים מאוד {name}! 😊', 'האם יש לך חניה פנויה שאתה רוצה לפרסם?'],
+    options: [
+      { text: '🏠 כן, יש לי חניה!', next: 'host_type' },
+      { text: '🔍 לא, מחפש חניה', next: 'search_area' }
+    ]
+  },
+  // HOST FLOW
+  {
+    id: 'host_type',
+    msg: ['מעולה! 🎉', 'איזה סוג חניה יש לך?'],
+    options: [
+      { text: '🏢 פרטית בבניין', next: 'host_city' },
+      { text: '🔽 תת-קרקעית', next: 'host_city' },
+      { text: '☀️ חיצונית / חצר', next: 'host_city' }
+    ]
+  },
+  {
+    id: 'host_city',
+    msg: ['באיזה עיר נמצאת החניה?'],
+    options: [
+      { text: '📍 תל אביב', next: 'host_price' },
+      { text: '📍 רמת גן', next: 'host_price' },
+      { text: '📍 הרצליה', next: 'host_price' },
+      { text: '📍 עיר אחרת', next: 'host_price' }
+    ]
+  },
+  {
+    id: 'host_price',
+    msg: ['כמה אתה רוצה לקבל לשעה?'],
+    options: [
+      { text: '₪8–12 לשעה', next: 'host_done' },
+      { text: '₪12–20 לשעה', next: 'host_done' },
+      { text: '₪20+ לשעה', next: 'host_done' }
+    ]
+  },
+  {
+    id: 'host_done',
+    msg: ['נהדר! {name}, כל מה שצריך נשמר. 🚀', 'עכשיו בוא נפרסם את החניה שלך — ייקח רק 3 דקות!'],
+    options: [
+      { text: '🚀 פרסם עכשיו!', action: 'host' },
+      { text: '👀 קודם תראה לי את האפליקציה', action: 'home' }
+    ]
+  },
+  // SEARCH FLOW
+  {
+    id: 'search_area',
+    msg: ['מגניב! 🔍', 'באיזה אזור אתה בדרך כלל מחפש חניה?'],
+    options: [
+      { text: '📍 תל אביב', next: 'search_freq' },
+      { text: '📍 רמת גן', next: 'search_freq' },
+      { text: '📍 הרצליה', next: 'search_freq' },
+      { text: '📍 אזור אחר', next: 'search_freq' }
+    ]
+  },
+  {
+    id: 'search_freq',
+    msg: ['כמה פעמים בשבוע אתה צריך חניה?'],
+    options: [
+      { text: '📅 כל יום', next: 'search_pref' },
+      { text: '📅 2–3 פעמים', next: 'search_pref' },
+      { text: '🎲 לפעמים', next: 'search_pref' }
+    ]
+  },
+  {
+    id: 'search_pref',
+    msg: ['מה הכי חשוב לך בחניה?'],
+    options: [
+      { text: '💰 מחיר זול', next: 'search_done' },
+      { text: '📍 קרוב ליעד', next: 'search_done' },
+      { text: '🛡️ מאובטח ומקורה', next: 'search_done' },
+      { text: '⚡ עמדת טעינה EV', next: 'search_done' }
+    ]
+  },
+  {
+    id: 'search_done',
+    msg: ['מצוין {name}! 🎉', 'מצאתי עשרות חניות שמתאימות לך באזורך. בוא נחפש!'],
+    options: [
+      { text: '🔍 חפש חניה עכשיו!', action: 'search' },
+      { text: '🏠 קח אותי לדף הבית', action: 'home' }
+    ]
+  }
+];
+
+let obHistory = [];
+let obUserName = '';
+
+function startOnboarding() {
+  const ob = document.getElementById('onboarding-screen');
+  ob.style.display = 'flex';
+  document.getElementById('navbar').style.display = 'none';
+  document.getElementById('bottomNav').style.display = 'none';
+  document.getElementById('ob-chat').innerHTML = '';
+  document.getElementById('ob-options').innerHTML = '';
+  obHistory = [];
+  setTimeout(() => runStep('welcome'), 400);
+}
+
+function runStep(stepId) {
+  const step = BOT_FLOW.find(s => s.id === stepId);
+  if (!step) return;
+
+  const msgs = step.msg.map(m => m.replace('{name}', obUserName || 'חבר'));
+  showBotMessages(msgs, () => {
+    if (step.type === 'input') {
+      showBotInput(step.placeholder, step.next);
+    } else if (step.options) {
+      showBotOptions(step.options);
+    }
+  });
+}
+
+function showBotMessages(msgs, cb) {
+  const chat = document.getElementById('ob-chat');
+  let i = 0;
+  function next() {
+    if (i >= msgs.length) { if (cb) cb(); return; }
+    // Typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'ob-bubble bot typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+
+    setTimeout(() => {
+      chat.removeChild(typing);
+      const bubble = document.createElement('div');
+      bubble.className = 'ob-bubble bot';
+      bubble.textContent = msgs[i];
+      chat.appendChild(bubble);
+      chat.scrollTop = chat.scrollHeight;
+      i++;
+      setTimeout(next, 600);
+    }, 900 + msgs[i].length * 18);
+  }
+  next();
+}
+
+function showBotOptions(options) {
+  const el = document.getElementById('ob-options');
+  el.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'ob-option-btn';
+    btn.textContent = opt.text;
+    btn.onclick = () => {
+      // Show user's choice as bubble
+      addUserBubble(opt.text);
+      el.innerHTML = '';
+      if (opt.action) {
+        // Done — enter app
+        setTimeout(() => finishOnboarding(opt.action), 600);
+      } else if (opt.next) {
+        setTimeout(() => runStep(opt.next), 500);
+      }
+    };
+    el.appendChild(btn);
+  });
+}
+
+function showBotInput(placeholder, next) {
+  const el = document.getElementById('ob-options');
+  el.innerHTML = `
+    <div class="ob-input-row">
+      <input type="text" class="ob-text-input" placeholder="${placeholder}" id="ob-input-field" />
+      <button class="ob-send-btn" onclick="submitBotInput('${next}')">שלח →</button>
+    </div>`;
+  document.getElementById('ob-input-field').focus();
+  document.getElementById('ob-input-field').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitBotInput(next);
+  });
+}
+
+function submitBotInput(next) {
+  const val = document.getElementById('ob-input-field')?.value?.trim();
+  if (!val) return;
+  obUserName = val;
+  userName = val;
+  sessionStorage.setItem('parkit_name', val);
+  addUserBubble(val);
+  document.getElementById('ob-options').innerHTML = '';
+  setTimeout(() => runStep(next), 500);
+}
+
+function addUserBubble(text) {
+  const chat = document.getElementById('ob-chat');
+  const b = document.createElement('div');
+  b.className = 'ob-bubble user';
+  b.textContent = text;
+  chat.appendChild(b);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function finishOnboarding(destination) {
+  const ob = document.getElementById('onboarding-screen');
+  ob.style.opacity = '0';
+  ob.style.transition = 'opacity .4s';
+  setTimeout(() => {
+    ob.style.display = 'none';
+    ob.style.opacity = '';
+    document.getElementById('navbar').style.display = '';
+    document.getElementById('bottomNav').style.display = '';
+    showPage(destination);
+    showToast(`ברוך הבא ${obUserName || ''}! 🎉`, 'success');
+  }, 400);
+}
+
 // ===== STATE =====
 let currentPage = 'home';
 let currentParking = null;
@@ -9,6 +341,7 @@ let bookingType = 'hourly';
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
+  initApp();
   showPage('home');
   renderHomeListings();
   updateEarningsPreview();

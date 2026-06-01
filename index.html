@@ -19,6 +19,83 @@
 </head>
 <body>
 
+<!-- ========== AUTH SCREEN ========== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-inner">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">P</div>
+      <div class="auth-logo-text">ParkIt</div>
+    </div>
+    <h1 class="auth-title">ברוך הבא 👋</h1>
+    <p class="auth-subtitle">פלטפורמת החניה הפרטית מס׳ 1 בישראל</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="atab-phone" onclick="switchAuthTab('phone')">📱 טלפון</button>
+      <button class="auth-tab" id="atab-email" onclick="switchAuthTab('email')">📧 אימייל</button>
+    </div>
+
+    <div id="auth-form-phone" class="auth-form">
+      <div class="auth-input-wrap">
+        <span class="auth-flag">🇮🇱 +972</span>
+        <input type="tel" id="auth-phone" placeholder="05X-XXXXXXX"
+          maxlength="11" oninput="formatAuthPhone(this)"
+          class="auth-input" />
+      </div>
+      <button class="auth-submit-btn" onclick="submitAuth('phone')">
+        המשך עם SMS ←
+      </button>
+    </div>
+
+    <div id="auth-form-email" class="auth-form" style="display:none">
+      <div class="auth-input-wrap">
+        <span class="auth-field-icon">@</span>
+        <input type="email" id="auth-email" placeholder="your@email.com"
+          class="auth-input" />
+      </div>
+      <button class="auth-submit-btn" onclick="submitAuth('email')">
+        המשך עם אימייל ←
+      </button>
+    </div>
+
+    <!-- OTP step (shown after submit) -->
+    <div id="auth-otp-step" class="auth-otp-step" style="display:none">
+      <p class="otp-desc" id="otp-desc">שלחנו קוד לטלפון שלך</p>
+      <div class="otp-inputs">
+        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,0)" />
+        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,1)" />
+        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,2)" />
+        <input type="number" class="otp-box" maxlength="1" oninput="otpNext(this,3)" />
+      </div>
+      <button class="auth-submit-btn" onclick="verifyOtp()">אמת קוד ✓</button>
+      <button class="auth-resend-btn" onclick="resendOtp()">שלח שוב</button>
+    </div>
+
+    <div class="auth-divider"><span>או</span></div>
+    <button class="auth-social-btn" onclick="submitAuth('google')">
+      <span class="social-icon google-icon">G</span> המשך עם Google
+    </button>
+    <button class="auth-social-btn" onclick="submitAuth('apple')">
+      <span class="social-icon apple-icon"> </span> המשך עם Apple
+    </button>
+
+    <p class="auth-terms">
+      בהמשך אתה מסכים ל<a href="#" onclick="openModal('terms')">תנאי השימוש</a>
+      ו<a href="#" onclick="openModal('privacy')">מדיניות הפרטיות</a>
+    </p>
+  </div>
+</div>
+
+<!-- ========== ONBOARDING BOT ========== -->
+<div id="onboarding-screen" class="onboarding-screen" style="display:none">
+  <div class="ob-header">
+    <div class="ob-bot-avatar">🤖</div>
+    <div class="ob-bot-name">ParkBot</div>
+    <div class="ob-bot-status"><span class="ob-dot"></span> מחובר</div>
+  </div>
+  <div class="ob-chat" id="ob-chat"></div>
+  <div class="ob-options" id="ob-options"></div>
+</div>
+
 <!-- ========== NAVBAR ========== -->
 <nav class="navbar" id="navbar">
   <div class="container nav-inner">
