@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#e91e8c" />
+  <meta name="description" content="ParkIt — פלטפורמת החניה הפרטית מס׳ 1 בישראל. מצא חניה או הרוויח מהחניה שלך." />
+  <title>ParkIt — חניה פרטית בקלות</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ========== NAVBAR ========== -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#" class="logo" onclick="showPage('home')">
+      <span class="logo-icon">P</span>
+      <span class="logo-text">ParkIt</span>
+    </a>
+    <div class="nav-links">
+      <a href="#" onclick="showPage('search')">חפש חניה</a>
+      <a href="#" onclick="showPage('how')">איך זה עובד</a>
+      <a href="#" onclick="showPage('host')">פרסם חניה</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-ghost" onclick="openModal('login')">התחברות</button>
+      <button class="btn-primary" onclick="openModal('signup')">הצטרפות חינם</button>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#" onclick="showPage('search');toggleMenu()">חפש חניה</a>
+    <a href="#" onclick="showPage('how');toggleMenu()">איך זה עובד</a>
+    <a href="#" onclick="showPage('host');toggleMenu()">פרסם חניה</a>
+    <a href="#" onclick="openModal('login');toggleMenu()">התחברות</a>
+    <a href="#" class="btn-primary-mobile" onclick="openModal('signup');toggleMenu()">הצטרפות חינם</a>
+  </div>
+</nav>
+
+<!-- ========== HOME PAGE ========== -->
+<div id="page-home" class="page active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        ⚡ +12,000 חניות זמינות עכשיו
+      </div>
+      <h1 class="hero-title">
+        חניה פרטית.<br/>
+        <span class="gradient-text">בלי כאב ראש.</span>
+      </h1>
+      <p class="hero-subtitle">
+        מצא והזמן חניה פרטית בכל מקום בארץ.<br/>
+        או הרוויח כסף מהחניה שלך כשאתה לא משתמש בה.
+      </p>
+
+      <!-- SEARCH BOX -->
+      <div class="hero-search-box">
+        <div class="search-tabs">
+          <button class="search-tab active" id="tab-find" onclick="switchTab('find')">🔍 מצא חניה</button>
+          <button class="search-tab" id="tab-host" onclick="switchTab('host')">🏠 פרסם חניה</button>
+        </div>
+        <div id="find-form" class="search-form">
+          <div class="search-inputs">
+            <div class="search-field">
+              <label>לאן אתה נוסע?</label>
+              <input type="text" id="searchLocation" placeholder="עיר, רחוב, אזור..." />
+            </div>
+            <div class="search-field">
+              <label>מתי?</label>
+              <input type="datetime-local" id="searchDate" />
+            </div>
+            <div class="search-field narrow">
+              <label>כמה שעות?</label>
+              <select id="searchHours">
+                <option value="1">שעה</option>
+                <option value="2">שעתיים</option>
+                <option value="3">3 שעות</option>
+                <option value="4">4 שעות</option>
+                <option value="8">יום שלם</option>
+                <option value="0">חודשי</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-search" onclick="doSearch()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            חפש חניה
+          </button>
+        </div>
+        <div id="host-form" class="search-form" style="display:none">
+          <div class="search-inputs">
+            <div class="search-field">
+              <label>כתובת החניה שלך</label>
+              <input type="text" placeholder="רחוב, מספר בית, עיר..." />
+            </div>
+            <div class="search-field narrow">
+              <label>סוג חניה</label>
+              <select>
+                <option>פרטית בבניין</option>
+                <option>חצר פרטית</option>
+                <option>תת-קרקעית</option>
+                <option>חיצונית</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-search" onclick="showPage('host')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            פרסם עכשיו
+          </button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">12K+</span>
+          <span class="stat-label">חניות פעילות</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">50K+</span>
+          <span class="stat-label">משתמשים מרוצים</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">4.9★</span>
+          <span class="stat-label">דירוג ממוצע</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#f8f9ff"/></svg>
+    </div>
+  </section>
+
+  <!-- WHY PARKIT -->
+  <section class="section section-light">
+    <div class="container">
+      <div class="section-header">
+        <h2>למה ParkIt?</h2>
+        <p>פלטפורמה אחת. אלפי חניות. אפס כאב ראש.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#ff6b9d,#e91e8c)">💰</div>
+          <h3>מחירים הוגנים</h3>
+          <p>עד 60% זול יותר מחניונים ציבוריים. תשלום לפי שעה, יום, או חודש.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">🛡️</div>
+          <h3>מאובטח ומבוטח</h3>
+          <p>כל החניות מאומתות על ידינו. ביטוח מלא לכל עסקה לשקט נפשי.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c)">⚡</div>
+          <h3>הזמנה ב-30 שניות</h3>
+          <p>מצא, הזמן, סע. בלי טפסים, בלי המתנה. הכל באפליקציה.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">🗺️</div>
+          <h3>ניווט אוטומטי</h3>
+          <p>לאחר ההזמנה — ניווט ישיר לחניה עם פתיחת שער אוטומטית.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">⭐</div>
+          <h3>דירוגים ואמון</h3>
+          <p>כל משתמש מדורג. קהילה של שוכרים ומשכירים מהימנים.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#fa709a,#fee140)">📱</div>
+          <h3>עובד על כל מכשיר</h3>
+          <p>ממובייל ועד מחשב. PWA — אפשר להתקין ישר מהדפדפן.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POPULAR LISTINGS -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>חניות פופולריות</h2>
+        <p>המומלצות ביותר השבוע</p>
+        <button class="btn-link" onclick="showPage('search')">ראה הכל ←</button>
+      </div>
+      <div class="listings-grid" id="home-listings"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS (MINI) -->
+  <section class="section section-pink">
+    <div class="container">
+      <div class="section-header light">
+        <h2>איך זה עובד?</h2>
+        <p>שלושה צעדים פשוטים</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-icon">🔍</div>
+          <h3>חפש</h3>
+          <p>הכנס יעד וזמן. קבל רשימת חניות זמינות באזור עם מחירים ברורים.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-icon">✅</div>
+          <h3>הזמן</h3>
+          <p>בחר חניה, שלם בצורה מאובטחת. תקבל אישור ופרטי גישה מיידית.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-icon">🚗</div>
+          <h3>חנה</h3>
+          <p>נסה לחניה. השער נפתח אוטומטית. חנה בלי דאגות.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOST CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="host-cta-card">
+        <div class="host-cta-content">
+          <div class="host-cta-badge">💸 הכנסה פסיבית</div>
+          <h2>החניה שלך = כסף בכיס</h2>
+          <p>יש לך חניה פנויה? פרסם אותה ב-ParkIt והרוויח עד <strong>₪2,500</strong> בחודש בלי לעשות כלום.</p>
+          <ul class="host-benefits">
+            <li>✓ פרסום חינמי — ללא עמלה על הרשמה</li>
+            <li>✓ תשלום ישיר לחשבון הבנק שלך</li>
+            <li>✓ אתה קובע את הזמינות והמחיר</li>
+            <li>✓ ביטוח מלא בכל הזמנה</li>
+          </ul>
+          <button class="btn-primary-large" onclick="showPage('host')">
+            פרסם חניה עכשיו →
+          </button>
+        </div>
+        <div class="host-cta-visual">
+          <div class="earning-card">
+            <div class="earning-month">מאי 2026</div>
+            <div class="earning-amount">₪2,340</div>
+            <div class="earning-label">הכנסה מחניה</div>
+            <div class="earning-bar-container">
+              <div class="earning-days">
+                <div class="e-day filled"></div><div class="e-day filled"></div><div class="e-day filled"></div>
+                <div class="e-day filled"></div><div class="e-day filled"></div><div class="e-day empty"></div>
+                <div class="e-day filled"></div>
+              </div>
+              <div class="earning-legend">מלא / פנוי</div>
+            </div>
+            <div class="earning-tip">⭐ 4.9 · 47 ביקורות</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section section-light">
+    <div class="container">
+      <div class="section-header">
+        <h2>מה אומרים עלינו</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"חיפשתי חניה ב-HaCarmel שעה שלמה. מאז ParkIt — 3 דקות ויש לי מקום. שינה חיים."</p>
+          <div class="testimonial-author">
+            <div class="avatar" style="background:#e91e8c">ד</div>
+            <div>
+              <strong>דנה לוי</strong>
+              <span>תל אביב</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"פרסמתי את החניה שלי לפני 3 חודשים. מאז הרווחתי ₪6,800 בלי לעשות כלום. מדהים."</p>
+          <div class="testimonial-author">
+            <div class="avatar" style="background:#764ba2">מ</div>
+            <div>
+              <strong>משה כהן</strong>
+              <span>רמת גן</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="stars">★★★★★</div>
+          <p>"הביטוח ופתיחת השער האוטומטית זה מה שמבדיל. לא צריך לדבר עם אף אחד. פשוט עובד."</p>
+          <div class="testimonial-author">
+            <div class="avatar" style="background:#f5576c">ר</div>
+            <div>
+              <strong>רונית אברהם</strong>
+              <span>הרצליה</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP INSTALL BANNER -->
+  <section class="section section-gradient">
+    <div class="container app-banner">
+      <div class="app-banner-text">
+        <h2>קבל את ParkIt בכל מקום</h2>
+        <p>התקן כאפליקציה על המובייל שלך — חינם, ללא חנות אפליקציות.</p>
+        <button class="btn-white" onclick="showInstallPrompt()">התקן עכשיו</button>
+      </div>
+      <div class="app-phone-mockup">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="phone-app-icon">P</div>
+            <div class="phone-app-name">ParkIt</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========== SEARCH PAGE ========== -->
+<div id="page-search" class="page">
+  <div class="search-page-header">
+    <div class="container">
+      <h1>חפש חניה</h1>
+      <div class="search-bar-inline">
+        <input type="text" id="searchInline" placeholder="עיר, רחוב, אזור..." />
+        <button onclick="filterListings()">חפש</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-layout container">
+    <!-- FILTERS -->
+    <aside class="filters-panel">
+      <h3>סינון תוצאות</h3>
+
+      <div class="filter-group">
+        <label class="filter-label">מחיר לשעה (₪)</label>
+        <div class="price-range">
+          <input type="number" id="priceMin" placeholder="מינ׳" value="0" min="0" />
+          <span>—</span>
+          <input type="number" id="priceMax" placeholder="מקס׳" value="50" min="0" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">סוג חניה</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> פרטית בבניין</label>
+          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> תת-קרקעית</label>
+          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> חיצונית</label>
+          <label class="checkbox-label"><input type="checkbox" checked onchange="filterListings()"> חצר פרטית</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">מאפיינים</label>
+        <div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> מקורה</label>
+          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> שמירה 24/7</label>
+          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> נגיש לנכים</label>
+          <label class="checkbox-label"><input type="checkbox" onchange="filterListings()"> טעינת חשמל</label>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">דירוג מינימלי</label>
+        <div class="star-filter">
+          <button class="star-btn active" onclick="setMinRating(0,this)">הכל</button>
+          <button class="star-btn" onclick="setMinRating(4,this)">4★+</button>
+          <button class="star-btn" onclick="setMinRating(4.5,this)">4.5★+</button>
+        </div>
+      </div>
+
+      <button class="btn-apply-filters" onclick="filterListings()">החל סינון</button>
+    </aside>
+
+    <!-- RESULTS -->
+    <main class="results-panel">
+      <div class="results-toolbar">
+        <span id="results-count">טוען...</span>
+        <div class="sort-options">
+          <label>מיין לפי:</label>
+          <select onchange="sortListings(this.value)">
+            <option value="rating">דירוג</option>
+            <option value="price_asc">מחיר: נמוך לגבוה</option>
+            <option value="price_desc">מחיר: גבוה לנמוך</option>
+            <option value="distance">מרחק</option>
+          </select>
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" onclick="setView('list',this)" title="רשימה">☰</button>
+          <button class="view-btn" onclick="setView('map',this)" title="מפה">🗺</button>
+        </div>
+      </div>
+
+      <div id="search-results" class="listings-list"></div>
+
+      <!-- MAP VIEW -->
+      <div id="map-view" class="map-container" style="display:none">
+        <div class="map-placeholder">
+          <div class="map-inner">
+            <div class="map-bg-text">🗺️</div>
+            <p>מפה אינטראקטיבית</p>
+            <small>נדרש Google Maps API Key להפעלה מלאה</small>
+            <div class="map-pins" id="map-pins"></div>
+          </div>
+        </div>
+        <div class="map-side-list" id="map-side-list"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ========== PARKING DETAIL PAGE ========== -->
+<div id="page-detail" class="page">
+  <div class="container detail-container" id="detail-content"></div>
+</div>
+
+<!-- ========== HOST PAGE ========== -->
+<div id="page-host" class="page">
+  <div class="host-hero">
+    <div class="container">
+      <div class="host-hero-content">
+        <h1>הרוויח מהחניה שלך</h1>
+        <p>פרסם חניה ב-5 דקות. קבל תשלום ישיר לחשבון.</p>
+        <div class="host-hero-stats">
+          <div class="host-stat">
+            <strong>₪2,500</strong>
+            <span>הכנסה חודשית ממוצעת</span>
+          </div>
+          <div class="host-stat">
+            <strong>0%</strong>
+            <span>עמלה על רישום</span>
+          </div>
+          <div class="host-stat">
+            <strong>100%</strong>
+            <span>שליטה על הזמינות</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container host-form-container">
+    <div class="host-form-card">
+      <div class="form-steps-indicator">
+        <div class="form-step active" id="fs1">1. פרטי החניה</div>
+        <div class="form-step-arrow">›</div>
+        <div class="form-step" id="fs2">2. זמינות ומחיר</div>
+        <div class="form-step-arrow">›</div>
+        <div class="form-step" id="fs3">3. פרסום</div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div id="host-step-1" class="host-step active">
+        <h2>פרטי החניה שלך</h2>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>כתובת מדויקת *</label>
+            <input type="text" id="h-address" placeholder="רחוב, מספר בית, עיר" />
+          </div>
+          <div class="form-group">
+            <label>סוג חניה *</label>
+            <div class="type-selector" id="type-selector">
+              <div class="type-option selected" onclick="selectType(this,'פרטית בבניין')">
+                <span class="type-icon">🏢</span>
+                <span>פרטית בבניין</span>
+              </div>
+              <div class="type-option" onclick="selectType(this,'תת-קרקעית')">
+                <span class="type-icon">🔽</span>
+                <span>תת-קרקעית</span>
+              </div>
+              <div class="type-option" onclick="selectType(this,'חיצונית')">
+                <span class="type-icon">☀️</span>
+                <span>חיצונית</span>
+              </div>
+              <div class="type-option" onclick="selectType(this,'חצר פרטית')">
+                <span class="type-icon">🌿</span>
+                <span>חצר פרטית</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>גודל רכב מקסימלי</label>
+            <select id="h-size">
+              <option>קטן (יונדאי i10)</option>
+              <option>בינוני (מאזדה 3)</option>
+              <option>גדול (קיה ספורטאז׳)</option>
+              <option>ואן / SUV גדול</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>תיאור (אופציונלי)</label>
+            <textarea id="h-desc" rows="3" placeholder="מידע נוסף שיעזור לשוכר: גובה כניסה, הוראות גישה, מה יש בסביבה..."></textarea>
+          </div>
+          <div class="form-group full">
+            <label>מאפיינים מיוחדים</label>
+            <div class="tags-selector">
+              <label class="tag-opt"><input type="checkbox" value="מקורה"> מקורה</label>
+              <label class="tag-opt"><input type="checkbox" value="מאובטח"> שמירה 24/7</label>
+              <label class="tag-opt"><input type="checkbox" value="מצלמות"> מצלמות</label>
+              <label class="tag-opt"><input type="checkbox" value="גישה 24/7"> גישה 24/7</label>
+              <label class="tag-opt"><input type="checkbox" value="טעינת חשמל"> עמדת טעינה</label>
+              <label class="tag-opt"><input type="checkbox" value="נגיש"> נגיש לנכים</label>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>תמונות החניה</label>
+            <div class="upload-area" onclick="this.querySelector('input').click()">
+              <input type="file" accept="image/*" multiple style="display:none" onchange="previewImages(this)" />
+              <div class="upload-icon">📷</div>
+              <p>לחץ להעלאת תמונות</p>
+              <small>עד 6 תמונות · JPG, PNG</small>
+            </div>
+            <div id="image-preview" class="image-preview-grid"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-next" onclick="nextStep(2)">הבא ←</button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="host-step-2" class="host-step">
+        <h2>זמינות ותמחור</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>מחיר לשעה (₪) *</label>
+            <div class="price-input-wrap">
+              <span>₪</span>
+              <input type="number" id="h-price-hour" value="15" min="5" max="100" />
+            </div>
+            <small class="price-hint">ממוצע באזורך: ₪12–18/שעה</small>
+          </div>
+          <div class="form-group">
+            <label>מחיר יומי (₪) — אופציונלי</label>
+            <div class="price-input-wrap">
+              <span>₪</span>
+              <input type="number" id="h-price-day" placeholder="80" min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>מחיר חודשי (₪) — אופציונלי</label>
+            <div class="price-input-wrap">
+              <span>₪</span>
+              <input type="number" id="h-price-month" placeholder="800" min="0" />
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>ימי זמינות</label>
+            <div class="days-selector">
+              <button class="day-btn active" onclick="toggleDay(this,'א׳')">א׳</button>
+              <button class="day-btn active" onclick="toggleDay(this,'ב׳')">ב׳</button>
+              <button class="day-btn active" onclick="toggleDay(this,'ג׳')">ג׳</button>
+              <button class="day-btn active" onclick="toggleDay(this,'ד׳')">ד׳</button>
+              <button class="day-btn active" onclick="toggleDay(this,'ה׳')">ה׳</button>
+              <button class="day-btn" onclick="toggleDay(this,'ו׳')">ו׳</button>
+              <button class="day-btn" onclick="toggleDay(this,'ש׳')">ש׳</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>שעת פתיחה</label>
+            <input type="time" id="h-open" value="08:00" />
+          </div>
+          <div class="form-group">
+            <label>שעת סגירה</label>
+            <input type="time" id="h-close" value="22:00" />
+          </div>
+        </div>
+
+        <div class="earnings-preview">
+          <h4>הכנסה חודשית משוערת</h4>
+          <div class="earnings-preview-nums">
+            <div class="ep-item">
+              <span class="ep-label">אם מאוכלסת 50%</span>
+              <span class="ep-num" id="earn-50">₪1,080</span>
+            </div>
+            <div class="ep-item">
+              <span class="ep-label">אם מאוכלסת 75%</span>
+              <span class="ep-num highlight" id="earn-75">₪1,620</span>
+            </div>
+            <div class="ep-item">
+              <span class="ep-label">אם מאוכלסת 100%</span>
+              <span class="ep-num" id="earn-100">₪2,160</span>
+            </div>
+          </div>
+          <small>* לאחר עמלת ParkIt 20%</small>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-back" onclick="prevStep(1)">← חזור</button>
+          <button class="btn-next" onclick="nextStep(3)">הבא ←</button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="host-step-3" class="host-step">
+        <h2>סיכום ופרסום</h2>
+        <div class="summary-card" id="host-summary"></div>
+
+        <div class="form-group">
+          <label class="checkbox-label big">
+            <input type="checkbox" id="agree-terms" />
+            קראתי ואני מסכים ל<a href="#" onclick="openModal('terms')">תנאי השימוש</a> ו<a href="#" onclick="openModal('privacy')">מדיניות הפרטיות</a>
+          </label>
+        </div>
+
+        <div class="legal-note">
+          <strong>⚠️ חשוב לדעת:</strong>
+          <ul>
+            <li>הכנסה מהשכרת חניה חייבת במס — התייעץ עם רואה חשבון.</li>
+            <li>בחניה בבית משותף — ודא שיש לך זכות חוקית להשכיר (הצמדה לדירה).</li>
+            <li>ביטוח שלנו מכסה נזקי רכב בזמן חניה. ביטוח הנכס — באחריותך.</li>
+          </ul>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-back" onclick="prevStep(2)">← חזור</button>
+          <button class="btn-publish" onclick="publishListing()">
+            🚀 פרסם חניה עכשיו
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW PAYMENT WORKS -->
+    <div class="host-sidebar">
+      <div class="sidebar-card">
+        <h3>איך מקבלים תשלום?</h3>
+        <div class="payment-steps">
+          <div class="ps-item">
+            <div class="ps-icon">📅</div>
+            <p>שוכר מזמין ומשלם מראש דרך ParkIt</p>
+          </div>
+          <div class="ps-item">
+            <div class="ps-icon">🔒</div>
+            <p>הכסף מוחזק בנאמנות עד לסיום ההזמנה</p>
+          </div>
+          <div class="ps-item">
+            <div class="ps-icon">💳</div>
+            <p>24 שעות לאחר הסיום — העברה לחשבון הבנק שלך</p>
+          </div>
+        </div>
+        <div class="commission-note">
+          עמלת ParkIt: <strong>20%</strong> מכל עסקה.<br/>
+          אתה מקבל: <strong>80%</strong>.
+        </div>
+      </div>
+      <div class="sidebar-card">
+        <h3>שאלות נפוצות</h3>
+        <div class="faq">
+          <details><summary>האם אני חייב לקבל כל הזמנה?</summary><p>לא. אתה יכול להגדיר זמינות מדויקת ולבטל הזמנה עם התראה מוקדמת.</p></details>
+          <details><summary>מה אם הרכב ניזוק?</summary><p>כל הזמנה מגיעה עם ביטוח לנזקי רכב. הגש דיווח דרך האפליקציה תוך 24 שעות.</p></details>
+          <details><summary>כמה זמן לוקח אישור?</summary><p>בדרך כלל 24-48 שעות. אנחנו מאמתים את הכתובת ופרטי החניה.</p></details>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== HOW IT WORKS PAGE ========== -->
+<div id="page-how" class="page">
+  <div class="container how-container">
+    <div class="section-header">
+      <h1>איך ParkIt עובד?</h1>
+      <p>מצא חניה או פרסם חניה — תהליך פשוט ומאובטח</p>
+    </div>
+
+    <div class="how-sections">
+      <div class="how-section">
+        <h2 class="how-section-title"><span class="how-icon">🔍</span> לשוכרים — מצא חניה</h2>
+        <div class="how-timeline">
+          <div class="ht-item">
+            <div class="ht-num">1</div>
+            <div class="ht-content">
+              <h3>חפש לפי מיקום וזמן</h3>
+              <p>הכנס את היעד שלך ומתי אתה צריך. המערכת מציגה חניות פרטיות זמינות בסביבה עם מחירים ברורים.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">2</div>
+            <div class="ht-content">
+              <h3>בחר ושלם</h3>
+              <p>קרא ביקורות, ראה תמונות, ובחר. תשלום מאובטח בכרטיס אשראי, Apple Pay, או Google Pay.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">3</div>
+            <div class="ht-content">
+              <h3>קבל קוד גישה</h3>
+              <p>מיד לאחר התשלום — תקבל קוד פתיחה שער, ניווט מדויק, ומספר חניה. בלי להתקשר לאף אחד.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">4</div>
+            <div class="ht-content">
+              <h3>חנה ודרג</h3>
+              <p>חנה בנחת. בסיום — דרג את החניה ועזור לקהילה לבחור טוב יותר.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="how-section">
+        <h2 class="how-section-title"><span class="how-icon">🏠</span> למשכירים — הרוויח מהחניה שלך</h2>
+        <div class="how-timeline">
+          <div class="ht-item">
+            <div class="ht-num">1</div>
+            <div class="ht-content">
+              <h3>פרסם ב-5 דקות</h3>
+              <p>תמונות, כתובת, מחיר, שעות זמינות. זהו. אנחנו מאמתים ומפרסמים תוך 48 שעות.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">2</div>
+            <div class="ht-content">
+              <h3>קבל הזמנות אוטומטית</h3>
+              <p>שוכרים מוצאים אותך, משלמים, ומקבלים גישה אוטומטית. אתה לא צריך לעשות כלום.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">3</div>
+            <div class="ht-content">
+              <h3>תשלום ישיר לחשבון</h3>
+              <p>24 שעות לאחר כל חניה — הכסף מועבר לחשבון הבנק שלך. ללא המתנה, ללא בירוקרטיה.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trust-section">
+      <h2>מה עושה אותנו מאובטחים?</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-icon">🆔</div>
+          <h3>אימות זהות</h3>
+          <p>כל משתמש מאמת תעודת זהות. כל חניה מאומתת על ידי הצוות שלנו.</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🛡️</div>
+          <h3>ביטוח מלא</h3>
+          <p>ביטוח נזקי רכב בכל הזמנה. עד ₪50,000 כיסוי לנזק ישיר.</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">⭐</div>
+          <h3>מערכת דירוגים</h3>
+          <p>כל עסקה מדורגת משני הצדדים. שוכרים ומשכירים עם היסטוריה שקופה.</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">💳</div>
+          <h3>תשלום מאובטח</h3>
+          <p>מופעל על ידי Stripe. פרטי כרטיס לא נשמרים אצלנו אף פעם.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <div class="logo">
+        <span class="logo-icon">P</span>
+        <span class="logo-text">ParkIt</span>
+      </div>
+      <p>פלטפורמת החניות הפרטיות מס׳ 1 בישראל.</p>
+      <div class="social-links">
+        <a href="#" title="Facebook">f</a>
+        <a href="#" title="Instagram">ig</a>
+        <a href="#" title="TikTok">tt</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h4>ניווט</h4>
+      <a href="#" onclick="showPage('search')">חפש חניה</a>
+      <a href="#" onclick="showPage('host')">פרסם חניה</a>
+      <a href="#" onclick="showPage('how')">איך זה עובד</a>
+    </div>
+    <div class="footer-links">
+      <h4>חברה</h4>
+      <a href="#">אודות</a>
+      <a href="#">בלוג</a>
+      <a href="#">קריירה</a>
+      <a href="#">עיתונות</a>
+    </div>
+    <div class="footer-links">
+      <h4>תמיכה</h4>
+      <a href="#">מרכז עזרה</a>
+      <a href="#">צור קשר</a>
+      <a href="#" onclick="openModal('terms')">תקנון</a>
+      <a href="#" onclick="openModal('privacy')">פרטיות</a>
+    </div>
+    <div class="footer-contact">
+      <h4>צרו קשר</h4>
+      <p>📧 support@parkit.co.il</p>
+      <p>📞 03-1234567</p>
+      <p>⏰ א׳–ה׳ 9:00–18:00</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 ParkIt. כל הזכויות שמורות.</p>
+  </div>
+</footer>
+
+<!-- ========== MODALS ========== -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- BOOKING MODAL (bottom sheet) -->
+<div id="booking-sheet" class="booking-sheet">
+  <div class="booking-sheet-handle"></div>
+  <div id="booking-sheet-content"></div>
+</div>
+<div id="booking-overlay" class="booking-overlay" onclick="closeBooking()"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
