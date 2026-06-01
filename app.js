@@ -39,6 +39,11 @@ function showPage(name) {
   currentPage = name;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
+  // Sync bottom nav
+  document.querySelectorAll('.mbn-btn').forEach(b => b.classList.remove('active'));
+  const mbnBtn = document.getElementById('mbn-' + name);
+  if (mbnBtn) mbnBtn.classList.add('active');
+
   if (name === 'search') {
     renderSearchResults(filteredListings);
     setTimeout(() => {
@@ -53,6 +58,18 @@ function showPage(name) {
 function toggleMenu() {
   const m = document.getElementById('mobileMenu');
   m.classList.toggle('open');
+}
+
+function mbnNav(page) {
+  document.querySelectorAll('.mbn-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('mbn-' + page);
+  if (btn) btn.classList.add('active');
+  showPage(page);
+}
+
+function toggleBookingCard() {
+  const card = document.getElementById('booking-card');
+  if (card) card.classList.toggle('expanded');
 }
 
 // ===== HOME LISTINGS =====
@@ -499,6 +516,7 @@ function openDetail(id) {
 
       <div class="detail-sidebar">
         <div class="booking-card" id="booking-card">
+          <div class="booking-card-handle" onclick="toggleBookingCard()"></div>
           <div class="booking-price" id="booking-price-display">₪${p.price_hour} <span>לשעה</span></div>
           <div class="booking-rating">★ ${p.rating} · ${p.reviews_count} ביקורות</div>
 
