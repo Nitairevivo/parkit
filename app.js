@@ -58,22 +58,12 @@ function isFileProtocol() {
 }
 
 function initRecaptcha() {
-  // יצור container חדש בכל פעם כדי למנוע "already rendered"
   try {
     if (fbRecaptchaVerifier) {
       try { fbRecaptchaVerifier.clear(); } catch(e) {}
-      fbRecaptchaVerifier = null;
     }
-  } catch(e) {}
-
-  // מחק ובנה מחדש את ה-container
-  const old = document.getElementById('recaptcha-container');
-  if (old) old.remove();
-  const fresh = document.createElement('div');
-  fresh.id = 'recaptcha-container';
-  document.body.appendChild(fresh);
-
-  try {
+    const el = document.getElementById('recaptcha-container');
+    if (el) el.innerHTML = '';
     fbRecaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
       size: 'invisible',
       callback: () => {},
