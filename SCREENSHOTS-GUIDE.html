@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מדריך Screenshots — NitPark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Heebo', sans-serif; background: #0f172a; color: #e2e8f0; padding: 32px 24px; }
+    h1 { font-size: 2rem; font-weight: 900; background: linear-gradient(135deg,#e91e8c,#764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    .subtitle { color: #64748b; margin-bottom: 40px; font-size: .95rem; }
+    .section-title { font-size: 1.2rem; font-weight: 800; color: #e91e8c; margin: 40px 0 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; margin-bottom: 16px; }
+    .card {
+      background: #1e293b; border-radius: 16px; padding: 24px;
+      border: 1px solid #334155; position: relative;
+    }
+    .card-num {
+      position: absolute; top: -12px; right: 20px;
+      background: linear-gradient(135deg,#e91e8c,#764ba2);
+      color: white; font-weight: 800; font-size: .8rem;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .card h3 { font-size: 1rem; font-weight: 800; margin-bottom: 8px; color: #f1f5f9; }
+    .card p { font-size: .85rem; color: #94a3b8; line-height: 1.6; margin-bottom: 12px; }
+    .steps { list-style: none; }
+    .steps li { font-size: .85rem; color: #cbd5e1; padding: 6px 0; border-bottom: 1px solid #334155; display: flex; gap: 10px; }
+    .steps li:last-child { border-bottom: none; }
+    .steps li::before { content: attr(data-step); background: #e91e8c; color: white; border-radius: 50%; width: 20px; height: 20px; min-width: 20px; display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 800; margin-top: 1px; }
+    .size-badge { display: inline-block; background: #0f172a; color: #38bdf8; font-size: .75rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; border: 1px solid #0284c7; margin-top: 8px; }
+    .tool-card { background: #1e293b; border-radius: 16px; padding: 20px 24px; border: 1px solid #334155; margin-bottom: 12px; display: flex; gap: 16px; align-items: flex-start; }
+    .tool-icon { font-size: 1.8rem; min-width: 36px; }
+    .tool-name { font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+    .tool-desc { font-size: .85rem; color: #94a3b8; line-height: 1.5; }
+    .tool-link { display: inline-block; margin-top: 8px; color: #e91e8c; font-size: .83rem; font-weight: 700; text-decoration: none; }
+    .tip { background: #1e293b; border: 1px solid #854d0e; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; }
+    .tip .tip-title { color: #fbbf24; font-weight: 800; font-size: .9rem; margin-bottom: 6px; }
+    .tip p { font-size: .85rem; color: #d1d5db; }
+    code { background: #0f172a; color: #34d399; padding: 2px 8px; border-radius: 6px; font-family: monospace; font-size: .85rem; }
+    .checklist { list-style: none; }
+    .checklist li { padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: .9rem; color: #cbd5e1; display: flex; gap: 10px; align-items: center; }
+    .checklist li::before { content: '☐'; color: #e91e8c; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+
+<h1>📸 מדריך Screenshots — NitPark</h1>
+<p class="subtitle">כל מה שצריך כדי להכין screenshots מושלמים לחנויות האפליקציות</p>
+
+<!-- =================== SIZES =================== -->
+<div class="section-title">📐 גדלים נדרשים לכל חנות</div>
+<div class="grid">
+  <div class="card">
+    <div class="card-num">Google Play</div>
+    <h3>📱 Phone Screenshots</h3>
+    <p>הגדלים שחייבים לספק (portrait):</p>
+    <ul class="steps">
+      <li data-step="✓">1080 × 1920px — Full HD</li>
+      <li data-step="✓">מינימום 2 screenshots, מקסימום 8</li>
+      <li data-step="✓">פורמט: JPG או PNG</li>
+      <li data-step="!">Feature Graphic: 1024 × 500px — חובה!</li>
+    </ul>
+    <span class="size-badge">מינימום 2 · מקסימום 8</span>
+  </div>
+  <div class="card">
+    <div class="card-num">App Store</div>
+    <h3>🍎 iPhone Screenshots</h3>
+    <p>חייב לספק שני גדלים:</p>
+    <ul class="steps">
+      <li data-step="1">iPhone 6.7" — 1290 × 2796px (iPhone 15 Pro Max)</li>
+      <li data-step="2">iPhone 6.5" — 1242 × 2688px (iPhone 14 Plus)</li>
+      <li data-step="3">פורמט: PNG בלבד</li>
+      <li data-step="!">מקסימום 10 screenshots לכל גדל</li>
+    </ul>
+    <span class="size-badge">2 גדלים שונים — חובה</span>
+  </div>
+</div>
+
+<!-- =================== SCREENS =================== -->
+<div class="section-title">🎬 6 מסכים לצלם — בדיוק בסדר הזה</div>
+<div class="grid">
+
+  <div class="card">
+    <div class="card-num">Screenshot 1</div>
+    <h3>🏠 דף הבית — החיפוש</h3>
+    <p>המסך הראשון שהמשתמש רואה. צריך להיות מרשים!</p>
+    <ul class="steps">
+      <li data-step="1">פתח את האפליקציה בדף הבית</li>
+      <li data-step="2">ודא שה-hero עם ה-search box נראה</li>
+      <li data-step="3">צלם את המסך (Power + Volume Down)</li>
+    </ul>
+    <p style="margin-top:12px;color:#fbbf24;font-size:.8rem">📝 טקסט overlay: <strong>"מצא חניה תוך 30 שניות"</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-num">Screenshot 2</div>
+    <h3>🗺️ מפה עם חניות</h3>
+    <p>מראה את המפה האינטראקטיבית עם מרקרים של חניות.</p>
+    <ul class="steps">
+      <li data-step="1">לחץ על "חפש חניה" מהדף הבית</li>
+      <li data-step="2">המתן שהמפה תיטען עם כל המרקרים</li>
+      <li data-step="3">ודא שנקודת המיקום שלך נראית</li>
+      <li data-step="4">צלם</li>
+    </ul>
+    <p style="margin-top:12px;color:#fbbf24;font-size:.8rem">📝 טקסט overlay: <strong>"מפה חיה · חניות בסביבתך"</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-num">Screenshot 3</div>
+    <h3>🅿️ פרטי חניה + הזמנה</h3>
+    <p>עמוד פרטים עם מחיר, ביקורות וכפתור הזמנה.</p>
+    <ul class="steps">
+      <li data-step="1">לחץ על חניה כלשהי מהחיפוש</li>
+      <li data-step="2">ודא שה-booking card נראה בצד</li>
+      <li data-step="3">גלול מעט כדי להראות גם פרטים + אמניות</li>
+      <li data-step="4">צלם</li>
+    </ul>
+    <p style="margin-top:12px;color:#fbbf24;font-size:.8rem">📝 טקסט overlay: <strong>"הזמן, שלם, קבל קוד גישה"</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-num">Screenshot 4</div>
+    <h3>⚡ כניסה חכמה (Smart Gate)</h3>
+    <p>מסך פתיחת השער — פיצ'ר ייחודי שמרשים!</p>
+    <ul class="steps">
+      <li data-step="1">פתח עמוד פרטי חניה כלשהי</li>
+      <li data-step="2">לחץ על כפתור "כניסה חכמה ⚡"</li>
+      <li data-step="3">ודא שמסך השער נטען עם הכפתור הגדול</li>
+      <li data-step="4">צלם לפני שהזמן פג</li>
+    </ul>
+    <p style="margin-top:12px;color:#fbbf24;font-size:.8rem">📝 טקסט overlay: <strong>"פתח שערים ישירות מהאפליקציה"</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-num">Screenshot 5</div>
+    <h3>🏠 פרסם חניה</h3>
+    <p>טופס פרסום — מראה שיש גם צד של משכירים.</p>
+    <ul class="steps">
+      <li data-step="1">לחץ "פרסם חניה" מהסיידבר</li>
+      <li data-step="2">ודא שטופס שלב 1 נראה עם שדות הכנסה</li>
+      <li data-step="3">צלם את המסך כולל ה-earnings preview</li>
+    </ul>
+    <p style="margin-top:12px;color:#fbbf24;font-size:.8rem">📝 טקסט overlay: <strong>"פרסם חניה ב-5 דקות · הרוויח"</strong></p>
+  </div>
+
+  <div class="card">
+    <div class="card-num">Screenshot 6</div>
+    <h3>🧭 ניווט לחניה</h3>
+    <p>כפתורי Waze + Google Maps — שימושי וחשוב!</p>
+    <ul class="steps">
+      <li data-step="1">פתח עמוד פרטי חניה</li>
+      <li data-step="2">גלול עד שרואים את אזור "ניווט לחניה"</li>
+      <li data-step="3">ודא שנראים שני כפתורים: Waze + Google Maps</li>
+      <li data-step="4">צלם</li>
+    </ul>
+    <p style="margin-top:12px;color:#fbbf24;font-size:.8rem">📝 טקסט overlay: <strong>"נווט ישירות ל-Waze או Google Maps"</strong></p>
+  </div>
+
+</div>
+
+<!-- =================== TOOLS =================== -->
+<div class="section-title">🛠️ כלים להוספת טקסט overlay על Screenshots</div>
+
+<div class="tool-card">
+  <div class="tool-icon">🎨</div>
+  <div>
+    <div class="tool-name">Canva (מומלץ — הכי קל)</div>
+    <div class="tool-desc">
+      אתר חינמי. יש תבניות מוכנות לApp Store Screenshots.
+      גרור את ה-screenshot שלך, הוסף טקסט עם הפונט והצבע של NitPark.
+    </div>
+    <a href="https://www.canva.com/create/app-screenshots/" class="tool-link" target="_blank">→ פתח Canva</a>
+  </div>
+</div>
+
+<div class="tool-card">
+  <div class="tool-icon">📱</div>
+  <div>
+    <div class="tool-name">AppLaunchpad / ScreenshotCreator</div>
+    <div class="tool-desc">
+      כלים ייעודיים ל-App Store screenshots עם frames של אייפון/אנדרואיד.
+      חינמי לבסיסי.
+    </div>
+    <a href="https://theapplaunchpad.com" class="tool-link" target="_blank">→ AppLaunchpad</a>
+  </div>
+</div>
+
+<div class="tool-card">
+  <div class="tool-icon">🖼️</div>
+  <div>
+    <div class="tool-name">DaVinci Resolve / Figma</div>
+    <div class="tool-desc">
+      לעיצוב מקצועי יותר. Figma מעולה אם אתה רוצה לייצר תבנית קבועה ולחסוך עבודה בגרסאות הבאות.
+    </div>
+    <a href="https://www.figma.com" class="tool-link" target="_blank">→ Figma (חינם)</a>
+  </div>
+</div>
+
+<!-- =================== COLORS =================== -->
+<div class="section-title">🎨 צבעים ופונטים של NitPark לעיצוב</div>
+<div class="grid">
+  <div class="card">
+    <h3>צבעים ראשיים</h3>
+    <ul class="steps">
+      <li data-step="1">Pink: <code>#e91e8c</code></li>
+      <li data-step="2">Purple: <code>#764ba2</code></li>
+      <li data-step="3">Dark BG: <code>#1a1a2e</code></li>
+      <li data-step="4">White: <code>#ffffff</code></li>
+      <li data-step="5">Gradient: <code>#e91e8c → #764ba2</code></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>פונטים לטקסט overlay</h3>
+    <ul class="steps">
+      <li data-step="H">כותרת גדולה: Heebo Bold 800, לבן</li>
+      <li data-step="S">כותרת משנה: Heebo Regular 400, לבן 80%</li>
+      <li data-step="B">רקע overlay: gradient כהה למטה (opacity 60%)</li>
+    </ul>
+    <a href="https://fonts.google.com/specimen/Heebo" class="tool-link" target="_blank">→ הורד פונט Heebo</a>
+  </div>
+</div>
+
+<!-- =================== TIPS =================== -->
+<div class="section-title">💡 טיפים חשובים</div>
+
+<div class="tip">
+  <div class="tip-title">📱 צלם על מכשיר אמיתי — לא סימולטור</div>
+  <p>Screenshots שצולמו על מכשיר אמיתי נראים טבעיים יותר. בצל תמיד על מצב full-screen ללא status bar.</p>
+</div>
+
+<div class="tip">
+  <div class="tip-title">🌙 מצב בהיר (Light Mode)</div>
+  <p>האפליקציה שלך בעיצוב בהיר — ודא שצולם ב-light mode. נראה טוב יותר בחנויות.</p>
+</div>
+
+<div class="tip">
+  <div class="tip-title">📶 הסתר סטטוס בר</div>
+  <p>לפני הצילום, ודא שסרגל הסטטוס (שעה, סוללה, WiFi) מוסתר או נקי. ב-Android: Developer Options → "Demo Mode".</p>
+</div>
+
+<div class="tip">
+  <div class="tip-title">🔤 טקסט overlay — קצר וחזק</div>
+  <p>מקסימום 5-6 מילים לכל screenshot. משתמשים רואים את זה 2-3 שניות בלבד בחנות. הודעה ישירה > תיאור ארוך.</p>
+</div>
+
+<!-- =================== CHECKLIST =================== -->
+<div class="section-title">✅ Checklist לפני העלאה</div>
+<ul class="checklist">
+  <li>6 screenshots צולמו בגדלים הנכונים</li>
+  <li>טקסט overlay נוסף לכל screenshot</li>
+  <li>Feature Graphic 1024×500px מוכן (Google Play)</li>
+  <li>צבעים תואמים לbranding של NitPark</li>
+  <li>כל המסכים בעברית ונראים מלאים</li>
+  <li>Status bar נקי / מוסתר</li>
+  <li>הבדיקה על מכשיר אמיתי עברה</li>
+  <li>שמות הקבצים: screen-1.png, screen-2.png... וכו'</li>
+</ul>
+
+</body>
+</html>

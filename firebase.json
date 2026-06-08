@@ -1,0 +1,40 @@
+﻿{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      ".gitignore",
+      ".git/**",
+      ".claude/**",
+      "functions/**",
+      "node_modules/**",
+      "server.js",
+      "*.bat",
+      "*.sh",
+      "*.exe",
+      "*.cmd",
+      "*.ps1"
+    ],
+    "rewrites": [
+      { "source": "**", "destination": "/index.html" }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css)",
+        "headers": [{ "key": "Cache-Control", "value": "max-age=3600" }]
+      },
+      {
+        "source": "/app.js",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  }
+}

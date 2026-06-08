@@ -1,0 +1,575 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מדריך פרסום לחנויות — NitPark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Heebo', sans-serif; background: #0f172a; color: #e2e8f0; }
+
+    .hero { background: linear-gradient(135deg,#e91e8c,#764ba2); padding: 48px 24px; text-align: center; }
+    .hero h1 { font-size: 2.2rem; font-weight: 900; color: white; margin-bottom: 10px; }
+    .hero p { color: rgba(255,255,255,.75); font-size: 1rem; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 100px; }
+
+    .platform-tabs { display: flex; gap: 12px; margin-bottom: 36px; }
+    .platform-tab {
+      flex: 1; padding: 16px; border-radius: 14px; border: 2px solid #1e293b;
+      background: #1e293b; cursor: pointer; text-align: center; transition: all .2s;
+      font-family: inherit;
+    }
+    .platform-tab.active { border-color: #e91e8c; background: rgba(233,30,140,.1); }
+    .platform-tab .tab-icon { font-size: 2rem; display: block; margin-bottom: 6px; }
+    .platform-tab .tab-name { font-weight: 800; color: #f1f5f9; }
+    .platform-tab .tab-cost { font-size: .78rem; color: #64748b; margin-top: 2px; }
+
+    .platform-section { display: none; }
+    .platform-section.active { display: block; }
+
+    .phase {
+      background: #1e293b; border-radius: 18px; padding: 28px;
+      border: 1px solid #334155; margin-bottom: 20px; position: relative;
+    }
+    .phase-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .phase-num {
+      width: 42px; height: 42px; border-radius: 12px; min-width: 42px;
+      background: linear-gradient(135deg,#e91e8c,#764ba2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 900; color: white;
+    }
+    .phase-title { font-size: 1.1rem; font-weight: 800; color: #f1f5f9; }
+    .phase-sub { font-size: .82rem; color: #64748b; margin-top: 2px; }
+
+    .step { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid #0f172a; }
+    .step:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e91e8c; margin-top: 8px; min-width: 8px; }
+    .step-content { flex: 1; }
+    .step-text { font-size: .9rem; color: #cbd5e1; line-height: 1.6; }
+    .step-text strong { color: #f1f5f9; }
+    code { background: #0f172a; color: #34d399; padding: 3px 10px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: .85rem; display: inline-block; margin: 4px 0; }
+    code.block { display: block; padding: 14px 16px; margin: 10px 0; line-height: 1.8; white-space: pre; overflow-x: auto; border: 1px solid #1e293b; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; margin-right: 6px; }
+    .badge-req { background: #7f1d1d; color: #fca5a5; }
+    .badge-opt { background: #1e3a5f; color: #93c5fd; }
+    .badge-tip { background: #14532d; color: #86efac; }
+
+    .warning-box {
+      background: #431407; border: 1px solid #9a3412; border-radius: 12px;
+      padding: 16px 20px; margin: 16px 0;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .warning-box .wi { font-size: 1.3rem; min-width: 24px; }
+    .warning-box p { font-size: .87rem; color: #fed7aa; line-height: 1.6; }
+
+    .info-box {
+      background: #0c1a2e; border: 1px solid #1e40af; border-radius: 12px;
+      padding: 16px 20px; margin: 16px 0;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .info-box .wi { font-size: 1.3rem; min-width: 24px; }
+    .info-box p { font-size: .87rem; color: #bfdbfe; line-height: 1.6; }
+
+    .checklist-phase { background: #0f172a; border-radius: 14px; padding: 20px; margin-top: 16px; }
+    .checklist-phase h4 { font-size: .9rem; font-weight: 700; color: #94a3b8; margin-bottom: 14px; }
+    .check-item { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid #1e293b; font-size: .87rem; color: #cbd5e1; }
+    .check-item:last-child { border-bottom: none; }
+    .check-box { width: 20px; height: 20px; border: 2px solid #334155; border-radius: 6px; min-width: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .check-box:hover { border-color: #e91e8c; }
+    .check-box.done { background: #e91e8c; border-color: #e91e8c; }
+    .check-box.done::after { content: '✓'; color: white; font-size: .75rem; font-weight: 800; }
+
+    .cost-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: .88rem; }
+    .cost-table th { background: #0f172a; color: #64748b; padding: 10px 14px; text-align: right; font-weight: 600; border-bottom: 1px solid #334155; }
+    .cost-table td { padding: 12px 14px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+    .cost-table tr:last-child td { border-bottom: none; }
+    .price-pink { color: #f472b6; font-weight: 800; }
+
+    .timeline { display: flex; flex-direction: column; gap: 0; margin: 16px 0; }
+    .tl-item { display: flex; gap: 16px; }
+    .tl-left { display: flex; flex-direction: column; align-items: center; min-width: 40px; }
+    .tl-dot { width: 14px; height: 14px; border-radius: 50%; background: #e91e8c; min-height: 14px; }
+    .tl-line { width: 2px; background: #334155; flex: 1; min-height: 24px; }
+    .tl-item:last-child .tl-line { display: none; }
+    .tl-right { padding: 0 0 24px; }
+    .tl-title { font-weight: 700; color: #f1f5f9; font-size: .9rem; }
+    .tl-desc { font-size: .82rem; color: #64748b; margin-top: 3px; }
+    .tl-time { display: inline-block; background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 2px 10px; font-size: .75rem; color: #94a3b8; margin-top: 6px; }
+
+    .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+    .file-card { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 14px 16px; }
+    .file-name { font-family: monospace; color: #34d399; font-size: .85rem; font-weight: 700; margin-bottom: 6px; }
+    .file-desc { font-size: .8rem; color: #64748b; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🚀 מדריך פרסום — NitPark</h1>
+  <p>שלב אחר שלב לחנויות Google Play ו-App Store</p>
+</div>
+
+<div class="container">
+
+  <!-- TABS -->
+  <div class="platform-tabs">
+    <button class="platform-tab active" onclick="showPlatform('android',this)">
+      <span class="tab-icon">🤖</span>
+      <div class="tab-name">Google Play</div>
+      <div class="tab-cost">$25 חד-פעמי</div>
+    </button>
+    <button class="platform-tab" onclick="showPlatform('ios',this)">
+      <span class="tab-icon">🍎</span>
+      <div class="tab-name">App Store</div>
+      <div class="tab-cost">$99 לשנה + Mac</div>
+    </button>
+    <button class="platform-tab" onclick="showPlatform('costs',this)">
+      <span class="tab-icon">💰</span>
+      <div class="tab-name">עלויות וזמנים</div>
+      <div class="tab-cost">סיכום כללי</div>
+    </button>
+  </div>
+
+  <!-- =================== ANDROID =================== -->
+  <div id="section-android" class="platform-section active">
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">1</div>
+        <div>
+          <div class="phase-title">התקן את הכלים הנדרשים</div>
+          <div class="phase-sub">חד-פעמי · ~1 שעה</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Node.js</strong> — הורד מ-nodejs.org אם עדיין לא מותקן<br/>בדוק: <code>node --version</code></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Android Studio</strong> — הורד מ-developer.android.com/studio<br/>גדול (~1GB) — תן לו להתקין את כל ה-SDK Components</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">ב-Android Studio: <strong>SDK Manager → Android 14 (API 34)</strong> — סמן ולחץ OK</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הגדר משתנה סביבה: הוסף לנתיב המשתמש:<br/>
+        <code>C:\Users\[שמך]\AppData\Local\Android\Sdk\platform-tools</code></div>
+      </div></div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">2</div>
+        <div>
+          <div class="phase-title">הוסף פלטפורמת Android ל-Capacitor</div>
+          <div class="phase-sub">בתיקיית NitPark בטרמינל</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">פתח טרמינל בתיקיית NitPark ורץ:</div>
+        <code class="block">cd "C:\Users\ניתאי רביבו\Desktop\NitPark"
+npm install
+npx cap add android
+npx cap sync android</code>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">אם הכל הצליח, תופיע תיקיית <strong>android/</strong> חדשה</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">פתח את הפרויקט ב-Android Studio:</div>
+        <code class="block">npx cap open android</code>
+      </div></div>
+      <div class="warning-box">
+        <div class="wi">⚠️</div>
+        <p>ב-Android Studio — המתן ל-<strong>Gradle Sync</strong> לסיים (יכול לקחת 5-10 דקות בפעם הראשונה). לא לסגור!</p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">3</div>
+        <div>
+          <div class="phase-title">הגדר App Icon וגרסה</div>
+          <div class="phase-sub">ב-Android Studio</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">לחץ ימני על <strong>app/res → New → Image Asset</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">בחר <strong>Launcher Icons</strong> → העלה את <strong>icon-512.png</strong> שלך (512×512)</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">ב-<code>android/app/build.gradle</code> — עדכן גרסה:</div>
+        <code class="block">versionCode 1
+versionName "1.0.0"</code>
+      </div></div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">4</div>
+        <div>
+          <div class="phase-title">בנה APK / AAB חתום</div>
+          <div class="phase-sub">חשוב מאוד — שמור את ה-Keystore!</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">ב-Android Studio: <strong>Build → Generate Signed Bundle / APK</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">בחר <strong>Android App Bundle (.aab)</strong> — זה מה שGoogle Play דורש</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">לחץ <strong>Create new...</strong> ליצירת Keystore חדש:<br/>
+        • Key store path: שמור בספריית גיבוי מאובטחת<br/>
+        • Password: סיסמה חזקה — <strong>שמור אותה, לא ניתן לשחזר!</strong><br/>
+        • Alias: nitpark-key<br/>
+        • Validity: 25 years</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">בחר <strong>Release</strong> → לחץ <strong>Create</strong></div>
+      </div></div>
+      <div class="warning-box">
+        <div class="wi">🔑</div>
+        <p><strong>קריטי:</strong> אם תאבד את ה-Keystore, לא תוכל לעדכן את האפליקציה בחנות לעולם! שמור אותו בענן (Google Drive / iCloud) + גיבוי מקומי.</p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">5</div>
+        <div>
+          <div class="phase-title">העלה ל-Google Play Console</div>
+          <div class="phase-sub">play.google.com/console</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הירשם ב-<strong>Google Play Console</strong> ושלם $25 חד-פעמי</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Create app → App name: "NitPark - חניה פרטית בקלות"</strong><br/>
+        Default language: Hebrew (iw) · App type: App · Free or paid: Free</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">מלא את <strong>Store listing</strong> — כל הטקסטים כבר מוכנים ב-<strong>STORE-LISTING.md</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">העלה ל-<strong>Production → Create new release → Upload .aab</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">מלא את ה-<strong>Content rating questionnaire</strong> — בחר "Everyone"</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">לחץ <strong>Review release → Start rollout to Production</strong></div>
+      </div></div>
+      <div class="info-box">
+        <div class="wi">⏰</div>
+        <p>הביקורת לוקחת בדרך כלל <strong>1-3 ימי עסקים</strong> לאפליקציה ראשונה. לאחר אישור — זמין בחנות תוך שעות.</p>
+      </div>
+
+      <div class="checklist-phase">
+        <h4>✅ Checklist — Google Play</h4>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>חשבון Google Play Console נוצר ושולם</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Android Studio מותקן + Gradle sync עבד</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>AAB נבנה בהצלחה (Release)</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Keystore נשמר בגיבוי מאובטח</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>App icon הוגדר (512×512)</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Feature Graphic 1024×500px הועלה</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>לפחות 2 screenshots הועלו</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Store listing מולא (מ-STORE-LISTING.md)</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Privacy Policy URL פעיל ומוזן</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Content rating הושלם</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Release נשלח לביקורת</div>
+      </div>
+    </div>
+
+  </div><!-- /android -->
+
+  <!-- =================== IOS =================== -->
+  <div id="section-ios" class="platform-section">
+
+    <div class="warning-box" style="margin-bottom:24px">
+      <div class="wi">🍎</div>
+      <p><strong>חובה: Mac עם macOS 13+ ו-Xcode 15+.</strong> לא ניתן לבנות iOS app מ-Windows. אם אין לך Mac — ראה את הפתרון בסוף הסעיף.</p>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">1</div>
+        <div>
+          <div class="phase-title">הכן את ה-Mac</div>
+          <div class="phase-sub">חד-פעמי</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הורד <strong>Xcode</strong> מ-App Store (חינם, ~15GB)</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הירשם ל-<strong>Apple Developer Program</strong> — $99/שנה<br/>
+        כתובת: <strong>developer.apple.com/programs</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">העתק את תיקיית NitPark למק (USB / Git / AirDrop)</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הורד Node.js ל-Mac ורץ:</div>
+        <code class="block">cd ~/Desktop/NitPark
+npm install
+npx cap add ios
+npx cap sync ios
+npx cap open ios</code>
+      </div></div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">2</div>
+        <div>
+          <div class="phase-title">הגדר ב-Xcode</div>
+          <div class="phase-sub">חשוב — Bundle ID + Signing</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">ב-Xcode — לחץ על <strong>App</strong> בצד שמאל → <strong>Signing & Capabilities</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Team:</strong> בחר את חשבון ה-Apple Developer שלך<br/>
+        <strong>Bundle Identifier:</strong> <code>il.co.nitpark.app</code></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הוסף App Icon: גרור את <strong>icon-1024.png</strong> (1024×1024) ל-AppIcon ב-Assets.xcassets</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Info.plist</strong> — הוסף הרשאות (Privacy strings):</div>
+        <code class="block">NSLocationWhenInUseUsageDescription = "NitPark משתמשת במיקום כדי להציג חניות קרובות ולאפשר ניווט"
+NSCameraUsageDescription = "NitPark משתמשת במצלמה להעלאת תמונות החניה"
+NSPhotoLibraryUsageDescription = "NitPark ניגשת לגלריה להעלאת תמונות החניה"</code>
+      </div></div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">3</div>
+        <div>
+          <div class="phase-title">Archive ו-Upload ל-App Store</div>
+          <div class="phase-sub">ב-Xcode</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">שנה את Scheme ל-<strong>Any iOS Device (arm64)</strong> (לא Simulator)</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Product → Archive</strong> — המתן לסיום (5-10 דקות)</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">חלון ה-Organizer יפתח → לחץ <strong>Distribute App → App Store Connect → Upload</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">כנס ל-<strong>appstoreconnect.apple.com</strong> → My Apps → NitPark</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">מלא פרטי App Store listing — הכל מוכן ב-<strong>STORE-LISTING.md</strong></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">מלא את <strong>App Privacy</strong> (nutrition label): Location, Payment Info</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">לחץ <strong>Submit for Review</strong></div>
+      </div></div>
+      <div class="info-box">
+        <div class="wi">⏰</div>
+        <p>ביקורת Apple לוקחת בדרך כלל <strong>24-48 שעות</strong>. לאפליקציות חדשות — לפעמים עד 7 ימים. שמור Demo Account מוכן (פרטים ב-STORE-LISTING.md).</p>
+      </div>
+    </div>
+
+    <div class="phase" style="border-color: #1e40af;">
+      <div class="phase-header">
+        <div class="phase-num" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">?</div>
+        <div>
+          <div class="phase-title">אין לך Mac? פתרונות חלופיים</div>
+          <div class="phase-sub">שיטות לבניית iOS בלי Mac</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>MacStadium / MacInCloud</strong> — השכרת Mac בענן לשעות/ימים. עלות: ~$25-50 לפרסום חד-פעמי.<br/>
+        <a href="https://www.macincloud.com" style="color:#60a5fa" target="_blank">macincloud.com</a></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Codemagic CI/CD</strong> — בונה iOS APK בענן ישירות מ-GitHub. יש תוכנית חינמית.<br/>
+        <a href="https://codemagic.io" style="color:#60a5fa" target="_blank">codemagic.io</a></div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text"><strong>Expo EAS Build</strong> — אם תמיר את הפרויקט ל-React Native (שינוי גדול)<br/>
+        המלצה: קודם פרסם Android, אחר כך תסדר Mac לiOS</div>
+      </div></div>
+    </div>
+
+    <div class="checklist-phase">
+      <h4>✅ Checklist — App Store</h4>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Apple Developer Account ($99/שנה) שולם</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Xcode 15+ מותקן על Mac</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Bundle ID מוגדר: il.co.nitpark.app</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>App Icon 1024×1024 מוכן</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Privacy strings נוספו ל-Info.plist</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Archive נבנה ב-Xcode ללא שגיאות</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Build הועלה ל-App Store Connect</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Screenshots iPhone 6.7" + 6.5" הועלו</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>App Privacy (nutrition label) מולא</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Demo account הוכנס ל-Review Notes</div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div>Submit for Review נלחץ</div>
+    </div>
+
+  </div><!-- /ios -->
+
+  <!-- =================== COSTS =================== -->
+  <div id="section-costs" class="platform-section">
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">💰</div>
+        <div>
+          <div class="phase-title">עלויות פרסום</div>
+          <div class="phase-sub">כל מה שעולה כסף</div>
+        </div>
+      </div>
+      <table class="cost-table">
+        <tr><th>מה</th><th>עלות</th><th>תדירות</th></tr>
+        <tr><td>🤖 Google Play Developer</td><td class="price-pink">$25</td><td>חד-פעמי</td></tr>
+        <tr><td>🍎 Apple Developer Program</td><td class="price-pink">$99</td><td>לשנה</td></tr>
+        <tr><td>🌐 Firebase (Auth + Firestore)</td><td class="price-pink">חינם</td><td>עד מכסה חינמית</td></tr>
+        <tr><td>💳 Stripe עמלות</td><td class="price-pink">2.9% + $0.30</td><td>לכל עסקה</td></tr>
+        <tr><td>📱 Mac להרצת iOS build</td><td class="price-pink">$0-50</td><td>חד-פעמי (MacInCloud)</td></tr>
+        <tr><td>🔒 Privacy Policy Hosting</td><td class="price-pink">חינם</td><td>Firebase Hosting</td></tr>
+      </table>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">📅</div>
+        <div>
+          <div class="phase-title">לוח זמנים ריאלי</div>
+          <div class="phase-sub">כמה זמן לוקח כל שלב</div>
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div class="tl-right">
+            <div class="tl-title">הכנת Assets (Screenshots + Feature Graphic)</div>
+            <div class="tl-desc">6 screenshots + overlay טקסט + feature graphic 1024×500</div>
+            <div class="tl-time">⏱ 2-4 שעות</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div class="tl-right">
+            <div class="tl-title">Android Studio + Capacitor Setup</div>
+            <div class="tl-desc">התקנה, Gradle sync, בניית AAB ראשונה</div>
+            <div class="tl-time">⏱ 2-4 שעות</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div class="tl-right">
+            <div class="tl-title">Google Play Console — מילוי פרטים</div>
+            <div class="tl-desc">Store listing, screenshots, content rating, privacy policy</div>
+            <div class="tl-time">⏱ 1-2 שעות</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div class="tl-right">
+            <div class="tl-title">ביקורת Google Play</div>
+            <div class="tl-desc">ביקורת אוטומטית + ידנית לאפליקציה ראשונה</div>
+            <div class="tl-time">⏱ 1-7 ימים</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div class="tl-right">
+            <div class="tl-title">iOS Build + App Store Connect</div>
+            <div class="tl-desc">Xcode Archive + מילוי פרטים + העלאה</div>
+            <div class="tl-time">⏱ 3-5 שעות</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div class="tl-right">
+            <div class="tl-title">ביקורת Apple</div>
+            <div class="tl-desc">ביקורת ידנית — Apple קפדנית יותר מ-Google</div>
+            <div class="tl-time">⏱ 24-72 שעות</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot" style="background:#22c55e"></div></div>
+          <div class="tl-right">
+            <div class="tl-title" style="color:#22c55e">🎉 NitPark חי בשתי החנויות!</div>
+            <div class="tl-desc">סה"כ מהיום — בתנאי שהכל עובר חלק</div>
+            <div class="tl-time">⏱ ~1-2 שבועות</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-num">📁</div>
+        <div>
+          <div class="phase-title">קבצים שהוכנו עבורך</div>
+          <div class="phase-sub">בתיקיית NitPark</div>
+        </div>
+      </div>
+      <div class="files-grid">
+        <div class="file-card"><div class="file-name">privacy-policy.html</div><div class="file-desc">מדיניות פרטיות מלאה — צריך להעלות לאינטרנט ולהזין URL</div></div>
+        <div class="file-card"><div class="file-name">terms-of-service.html</div><div class="file-desc">תנאי שימוש מלאים — אותו דבר</div></div>
+        <div class="file-card"><div class="file-name">STORE-LISTING.md</div><div class="file-desc">כל הטקסטים להגשה — כותרת, תיאור, מילות מפתח — העתק/הדבק</div></div>
+        <div class="file-card"><div class="file-name">SCREENSHOTS-GUIDE.html</div><div class="file-desc">בדיוק אילו מסכים לצלם ואיך לעצב אותם</div></div>
+        <div class="file-card"><div class="file-name">manifest.json</div><div class="file-desc">PWA manifest מעודכן עם כל השדות הנדרשים</div></div>
+        <div class="file-card"><div class="file-name">capacitor.config.json</div><div class="file-desc">הגדרות Capacitor מעודכנות ל-Production</div></div>
+      </div>
+    </div>
+
+    <div class="phase" style="border-color:#15803d">
+      <div class="phase-header">
+        <div class="phase-num" style="background:linear-gradient(135deg,#16a34a,#15803d)">🌐</div>
+        <div>
+          <div class="phase-title">אחרון — העלה Privacy Policy לאינטרנט</div>
+          <div class="phase-sub">חובה לשתי החנויות</div>
+        </div>
+      </div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הכי קל — Firebase Hosting (חינם, כבר מחובר לפרויקט שלך):</div>
+        <code class="block">npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy</code>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">הכתובת שתקבל: <code>https://prkint-749da.web.app/privacy-policy.html</code><br/>
+        זו ה-URL שמכניסים בשתי החנויות</div>
+      </div></div>
+      <div class="step"><div class="step-dot"></div><div class="step-content">
+        <div class="step-text">חלופה קלה יותר: העלה ל-<strong>GitHub Pages</strong> — חינם, 5 דקות הגדרה</div>
+      </div></div>
+    </div>
+
+  </div><!-- /costs -->
+
+</div><!-- /container -->
+
+<script>
+function showPlatform(id, btn) {
+  document.querySelectorAll('.platform-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.platform-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+function toggleCheck(item) {
+  const box = item.querySelector('.check-box');
+  box.classList.toggle('done');
+}
+</script>
+</body>
+</html>

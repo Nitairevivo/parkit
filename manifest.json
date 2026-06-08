@@ -1,9 +1,9 @@
-{
-  "name": "ParkIt — חניה פרטית",
-  "short_name": "ParkIt",
+﻿{
+  "name": "NitPark — חניה פרטית",
+  "short_name": "NitPark",
   "description": "פלטפורמת החניה הפרטית מס׳ 1 בישראל",
-  "start_url": "/parkit/",
-  "scope": "/parkit/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1a1a2e",
   "theme_color": "#e91e8c",
@@ -17,7 +17,7 @@
   ],
   "categories": ["travel", "utilities"],
   "shortcuts": [
-    { "name": "חפש חניה", "url": "/parkit/#search", "description": "חפש חניה זמינה" },
-    { "name": "פרסם חניה", "url": "/parkit/#host", "description": "פרסם את החניה שלך" }
+    { "name": "חפש חניה", "url": "/#search", "description": "חפש חניה זמינה" },
+    { "name": "פרסם חניה", "url": "/#host", "description": "פרסם את החניה שלך" }
   ]
 }

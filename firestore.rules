@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper Functions ────────────────────────────────────────────────────
+    function isSignedIn()          { return request.auth != null; }
+    function isOwner(uid)          { return isSignedIn() && request.auth.uid == uid; }
+    function isValidString(s, max) { return s is string && s.size() > 0 && s.size() <= max; }
+    function isPositiveNumber(n)   { return n is number && n >= 0; }
+
+    // ── Parkings (public read, owner can publish their own listing) ─────────
+    match /parkings/{parkingId} {
+      allow read:  if true;  // public — anyone can browse listings
+      allow create: if isSignedIn()
+        && isOwner(request.resource.data.ownerId)
+        && isValidString(request.resource.data.address, 200)
+        && isPositiveNumber(request.resource.data.priceHour)
+        && request.resource.data.active == true;
+      allow update, delete: if isOwner(resource.data.ownerId); // owner manages their own listing
+    }
+
+    // ── Listings (the collection the app actually publishes to) ─────────────
+    // Goes live immediately on publish — no manual approval step.
+    match /listings/{listingId} {
+      allow read: if true; // public — anyone can browse listings
+      allow create: if isSignedIn()
+        && isOwner(request.resource.data.ownerId)
+        && isValidString(request.resource.data.address, 200)
+        && isPositiveNumber(request.resource.data.priceHour)
+        && request.resource.data.status == 'active';
+      allow update, delete: if isOwner(resource.data.ownerId); // owner manages their own listing
+    }
+
+    // ── Listing reviews (public read, signed-in users write their own review) ──
+    match /listings/{listingId}/reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && isOwner(request.resource.data.userId)
+        && request.resource.data.stars is number
+        && request.resource.data.stars >= 1
+        && request.resource.data.stars <= 5
+        && isValidString(request.resource.data.userName, 100);
+      allow update, delete: if false; // reviews are immutable from client
+    }
+
+    // ── Bookings ────────────────────────────────────────────────────────────
+    match /bookings/{bookingId} {
+      // Users can only read their own bookings
+      allow read: if isOwner(resource.data.userId);
+
+      // Create: must be authenticated, own booking, valid amounts
+      allow create: if isSignedIn()
+        && isOwner(request.resource.data.userId)
+        && isValidString(request.resource.data.parkingId, 100)
+        && isPositiveNumber(request.resource.data.subtotal)
+        && isPositiveNumber(request.resource.data.total)
+        && request.resource.data.total == request.resource.data.subtotal + request.resource.data.fee
+        && request.resource.data.status == 'confirmed';
+
+      allow update, delete: if false; // bookings are immutable from client
+    }
+
+    // ── Users (profile data) ────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read:   if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['displayName','email','phone','updatedAt']);
+      allow update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['displayName','email','phone','updatedAt']);
+      allow delete: if false;
+    }
+
+    // ── Default: deny everything else ──────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

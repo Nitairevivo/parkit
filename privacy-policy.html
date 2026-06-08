@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מדיניות פרטיות — NitPark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Heebo', sans-serif; background: #f8f9ff; color: #1e293b; line-height: 1.8; }
+    .header {
+      background: linear-gradient(135deg, #e91e8c, #764ba2);
+      padding: 40px 24px; text-align: center; color: white;
+    }
+    .header .logo { font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+    .header h1 { font-size: 1.4rem; font-weight: 700; opacity: .9; }
+    .header .updated { font-size: .85rem; opacity: .6; margin-top: 6px; }
+    .container { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+    .card {
+      background: white; border-radius: 20px; padding: 32px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.06); margin-bottom: 20px;
+    }
+    h2 { font-size: 1.15rem; font-weight: 800; color: #e91e8c; margin-bottom: 16px;
+         display: flex; align-items: center; gap: 10px; }
+    h2 .num {
+      background: linear-gradient(135deg,#e91e8c,#764ba2); color: white;
+      width: 28px; height: 28px; border-radius: 8px; display: inline-flex;
+      align-items: center; justify-content: center; font-size: .85rem;
+    }
+    p { color: #475569; font-size: .95rem; margin-bottom: 12px; }
+    ul { padding-right: 20px; color: #475569; font-size: .95rem; }
+    ul li { margin-bottom: 8px; }
+    .highlight { background: #fdf2f8; border-right: 3px solid #e91e8c; padding: 14px 16px;
+                 border-radius: 0 12px 12px 0; margin: 12px 0; }
+    .contact-box {
+      background: linear-gradient(135deg,#1e293b,#334155);
+      color: white; border-radius: 16px; padding: 24px; text-align: center; margin-top: 32px;
+    }
+    .contact-box h3 { font-size: 1.1rem; margin-bottom: 12px; }
+    .contact-box a { color: #e91e8c; text-decoration: none; font-weight: 700; }
+    .back-btn {
+      display: inline-block; margin-bottom: 24px; padding: 10px 20px;
+      background: linear-gradient(135deg,#e91e8c,#764ba2); color: white;
+      border-radius: 12px; text-decoration: none; font-weight: 700; font-size: .9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">P NitPark</div>
+  <h1>מדיניות פרטיות</h1>
+  <div class="updated">עדכון אחרון: יוני 2026</div>
+</div>
+
+<div class="container">
+  <a href="index.html" class="back-btn">← חזרה לאפליקציה</a>
+
+  <div class="card">
+    <h2><span class="num">1</span> מבוא</h2>
+    <p>
+      NitPark ("אנחנו", "החברה") מפעילה פלטפורמה לחיבור בין בעלי חניות פרטיות לנהגים.
+      מדיניות פרטיות זו מסבירה כיצד אנו אוספים, משתמשים ומגנים על המידע האישי שלך.
+    </p>
+    <div class="highlight">
+      בשימוש בשירות, אתה מסכים למדיניות פרטיות זו. אם אינך מסכים — אל תשתמש בשירות.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">2</span> מידע שאנו אוספים</h2>
+    <ul>
+      <li><strong>פרטי זיהוי:</strong> שם מלא, מספר טלפון, כתובת אימייל</li>
+      <li><strong>מידע כניסה:</strong> אימות דרך Firebase Authentication (SMS / Google / Apple)</li>
+      <li><strong>מיקום:</strong> GPS בזמן שימוש בפיצ׳ר ניווט ופתיחת שער (לא נשמר בשרתינו)</li>
+      <li><strong>פרטי חניה:</strong> כתובת, תמונות, מחיר, זמינות — שמוסר בעל החניה</li>
+      <li><strong>היסטוריית הזמנות:</strong> תאריכים, סכומים, חניות — לצורך ניהול השירות</li>
+      <li><strong>מידע מכשיר:</strong> סוג דפדפן, גרסת מערכת הפעלה (אנונימי)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">3</span> שימוש במידע</h2>
+    <p>אנו משתמשים במידע אך ורק לצרכים הבאים:</p>
+    <ul>
+      <li>אספקת שירות ההזמנה וחיבור בין שוכרים למשכירים</li>
+      <li>עיבוד תשלומים מאובטח דרך Stripe</li>
+      <li>שליחת אישורי הזמנה, קודי גישה, ועדכונים</li>
+      <li>תמיכה טכנית ופתרון תקלות</li>
+      <li>שיפור ופיתוח השירות (מידע אנונימי בלבד)</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">4</span> שיתוף מידע</h2>
+    <p>אנו <strong>לא מוכרים</strong> מידע אישי לצדדים שלישיים. מידע מועבר רק ל:</p>
+    <ul>
+      <li><strong>Stripe</strong> — עיבוד תשלומים (PCI DSS Level 1)</li>
+      <li><strong>Firebase / Google</strong> — אימות משתמשים ואחסון נתונים</li>
+      <li><strong>צד שני בעסקה</strong> — שם ושם המשתמש בלבד לצורך יצירת קשר</li>
+    </ul>
+    <div class="highlight">
+      פרטי כרטיס אשראי מלאים לא נשמרים בשרתינו בשום שלב.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">5</span> אבטחת מידע</h2>
+    <ul>
+      <li>הצפנת SSL/TLS לכל התקשורת</li>
+      <li>Firebase Security Rules — הגבלת גישה לנתונים</li>
+      <li>אימות דו-שלבי SMS לכניסה</li>
+      <li>Stripe PCI DSS לתשלומים</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">6</span> שמירת מידע</h2>
+    <p>
+      מידע נשמר כל עוד חשבונך פעיל, ועד 3 שנים לאחר הסגירה לצרכי חשבונאות ורגולציה.
+      ניתן לבקש מחיקת חשבון בכל עת — ראה סעיף 8.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">7</span> עוגיות ומעקב</h2>
+    <p>
+      אנו משתמשים ב-localStorage לשמירת הגדרות מקומיות (כרטיס אשראי מוצפן, העדפות).
+      אין שימוש בעוגיות מעקב של צדדים שלישיים לפרסום.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">8</span> זכויותיך</h2>
+    <ul>
+      <li><strong>גישה:</strong> בקש עותק של המידע שנשמר עליך</li>
+      <li><strong>תיקון:</strong> עדכן פרטים שגויים ישירות בפרופיל</li>
+      <li><strong>מחיקה:</strong> בקש מחיקת חשבון ומידע אישי</li>
+      <li><strong>ניוד:</strong> קבל את המידע שלך בפורמט נגיש</li>
+    </ul>
+    <p>לכל הבקשות: <strong>privacy@nitpark.co.il</strong></p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">9</span> ילדים</h2>
+    <p>
+      השירות אינו מיועד לאנשים מתחת לגיל 18. אנו לא אוספים ביודעין מידע מקטינים.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2><span class="num">10</span> שינויים במדיניות</h2>
+    <p>
+      עדכונים למדיניות יפורסמו בדף זה. שינויים מהותיים ייודעו גם ב-SMS / אימייל.
+      המשך שימוש בשירות לאחר שינוי = הסכמה למדיניות החדשה.
+    </p>
+  </div>
+
+  <div class="contact-box">
+    <h3>שאלות לגבי פרטיות?</h3>
+    <p style="color:rgba(255,255,255,.7);font-size:.9rem;margin:8px 0 16px">
+      אנחנו כאן לעזור — פנה אלינו
+    </p>
+    <a href="mailto:privacy@nitpark.co.il">📧 privacy@nitpark.co.il</a>
+    <span style="color:rgba(255,255,255,.3);margin:0 12px">·</span>
+    <a href="tel:+97231234567">📞 03-123-4567</a>
+  </div>
+</div>
+
+</body>
+</html>

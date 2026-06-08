@@ -1,0 +1,17 @@
+# Secret keys — never commit these!
+functions/.env
+.env
+*.env
+
+# Node
+node_modules/
+functions/node_modules/
+
+# Capacitor build output
+android/
+ios/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db

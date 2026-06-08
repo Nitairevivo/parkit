@@ -1,13 +1,13 @@
-const CACHE = 'parkit-v2';
+﻿const CACHE = 'nitpark-v6';
 const ASSETS = [
-  '/parkit/',
-  '/parkit/index.html',
-  '/parkit/style.css',
-  '/parkit/app.js',
-  '/parkit/data.js',
-  '/parkit/manifest.json',
-  '/parkit/icon-192.png',
-  '/parkit/icon-512.png',
+  '/',
+  '/index.html',
+  '/style.css',
+  '/app.js',
+  '/data.js',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
   'https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'

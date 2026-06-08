@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <meta name="theme-color" content="#e91e8c" />
-  <meta name="description" content="ParkIt — פלטפורמת החניה הפרטית מס׳ 1 בישראל. מצא חניה או הרוויח מהחניה שלך." />
-  <title>ParkIt — חניה פרטית בקלות</title>
+  <meta name="description" content="NitPark — פלטפורמת החניה הפרטית מס׳ 1 בישראל. מצא חניה או הרוויח מהחניה שלך." />
+  <title>NitPark — חניה פרטית בקלות</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="ParkIt" />
+  <meta name="apple-mobile-web-app-title" content="NitPark" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -19,12 +19,22 @@
 </head>
 <body>
 
+<!-- ========== SPLASH SCREEN ========== -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .4s ease">
+  <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#e91e8c,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900;color:white;margin-bottom:16px;box-shadow:0 8px 32px rgba(233,30,140,.4)">P</div>
+  <div style="color:white;font-size:1.5rem;font-weight:800;margin-bottom:8px">NitPark</div>
+  <div style="color:rgba(255,255,255,.5);font-size:.85rem">פלטפורמת החניה הפרטית מס׳ 1</div>
+  <div style="margin-top:40px;width:40px;height:3px;background:rgba(255,255,255,.15);border-radius:100px;overflow:hidden">
+    <div id="splash-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#e91e8c,#8b5cf6);border-radius:100px;transition:width 1.2s ease"></div>
+  </div>
+</div>
+
 <!-- ========== AUTH SCREEN ========== -->
 <div id="auth-screen" class="auth-screen">
   <div class="auth-inner">
     <div class="auth-logo">
       <div class="auth-logo-icon">P</div>
-      <div class="auth-logo-text">ParkIt</div>
+      <div class="auth-logo-text">NitPark</div>
     </div>
     <h1 class="auth-title">ברוך הבא 👋</h1>
     <p class="auth-subtitle">פלטפורמת החניה הפרטית מס׳ 1 בישראל</p>
@@ -65,6 +75,8 @@
         <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,1)" />
         <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,2)" />
         <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,3)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,4)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,5)" />
       </div>
       <button class="auth-submit-btn" onclick="verifyOtp()">אמת קוד ✓</button>
       <button class="auth-resend-btn" onclick="resendOtp()">שלח שוב</button>
@@ -96,34 +108,78 @@
   <div class="ob-options" id="ob-options"></div>
 </div>
 
-<!-- ========== NAVBAR ========== -->
-<nav class="navbar" id="navbar">
-  <div class="container nav-inner">
-    <a href="#" class="logo" onclick="showPage('home')">
-      <span class="logo-icon">P</span>
-      <span class="logo-text">ParkIt</span>
-    </a>
-    <div class="nav-links">
-      <a href="#" onclick="showPage('search')">חפש חניה</a>
-      <a href="#" onclick="showPage('how')">איך זה עובד</a>
-      <a href="#" onclick="showPage('host')">פרסם חניה</a>
+<!-- ========== TOPBAR ========== -->
+<header class="topbar" id="topbar">
+  <button class="topbar-hamburger" onclick="toggleSidebar()" aria-label="תפריט">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="#" class="topbar-logo" onclick="showPage('home')">
+    <span class="logo-icon">P</span>
+    <span class="logo-text">NitPark</span>
+  </a>
+  <div class="topbar-actions" id="topbar-actions"></div>
+</header>
+
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+    <div class="sidebar-header">
+      <a href="#" class="sidebar-logo" onclick="showPage('home');closeSidebar()">
+        <span class="logo-icon">P</span>
+        <span class="logo-text">NitPark</span>
+      </a>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
     </div>
-    <div class="nav-actions">
-      <button class="btn-ghost" onclick="openModal('login')">התחברות</button>
-      <button class="btn-primary" onclick="openModal('signup')">הצטרפות חינם</button>
+
+    <div class="sidebar-user-card" id="sidebar-user-card"></div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" id="slink-home" href="#" onclick="sidebarNav('home')">
+        <span class="slink-icon">🏠</span><span class="slink-text">בית</span>
+      </a>
+      <a class="sidebar-link" id="slink-search" href="#" onclick="sidebarNav('search')">
+        <span class="slink-icon">🔍</span><span class="slink-text">חיפוש חניה</span>
+      </a>
+      <a class="sidebar-link" id="slink-host" href="#" onclick="sidebarNav('host')">
+        <span class="slink-icon">🏡</span><span class="slink-text">פרסם חניה</span>
+      </a>
+      <a class="sidebar-link" id="slink-bookings" href="#" onclick="sidebarNav('bookings')">
+        <span class="slink-icon">📋</span><span class="slink-text">ההזמנות שלי</span>
+      </a>
+      <a class="sidebar-link" id="slink-profile" href="#" onclick="closeSidebar();setTimeout(()=>isLoggedIn?openModal('profile'):openModal('login'),200)">
+        <span class="slink-icon">👤</span><span class="slink-text">הפרופיל שלי</span>
+      </a>
+      <a class="sidebar-link" id="slink-how" href="#" onclick="sidebarNav('how')">
+        <span class="slink-icon">❓</span><span class="slink-text">איך זה עובד</span>
+      </a>
+      <a class="sidebar-link" id="slink-policy" href="#" onclick="sidebarNav('policy')">
+        <span class="slink-icon">📋</span><span class="slink-text">מדיניות</span>
+      </a>
+    </nav>
+
+    <!-- Credit Card Button -->
+    <div class="sidebar-card-btn-wrap">
+      <button class="sidebar-card-btn" onclick="openCreditCardPanel();closeSidebar()">
+        <span class="sidebar-card-icon">💳</span>
+        <div class="sidebar-card-btn-text">
+          <span class="sidebar-card-btn-title">כרטיס אשראי</span>
+          <span class="sidebar-card-btn-sub" id="sidebar-card-sub">לא שמור</span>
+        </div>
+        <span class="sidebar-card-badge" id="sidebar-card-badge" style="display:none">✓</span>
+      </button>
     </div>
-    <button class="hamburger" id="hamburger" onclick="toggleMenu()">
-      <span></span><span></span><span></span>
-    </button>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-auth" id="sidebar-auth"></div>
   </div>
-  <div class="mobile-menu" id="mobileMenu">
-    <a href="#" onclick="showPage('search');toggleMenu()">חפש חניה</a>
-    <a href="#" onclick="showPage('how');toggleMenu()">איך זה עובד</a>
-    <a href="#" onclick="showPage('host');toggleMenu()">פרסם חניה</a>
-    <a href="#" onclick="openModal('login');toggleMenu()">התחברות</a>
-    <a href="#" class="btn-primary-mobile" onclick="openModal('signup');toggleMenu()">הצטרפות חינם</a>
-  </div>
-</nav>
+</aside>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Legacy navbar (hidden, kept for JS references) -->
+<nav class="navbar" id="navbar" style="display:none!important"></nav>
 
 <!-- ========== HOME PAGE ========== -->
 <div id="page-home" class="page active">
@@ -131,11 +187,18 @@
   <!-- HERO -->
   <section class="hero">
     <div class="hero-bg"></div>
+
+    <!-- floating decorative blobs -->
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+
     <div class="container hero-content">
+      <!-- badge -->
       <div class="hero-badge">
         <span class="badge-dot"></span>
-        ⚡ +12,000 חניות זמינות עכשיו
+        פלטפורמת החניה מס׳ 1 בישראל
       </div>
+
       <h1 class="hero-title">
         חניה פרטית.<br/>
         <span class="gradient-text">בלי כאב ראש.</span>
@@ -145,122 +208,137 @@
         או הרוויח כסף מהחניה שלך כשאתה לא משתמש בה.
       </p>
 
-      <!-- SEARCH BOX -->
-      <div class="hero-search-box">
-        <div class="search-tabs">
-          <button class="search-tab active" id="tab-find" onclick="switchTab('find')">🔍 מצא חניה</button>
-          <button class="search-tab" id="tab-host" onclick="switchTab('host')">🏠 פרסם חניה</button>
-        </div>
-        <div id="find-form" class="search-form">
-          <div class="search-inputs">
-            <div class="search-field">
-              <label>לאן אתה נוסע?</label>
-              <input type="text" id="searchLocation" placeholder="עיר, רחוב, אזור..." />
-            </div>
-            <div class="search-field">
-              <label>מתי?</label>
-              <input type="datetime-local" id="searchDate" />
-            </div>
-            <div class="search-field narrow">
-              <label>כמה שעות?</label>
-              <select id="searchHours">
-                <option value="1">שעה</option>
-                <option value="2">שעתיים</option>
-                <option value="3">3 שעות</option>
-                <option value="4">4 שעות</option>
-                <option value="8">יום שלם</option>
-                <option value="0">חודשי</option>
-              </select>
-            </div>
+      <!-- CTA cards -->
+      <div class="hero-cta-cards">
+        <button class="hero-cta-card hero-cta-card--search" onclick="showPage('search')">
+          <div class="hero-cta-card-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </div>
-          <button class="btn-search" onclick="doSearch()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            חפש חניה
-          </button>
-        </div>
-        <div id="host-form" class="search-form" style="display:none">
-          <div class="search-inputs">
-            <div class="search-field">
-              <label>כתובת החניה שלך</label>
-              <input type="text" placeholder="רחוב, מספר בית, עיר..." />
-            </div>
-            <div class="search-field narrow">
-              <label>סוג חניה</label>
-              <select>
-                <option>פרטית בבניין</option>
-                <option>חצר פרטית</option>
-                <option>תת-קרקעית</option>
-                <option>חיצונית</option>
-              </select>
-            </div>
+          <div class="hero-cta-card-text">
+            <span class="hero-cta-card-title">חפש חניה</span>
+            <span class="hero-cta-card-sub">מצא חניה פרטית קרוב אליך</span>
           </div>
-          <button class="btn-search" onclick="showPage('host')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            פרסם עכשיו
-          </button>
+          <div class="hero-cta-card-arrow">←</div>
+        </button>
+
+        <div class="hero-cta-or"><span>או</span></div>
+
+        <button class="hero-cta-card hero-cta-card--host" id="hero-host-cta" onclick="showPage('host')">
+          <div class="hero-cta-card-icon">🏠</div>
+          <div class="hero-cta-card-text">
+            <span class="hero-cta-card-title">פרסם חניה</span>
+            <span class="hero-cta-card-sub">הרוויח כסף מהחניה שלך</span>
+          </div>
+          <div class="hero-cta-card-arrow">←</div>
+        </button>
+      </div>
+
+      <!-- quick facts row — real facts about the platform, not fabricated stats -->
+      <div class="hero-facts">
+        <div class="hero-fact">
+          <span class="hero-fact-icon">⚡</span>
+          <span class="hero-fact-text">פרסום חניה תוך פחות מדקה</span>
+        </div>
+        <div class="hero-fact">
+          <span class="hero-fact-icon">🆓</span>
+          <span class="hero-fact-text">ללא עמלת רישום</span>
+        </div>
+        <div class="hero-fact">
+          <span class="hero-fact-icon">🔒</span>
+          <span class="hero-fact-text">תשלום מאובטח דרך Stripe</span>
+        </div>
+        <div class="hero-fact">
+          <span class="hero-fact-icon">🎚️</span>
+          <span class="hero-fact-text">אתה קובע זמינות ומחיר</span>
         </div>
       </div>
 
-      <!-- STATS -->
-      <div class="hero-stats">
-        <div class="stat">
-          <span class="stat-num">12K+</span>
-          <span class="stat-label">חניות פעילות</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-num">50K+</span>
-          <span class="stat-label">משתמשים מרוצים</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-num">4.9★</span>
-          <span class="stat-label">דירוג ממוצע</span>
-        </div>
-      </div>
     </div>
+
     <div class="hero-wave">
       <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#f8f9ff"/></svg>
     </div>
   </section>
 
-  <!-- WHY PARKIT -->
+  <!-- QUICK-FIND SHORTCUT CARDS -->
+  <section class="section quick-find-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>בדיוק מה שאתה מחפש</h2>
+        <p>קיצורי דרך לחיפושים הכי פופולריים</p>
+      </div>
+      <div class="quick-find-grid">
+        <div class="quick-find-card qf-ev" onclick="goToSearchWithFilter('ev')">
+          <div class="qf-icon">⚡</div>
+          <div class="qf-title">מצא את החנייה עם ההטענה הכי קרובה אליך</div>
+          <div class="qf-sub">חניות עם עמדות טעינה לרכב חשמלי באזור שלך</div>
+          <div class="qf-arrow">←</div>
+        </div>
+        <div class="quick-find-card qf-airport" onclick="goToSearchWithFilter('airport')">
+          <div class="qf-icon">✈️</div>
+          <div class="qf-title">מחפש חניה ליד שדה התעופה?</div>
+          <div class="qf-sub">חניות פרטיות במחיר משתלם בקרבת שדות תעופה</div>
+          <div class="qf-arrow">←</div>
+        </div>
+        <div class="quick-find-card qf-mall" onclick="goToSearchWithFilter('mall')">
+          <div class="qf-icon">🛍️</div>
+          <div class="qf-title">יוצא לקניון? מצא חניה קרובה</div>
+          <div class="qf-sub">חניות פרטיות במרחק הליכה מהקניונים הכי גדולים</div>
+          <div class="qf-arrow">←</div>
+        </div>
+        <div class="quick-find-card qf-help" onclick="closeModal();toggleChatbot()">
+          <div class="qf-icon">🤖</div>
+          <div class="qf-title">נתקעת? צריך עזרה בכל דבר?</div>
+          <div class="qf-sub">השתמש בבוט שלנו — כאן בשבילך 24/7</div>
+          <button class="qf-help-btn" onclick="event.stopPropagation();closeModal();toggleChatbot()">💬 פתח את הבוט</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY NITPARK -->
   <section class="section section-light">
     <div class="container">
       <div class="section-header">
-        <h2>למה ParkIt?</h2>
+        <h2>למה NitPark?</h2>
         <p>פלטפורמה אחת. אלפי חניות. אפס כאב ראש.</p>
       </div>
       <div class="features-grid">
-        <div class="feature-card">
+        <div class="feature-card feature-card-link" onclick="showPage('search')">
           <div class="feature-icon" style="background:linear-gradient(135deg,#ff6b9d,#e91e8c)">💰</div>
           <h3>מחירים הוגנים</h3>
           <p>עד 60% זול יותר מחניונים ציבוריים. תשלום לפי שעה, יום, או חודש.</p>
+          <span class="feature-arrow">חפש חניות ←</span>
         </div>
-        <div class="feature-card">
+        <div class="feature-card feature-card-link" onclick="showPage('how')">
           <div class="feature-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">🛡️</div>
           <h3>מאובטח ומבוטח</h3>
           <p>כל החניות מאומתות על ידינו. ביטוח מלא לכל עסקה לשקט נפשי.</p>
+          <span class="feature-arrow">איך זה עובד ←</span>
         </div>
-        <div class="feature-card">
+        <div class="feature-card feature-card-link" onclick="showPage('search')">
           <div class="feature-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c)">⚡</div>
           <h3>הזמנה ב-30 שניות</h3>
           <p>מצא, הזמן, סע. בלי טפסים, בלי המתנה. הכל באפליקציה.</p>
+          <span class="feature-arrow">הזמן עכשיו ←</span>
         </div>
-        <div class="feature-card">
+        <div class="feature-card feature-card-link" onclick="showPage('search')">
           <div class="feature-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">🗺️</div>
           <h3>ניווט אוטומטי</h3>
           <p>לאחר ההזמנה — ניווט ישיר לחניה עם פתיחת שער אוטומטית.</p>
+          <span class="feature-arrow">מצא חניה ←</span>
         </div>
-        <div class="feature-card">
+        <div class="feature-card feature-card-link" onclick="showPage('how')">
           <div class="feature-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">⭐</div>
           <h3>דירוגים ואמון</h3>
           <p>כל משתמש מדורג. קהילה של שוכרים ומשכירים מהימנים.</p>
+          <span class="feature-arrow">קרא עוד ←</span>
         </div>
-        <div class="feature-card">
+        <div class="feature-card feature-card-link" onclick="showInstallPrompt()">
           <div class="feature-icon" style="background:linear-gradient(135deg,#fa709a,#fee140)">📱</div>
           <h3>עובד על כל מכשיר</h3>
           <p>ממובייל ועד מחשב. PWA — אפשר להתקין ישר מהדפדפן.</p>
+          <span class="feature-arrow">התקן עכשיו ←</span>
         </div>
       </div>
     </div>
@@ -317,86 +395,27 @@
         <div class="host-cta-content">
           <div class="host-cta-badge">💸 הכנסה פסיבית</div>
           <h2>החניה שלך = כסף בכיס</h2>
-          <p>יש לך חניה פנויה? פרסם אותה ב-ParkIt והרוויח עד <strong>₪2,500</strong> בחודש בלי לעשות כלום.</p>
+          <p>יש לך חניה פנויה? פרסם אותה ב-NitPark והרוויח כסף מהחניה שלך כשאתה לא משתמש בה.</p>
           <ul class="host-benefits">
             <li>✓ פרסום חינמי — ללא עמלה על הרשמה</li>
             <li>✓ תשלום ישיר לחשבון הבנק שלך</li>
             <li>✓ אתה קובע את הזמינות והמחיר</li>
             <li>✓ ביטוח מלא בכל הזמנה</li>
           </ul>
-          <button class="btn-primary-large" onclick="showPage('host')">
+          <button class="btn-primary-large" id="host-cta-btn" onclick="showPage('host')">
             פרסם חניה עכשיו →
           </button>
-        </div>
-        <div class="host-cta-visual">
-          <div class="earning-card">
-            <div class="earning-month">מאי 2026</div>
-            <div class="earning-amount">₪2,340</div>
-            <div class="earning-label">הכנסה מחניה</div>
-            <div class="earning-bar-container">
-              <div class="earning-days">
-                <div class="e-day filled"></div><div class="e-day filled"></div><div class="e-day filled"></div>
-                <div class="e-day filled"></div><div class="e-day filled"></div><div class="e-day empty"></div>
-                <div class="e-day filled"></div>
-              </div>
-              <div class="earning-legend">מלא / פנוי</div>
-            </div>
-            <div class="earning-tip">⭐ 4.9 · 47 ביקורות</div>
-          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- TESTIMONIALS -->
-  <section class="section section-light">
-    <div class="container">
-      <div class="section-header">
-        <h2>מה אומרים עלינו</h2>
-      </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p>"חיפשתי חניה ב-HaCarmel שעה שלמה. מאז ParkIt — 3 דקות ויש לי מקום. שינה חיים."</p>
-          <div class="testimonial-author">
-            <div class="avatar" style="background:#e91e8c">ד</div>
-            <div>
-              <strong>דנה לוי</strong>
-              <span>תל אביב</span>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p>"פרסמתי את החניה שלי לפני 3 חודשים. מאז הרווחתי ₪6,800 בלי לעשות כלום. מדהים."</p>
-          <div class="testimonial-author">
-            <div class="avatar" style="background:#764ba2">מ</div>
-            <div>
-              <strong>משה כהן</strong>
-              <span>רמת גן</span>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <div class="stars">★★★★★</div>
-          <p>"הביטוח ופתיחת השער האוטומטית זה מה שמבדיל. לא צריך לדבר עם אף אחד. פשוט עובד."</p>
-          <div class="testimonial-author">
-            <div class="avatar" style="background:#f5576c">ר</div>
-            <div>
-              <strong>רונית אברהם</strong>
-              <span>הרצליה</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- APP INSTALL BANNER -->
   <section class="section section-gradient">
     <div class="container app-banner">
       <div class="app-banner-text">
-        <h2>קבל את ParkIt בכל מקום</h2>
+        <h2>קבל את NitPark בכל מקום</h2>
         <p>התקן כאפליקציה על המובייל שלך — חינם, ללא חנות אפליקציות.</p>
         <button class="btn-white" onclick="showInstallPrompt()">התקן עכשיו</button>
       </div>
@@ -404,7 +423,7 @@
         <div class="phone-frame">
           <div class="phone-screen">
             <div class="phone-app-icon">P</div>
-            <div class="phone-app-name">ParkIt</div>
+            <div class="phone-app-name">NitPark</div>
           </div>
         </div>
       </div>
@@ -425,19 +444,39 @@
         <button class="search-topbar-btn" onclick="doSearchInline()">חפש</button>
       </div>
 
+      <!-- ENTRY / EXIT TIME -->
+      <div class="search-time-row">
+        <div class="search-time-field">
+          <label for="searchEntryTime">🚗 כניסה</label>
+          <input type="datetime-local" id="searchEntryTime" class="search-time-input" onchange="onSearchTimesChanged()" />
+        </div>
+        <div class="search-time-field">
+          <label for="searchExitTime">🏁 יציאה</label>
+          <input type="datetime-local" id="searchExitTime" class="search-time-input" onchange="onSearchTimesChanged()" />
+        </div>
+      </div>
+
       <!-- QUICK FILTERS -->
       <div class="search-quick-filters">
         <!-- Categories -->
         <div class="cat-pills" id="cat-pills">
-          <button class="cat-pill active" onclick="filterByCategory('all',this)">🅰️ הכל</button>
-          <button class="cat-pill" onclick="filterByCategory('beach',this)">🏖️ חוף ים</button>
-          <button class="cat-pill" onclick="filterByCategory('hospital',this)">🏥 בית חולים</button>
-          <button class="cat-pill" onclick="filterByCategory('mall',this)">🛍️ קניון</button>
-          <button class="cat-pill" onclick="filterByCategory('events',this)">🎭 אירועים</button>
-          <button class="cat-pill" onclick="filterByCategory('office',this)">🏢 אזור עסקים</button>
-          <button class="cat-pill" onclick="filterByCategory('restaurant',this)">🍽️ מסעדות</button>
-          <button class="cat-pill" onclick="filterByCategory('university',this)">🎓 אוניברסיטה</button>
-          <button class="cat-pill" onclick="filterByCategory('ev',this)">⚡ EV</button>
+          <button class="cat-pill active" data-cat="all" onclick="filterByCategory('all',this)">🅰️ הכל</button>
+          <button class="cat-pill" data-cat="beach" onclick="filterByCategory('beach',this)">🏖️ חוף ים</button>
+          <button class="cat-pill" data-cat="hospital" onclick="filterByCategory('hospital',this)">🏥 בית חולים</button>
+          <button class="cat-pill" data-cat="mall" onclick="filterByCategory('mall',this)">🛍️ קניון</button>
+          <button class="cat-pill" data-cat="events" onclick="filterByCategory('events',this)">🎭 אירועים</button>
+          <button class="cat-pill" data-cat="office" onclick="filterByCategory('office',this)">🏢 אזור עסקים</button>
+          <button class="cat-pill" data-cat="restaurant" onclick="filterByCategory('restaurant',this)">🍽️ מסעדות</button>
+          <button class="cat-pill" data-cat="university" onclick="filterByCategory('university',this)">🎓 אוניברסיטה</button>
+          <button class="cat-pill" data-cat="airport" onclick="filterByCategory('airport',this)">✈️ שדה תעופה</button>
+        </div>
+
+        <!-- EV charging — its own prominent row -->
+        <div class="ev-highlight-row">
+          <button class="ev-highlight-pill" id="ev-highlight-pill" onclick="filterByCategory('ev', document.getElementById('ev-highlight-pill'))">
+            <span class="ev-highlight-icon">⚡</span>
+            <span class="ev-highlight-text">חניות עם עמדת טעינה לרכב חשמלי</span>
+          </button>
         </div>
 
         <!-- Rental type + period -->
@@ -464,13 +503,17 @@
             <option value="price_desc">₪ מחיר יורד</option>
           </select>
           <span id="results-count" class="results-count-pill">טוען...</span>
+          <div class="view-toggle">
+            <button class="view-toggle-btn active" id="vt-list" onclick="setSearchView('list')">📋 רשימה</button>
+            <button class="view-toggle-btn" id="vt-map" onclick="setSearchView('map')">🗺️ מפה</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- MAIN: MAP + SIDEBAR -->
-  <div class="search-map-layout">
+  <div class="search-map-layout" id="search-map-layout">
 
     <!-- SIDEBAR: cards list -->
     <aside class="search-sidebar" id="search-sidebar">
@@ -480,6 +523,7 @@
     <!-- MAP: takes the rest -->
     <div class="search-map-area">
       <div id="leaflet-map"></div>
+      <button class="map-locate-btn" onclick="centerOnUser()" title="מיקומי">📍</button>
     </div>
 
   </div>
@@ -497,20 +541,6 @@
       <div class="host-hero-content">
         <h1>הרוויח מהחניה שלך</h1>
         <p>פרסם חניה ב-5 דקות. קבל תשלום ישיר לחשבון.</p>
-        <div class="host-hero-stats">
-          <div class="host-stat">
-            <strong>₪2,500</strong>
-            <span>הכנסה חודשית ממוצעת</span>
-          </div>
-          <div class="host-stat">
-            <strong>0%</strong>
-            <span>עמלה על רישום</span>
-          </div>
-          <div class="host-stat">
-            <strong>100%</strong>
-            <span>שליטה על הזמינות</span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -568,35 +598,27 @@
             <textarea id="h-desc" rows="3" placeholder="מידע נוסף שיעזור לשוכר: גובה כניסה, הוראות גישה, מה יש בסביבה..."></textarea>
           </div>
           <div class="form-group full">
+            <label>מה יש בקרבת החניה שלך? 📍</label>
+            <small class="price-hint">סמן את מה שנמצא קרוב — זה עוזר לשוכרים שמחפשים חניה ליד יעד מסוים למצוא אותך!</small>
+            <div class="tags-selector" id="nearby-categories">
+              <label class="tag-opt"><input type="checkbox" value="beach"> 🏖️ חוף ים</label>
+              <label class="tag-opt"><input type="checkbox" value="hospital"> 🏥 בית חולים</label>
+              <label class="tag-opt"><input type="checkbox" value="mall"> 🛍️ קניון</label>
+              <label class="tag-opt"><input type="checkbox" value="events"> 🎭 אולם/אזור אירועים</label>
+              <label class="tag-opt"><input type="checkbox" value="office"> 🏢 אזור עסקים</label>
+              <label class="tag-opt"><input type="checkbox" value="restaurant"> 🍽️ מסעדות</label>
+              <label class="tag-opt"><input type="checkbox" value="university"> 🎓 אוניברסיטה/מכללה</label>
+              <label class="tag-opt"><input type="checkbox" value="airport"> ✈️ שדה תעופה</label>
+            </div>
+          </div>
+          <div class="form-group full">
             <label>מאפיינים מיוחדים</label>
             <div class="tags-selector">
               <label class="tag-opt"><input type="checkbox" value="מקורה"> מקורה</label>
               <label class="tag-opt"><input type="checkbox" value="מאובטח"> שמירה 24/7</label>
               <label class="tag-opt"><input type="checkbox" value="מצלמות"> מצלמות</label>
               <label class="tag-opt"><input type="checkbox" value="גישה 24/7"> גישה 24/7</label>
-              <label class="tag-opt"><input type="checkbox" value="טעינת חשמל" id="host-ev-check" onchange="toggleEVFields(this)"> ⚡ עמדת טעינה (EV)</label>
               <label class="tag-opt"><input type="checkbox" value="נגיש"> נגיש לנכים</label>
-            </div>
-          </div>
-          <div class="form-group full ev-fields" id="ev-fields" style="display:none">
-            <label>פרטי עמדת הטעינה</label>
-            <div class="ev-host-grid">
-              <div class="ev-host-field">
-                <label class="ev-sub-label">סוג עמדה</label>
-                <select id="h-ev-type">
-                  <option>AC Type 2 (ביתי · עד 22kW)</option>
-                  <option>DC Fast Charge (מהיר · עד 50kW)</option>
-                  <option>AC שקע רגיל (3.7kW)</option>
-                </select>
-              </div>
-              <div class="ev-host-field">
-                <label class="ev-sub-label">הספק (kW)</label>
-                <input type="number" id="h-ev-kw" value="7" min="2" max="150" />
-              </div>
-              <div class="ev-host-field">
-                <label class="ev-sub-label">מחיר לkWh (₪) — 0 = כלול</label>
-                <input type="number" id="h-ev-price" value="0.85" min="0" step="0.05" />
-              </div>
             </div>
           </div>
 
@@ -609,6 +631,9 @@
                 </label>
                 <label class="gate-type-opt" id="gtype-intercom" onclick="selectGateType(this,'intercom')">
                   <span>📞 אינטרקום</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-iot" onclick="selectGateType(this,'iot')">
+                  <span>🌐 IoT חכם</span>
                 </label>
                 <label class="gate-type-opt" id="gtype-key" onclick="selectGateType(this,'key')">
                   <span>🔑 מפתח פיזי</span>
@@ -641,11 +666,31 @@
 
               <div id="gate-intercom-fields" class="gate-fields" style="display:none">
                 <div class="form-group">
-                  <label>מספר דירה / כפתור אינטרקום</label>
-                  <input type="text" id="h-intercom" class="modal-input" placeholder="לדוגמה: דירה 5, כפתור 12" />
+                  <label>מספר טלפון האינטרקום (לחיוג DTMF)</label>
+                  <input type="tel" id="h-intercom-phone" class="modal-input" placeholder="לדוגמה: 0501234567" />
+                </div>
+                <div class="form-group">
+                  <label>קוד כניסה (יוזן אוטומטית לאחר חיוג)</label>
+                  <input type="text" id="h-intercom-code" class="gate-pin-input"
+                    placeholder="1234" maxlength="8"
+                    oninput="this.value=this.value.replace(/[^0-9#*]/g,'')" autocomplete="off" />
                 </div>
                 <div class="gate-code-note">
-                  <span>📞 השוכר יצלצל על האינטרקום — בעל החניה יפתח מרחוק</span>
+                  <span>📞 האפליקציה תחייג ותזין את הקוד אוטומטית כשהנהג מתקרב לשער</span>
+                </div>
+              </div>
+
+              <div id="gate-iot-fields" class="gate-fields" style="display:none">
+                <div class="form-group">
+                  <label>Webhook URL של הבקר החכם</label>
+                  <input type="url" id="h-iot-url" class="modal-input" placeholder="https://my-gate-controller.com/open" />
+                </div>
+                <div class="form-group">
+                  <label>Secret Token (אופציונלי)</label>
+                  <input type="text" id="h-iot-token" class="modal-input" placeholder="bearer token / API key" autocomplete="off" />
+                </div>
+                <div class="gate-code-note">
+                  <span>🌐 האפליקציה תשלח POST request לבקר כשהנהג לוחץ "פתח שער"</span>
                 </div>
               </div>
 
@@ -706,7 +751,7 @@
                 </div>
               </div>
               <div class="ev-info-note">
-                💡 חניות עם עמדת טעינה מרוויחות בממוצע 35% יותר ומופיעות גבוה יותר בחיפוש.
+                💡 חניות עם עמדת טעינה מופיעות גבוה יותר בחיפוש.
               </div>
             </div>
           </div>
@@ -716,8 +761,8 @@
             <div class="upload-area" onclick="this.querySelector('input').click()">
               <input type="file" accept="image/*" multiple style="display:none" onchange="previewImages(this)" />
               <div class="upload-icon">📷</div>
-              <p>לחץ להעלאת תמונות</p>
-              <small>עד 6 תמונות · JPG, PNG</small>
+              <p>לחץ לצילום תמונה או לבחירה מהגלריה</p>
+              <small>חובה לפחות תמונה אחת · עד 6 תמונות · לחץ על תמונה כדי לסמן את מיקום החניה</small>
             </div>
             <div id="image-preview" class="image-preview-grid"></div>
           </div>
@@ -731,19 +776,36 @@
       <div id="host-step-2" class="host-step">
         <h2>זמינות ותמחור</h2>
         <div class="form-grid">
-          <div class="form-group">
-            <label>מחיר לשעה (₪) *</label>
-            <div class="price-input-wrap">
-              <span>₪</span>
-              <input type="number" id="h-price-hour" value="15" min="5" max="100" />
+          <div class="form-group full">
+            <label>מתי החניה תהיה זמינה להזמנה?</label>
+            <div class="days-selector">
+              <button type="button" class="avail-mode-btn active" id="avail-now-btn" onclick="setAvailabilityMode('now', this)">זמינה מיד</button>
+              <button type="button" class="avail-mode-btn" id="avail-later-btn" onclick="setAvailabilityMode('later', this)">ממועד עתידי</button>
             </div>
-            <small class="price-hint">ממוצע באזורך: ₪12–18/שעה</small>
+            <div id="avail-date-wrap" style="display:none;margin-top:10px">
+              <label>זמינה החל מ־</label>
+              <input type="datetime-local" id="h-available-from" />
+              <small class="price-hint">הלקוחות יוכלו לראות ולהזמין את החניה, אך הכניסה תיפתח רק החל מהמועד שתבחר.</small>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>מחירון לפי שעות *</label>
+            <small class="price-hint">תוכל לקבוע מחיר שונה לכל שעה — למשל שעה ראשונה ₪17, שעה שנייה ₪10. כל שעה נוספת תחויב לפי "כל שעה נוספת".</small>
+            <div id="hour-tiers-list" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
+            <button type="button" class="btn-secondary" style="margin-top:8px;padding:8px 16px;font-size:.85rem" onclick="addHourTier()">+ הוסף שעה במחיר שונה</button>
           </div>
           <div class="form-group">
             <label>מחיר יומי (₪) — אופציונלי</label>
             <div class="price-input-wrap">
               <span>₪</span>
               <input type="number" id="h-price-day" placeholder="80" min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>מחיר שבועי (₪) — אופציונלי</label>
+            <div class="price-input-wrap">
+              <span>₪</span>
+              <input type="number" id="h-price-week" placeholder="450" min="0" />
             </div>
           </div>
           <div class="form-group">
@@ -791,7 +853,7 @@
               <span class="ep-num" id="earn-100">₪2,160</span>
             </div>
           </div>
-          <small>* לאחר עמלת ParkIt 20%</small>
+          <small>* לאחר עמלת NitPark 20%</small>
         </div>
 
         <div class="form-actions">
@@ -837,7 +899,7 @@
         <div class="payment-steps">
           <div class="ps-item">
             <div class="ps-icon">📅</div>
-            <p>שוכר מזמין ומשלם מראש דרך ParkIt</p>
+            <p>שוכר מזמין ומשלם מראש דרך NitPark</p>
           </div>
           <div class="ps-item">
             <div class="ps-icon">🔒</div>
@@ -849,7 +911,7 @@
           </div>
         </div>
         <div class="commission-note">
-          עמלת ParkIt: <strong>20%</strong> מכל עסקה.<br/>
+          עמלת NitPark: <strong>20%</strong> מכל עסקה.<br/>
           אתה מקבל: <strong>80%</strong>.
         </div>
       </div>
@@ -869,7 +931,7 @@
 <div id="page-how" class="page">
   <div class="container how-container">
     <div class="section-header">
-      <h1>איך ParkIt עובד?</h1>
+      <h1>איך NitPark עובד?</h1>
       <p>מצא חניה או פרסם חניה — תהליך פשוט ומאובטח</p>
     </div>
 
@@ -961,6 +1023,99 @@
         </div>
       </div>
     </div>
+
+    <!-- FINE POLICY SECTION -->
+    <div class="how-fine-section" onclick="showFinePolicy()" style="cursor:pointer;background:linear-gradient(135deg,#fff7ed,#fef2f2);border:2px solid #fca5a5;border-radius:18px;padding:20px 24px;margin-top:28px;display:flex;align-items:center;gap:16px">
+      <div style="font-size:2.2rem">⚠️</div>
+      <div>
+        <div style="font-weight:800;font-size:1.05rem;color:#b91c1c;margin-bottom:4px">מדיניות קנסות וגרירה</div>
+        <div style="color:#7f1d1d;font-size:.88rem;line-height:1.5">חריגה מהזמנה = ₪200/שעה. חניה ללא הזמנה = גרירה מיידית ₪400–₪800. לחץ לפרטים מלאים.</div>
+      </div>
+      <div style="margin-right:auto;color:#dc2626;font-size:1.1rem">←</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== POLICY PAGE ========== -->
+<div id="page-policy" class="page">
+  <div class="container">
+    <div class="section-header">
+      <h1>📋 מדיניות האפליקציה</h1>
+      <p>חשוב לקרוא לפני השימוש ב-NitPark</p>
+    </div>
+
+    <div style="max-width:720px;margin:0 auto;color:var(--gray-600);font-size:.95rem;line-height:1.9;padding-bottom:24px">
+
+      <div style="background:linear-gradient(135deg,#fff0f7,#f5f0ff);border-radius:14px;padding:18px 20px;margin-bottom:16px;border-right:4px solid #e91e8c">
+        <div style="font-weight:800;color:#1a1a2e;font-size:1.05rem;margin-bottom:6px">⏱️ זמן החניה</div>
+        <p style="margin:0">יש לפנות את מקום החניה בדיוק בשעה שסיימת להזמין. חריגה מהזמן המוזמן, גם של דקות בודדות, תוביל לחיוב נוסף אוטומטי.</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#fff5f5,#fff0f0);border-radius:14px;padding:18px 20px;margin-bottom:16px;border-right:4px solid #ef4444">
+        <div style="font-weight:800;color:#1a1a2e;font-size:1.05rem;margin-bottom:6px">🚗 גרירת רכב</div>
+        <p style="margin:0">רכב שלא פינה את מקומו בזמן עלול להיגרר על חשבון הנהג. NitPark לא תישא באחריות לעלות הגרירה או לכל נזק הנובע מכך.</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#f0f7ff,#f0f5ff);border-radius:14px;padding:18px 20px;margin-bottom:16px;border-right:4px solid #3b82f6">
+        <div style="font-weight:800;color:#1a1a2e;font-size:1.05rem;margin-bottom:6px">💳 ביטול הזמנה</div>
+        <p style="margin:0">ביטול עד 2 שעות לפני תחילת החניה — ללא חיוב. ביטול מאוחר יותר יחויב ב-50% מסכום ההזמנה.</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#f0fff4,#f0fdf4);border-radius:14px;padding:18px 20px;margin-bottom:16px;border-right:4px solid #22c55e">
+        <div style="font-weight:800;color:#1a1a2e;font-size:1.05rem;margin-bottom:6px">🏡 כבוד הנכס</div>
+        <p style="margin:0">יש לחנות אך ורק במקום שהוזמן, לא לחסום מעברים, ולשמור על ניקיון הסביבה. כל נזק לנכס יחויב בנפרד.</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#fffbf0,#fff8e1);border-radius:14px;padding:18px 20px;margin-bottom:16px;border-right:4px solid #f59e0b">
+        <div style="font-weight:800;color:#1a1a2e;font-size:1.05rem;margin-bottom:6px">🔒 אחריות ובטיחות</div>
+        <p style="margin:0">NitPark אינה אחראית לנזק, גניבה, או תאונה שתתרחש במקום החניה. מומלץ לוודא שהרכב נעול כראוי.</p>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#faf0ff,#f5f0ff);border-radius:14px;padding:18px 20px;margin-bottom:4px;border-right:4px solid #8b5cf6">
+        <div style="font-weight:800;color:#1a1a2e;font-size:1.05rem;margin-bottom:6px">⚠️ דיווח תקלות</div>
+        <p style="margin:0">אם נתקלת בבעיה (מקום תפוס, שער סגור וכד׳) — פנה לתמיכה מיד דרך האפליקציה. אנחנו זמינים 24/7.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== BOOKINGS PAGE ========== -->
+<div id="page-bookings" class="page">
+  <div class="container" style="padding-top:24px;padding-bottom:100px">
+    <div class="section-header" style="margin-bottom:20px">
+      <h1 style="font-size:1.6rem;font-weight:800">הזמנות שלי</h1>
+    </div>
+
+    <!-- TABS -->
+    <div class="bk-tabs" id="bk-tabs">
+      <button class="bk-tab active" onclick="switchBookingsTab('active')">פעילות</button>
+      <button class="bk-tab" onclick="switchBookingsTab('upcoming')">עתידיות</button>
+      <button class="bk-tab" onclick="switchBookingsTab('past')">עברו</button>
+    </div>
+
+    <!-- LOADING -->
+    <div id="bk-loading" style="text-align:center;padding:48px 0;display:none">
+      <div class="spinner" style="margin:0 auto 12px"></div>
+      <p style="color:var(--gray-500)">טוען הזמנות...</p>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="bk-empty" style="text-align:center;padding:64px 20px;display:none">
+      <div style="font-size:3.5rem;margin-bottom:16px">🅿️</div>
+      <h3 style="font-weight:800;font-size:1.2rem;margin-bottom:8px">אין הזמנות עדיין</h3>
+      <p style="color:var(--gray-500);font-size:.9rem;margin-bottom:24px">חפש חניה ובצע הזמנה ראשונה</p>
+      <button class="btn-primary" onclick="mbnNav('search')" style="padding:12px 28px;border-radius:14px">🔍 חפש חניה</button>
+    </div>
+
+    <!-- LIST -->
+    <div id="bk-list" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+</div>
+
+<!-- ========== PROFILE PAGE ========== -->
+<div id="page-profile" class="page">
+  <div class="profile-page-wrap" id="profile-page-content">
+    <!-- rendered by renderProfilePage() -->
   </div>
 </div>
 
@@ -970,7 +1125,7 @@
     <div class="footer-brand">
       <div class="logo">
         <span class="logo-icon">P</span>
-        <span class="logo-text">ParkIt</span>
+        <span class="logo-text">NitPark</span>
       </div>
       <p>פלטפורמת החניות הפרטיות מס׳ 1 בישראל.</p>
       <div class="social-links">
@@ -998,16 +1153,17 @@
       <a href="#">צור קשר</a>
       <a href="#" onclick="openModal('terms')">תקנון</a>
       <a href="#" onclick="openModal('privacy')">פרטיות</a>
+      <a href="#" onclick="showFinePolicy()" style="color:#dc2626;font-weight:600">⚠️ קנסות וגרירה</a>
     </div>
     <div class="footer-contact">
       <h4>צרו קשר</h4>
-      <p>📧 support@parkit.co.il</p>
+      <p>📧 nitaizx123@gmail.com</p>
       <p>📞 03-1234567</p>
       <p>⏰ א׳–ה׳ 9:00–18:00</p>
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2026 ParkIt. כל הזכויות שמורות.</p>
+    <p>© 2026 NitPark. כל הזכויות שמורות.</p>
   </div>
 </footer>
 
@@ -1034,11 +1190,11 @@
       <span class="mbn-icon">➕</span>
       <span class="mbn-label">פרסם</span>
     </button>
-    <button class="mbn-btn" id="mbn-how" onclick="mbnNav('how')">
-      <span class="mbn-icon">❓</span>
-      <span class="mbn-label">מידע</span>
+    <button class="mbn-btn" id="mbn-bookings" onclick="mbnNav('bookings')">
+      <span class="mbn-icon">📋</span>
+      <span class="mbn-label">הזמנות</span>
     </button>
-    <button class="mbn-btn" id="mbn-profile" onclick="openModal('login')">
+    <button class="mbn-btn" id="mbn-profile" onclick="mbnNav('profile')">
       <span class="mbn-icon">👤</span>
       <span class="mbn-label">פרופיל</span>
     </button>
@@ -1048,6 +1204,121 @@
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
 
+<!-- ACTIVE PARKING SESSION WIDGET (parker) -->
+<div id="parking-session-widget" class="psw" style="display:none">
+  <div class="psw-inner">
+    <div class="psw-top">
+      <div class="psw-dot"></div>
+      <span class="psw-title">🚗 חניה פעילה</span>
+      <button class="psw-end-btn" onclick="endParkingSessionConfirm()">סיים</button>
+    </div>
+    <div class="psw-body">
+      <div class="psw-col">
+        <div class="psw-label">זמן בחניה</div>
+        <div class="psw-timer" id="psw-timer">00:00:00</div>
+      </div>
+      <div class="psw-divider"></div>
+      <div class="psw-col">
+        <div class="psw-label">עלות כרגע</div>
+        <div class="psw-cost" id="psw-cost">₪0.00</div>
+      </div>
+      <div class="psw-divider"></div>
+      <div class="psw-col">
+        <div class="psw-label">נותר</div>
+        <div class="psw-remain" id="psw-remain">--:--</div>
+      </div>
+    </div>
+    <div class="psw-progress-wrap">
+      <div class="psw-progress-bar" id="psw-progress-bar"></div>
+    </div>
+    <div class="psw-location" id="psw-location"></div>
+  </div>
+</div>
+
+<!-- HOST INCOME WIDGET (shows when car is in their spot) -->
+<div id="host-session-widget" class="hsw" style="display:none">
+  <div class="hsw-inner">
+    <div class="hsw-top">
+      <div class="hsw-dot"></div>
+      <span class="hsw-title">💰 רכב בחניה שלך</span>
+      <button class="hsw-toggle" onclick="toggleHostWidget()">▲</button>
+    </div>
+    <div class="hsw-body" id="hsw-body">
+      <div class="hsw-col">
+        <div class="hsw-label">זמן בחניה</div>
+        <div class="hsw-timer" id="hsw-timer">00:00:00</div>
+      </div>
+      <div class="psw-divider"></div>
+      <div class="hsw-col">
+        <div class="hsw-label">הכנסה שלך (80%)</div>
+        <div class="hsw-income" id="hsw-income">₪0.00</div>
+      </div>
+    </div>
+    <div class="hsw-location" id="hsw-location"></div>
+  </div>
+</div>
+
+<!-- FINE POLICY MODAL -->
+<div id="fine-policy-overlay" class="fine-overlay" onclick="closeFinePolicy()" style="display:none"></div>
+<div id="fine-policy-modal" class="fine-modal" style="display:none">
+  <div class="fine-modal-inner">
+    <div class="fine-header">
+      <span>⚠️ מדיניות קנסות וגרירה</span>
+      <button onclick="closeFinePolicy()">✕</button>
+    </div>
+    <div class="fine-body">
+      <div class="fine-section fine-warning">
+        <div class="fine-icon">🚨</div>
+        <div class="fine-text">
+          <strong>חריגה מזמן הזמנה = קנס מיידי</strong>
+          <p>כל דקה של חריגה נרשמת אוטומטית — ומחויבת לכרטיס האשראי</p>
+        </div>
+      </div>
+      <div class="fine-row">
+        <span class="fine-row-icon">⏱️</span>
+        <div>
+          <div class="fine-row-title">קנס חריגה — הפרה ראשונה</div>
+          <div class="fine-row-val">₪500 לכל שעה חלקית</div>
+        </div>
+      </div>
+      <div class="fine-row">
+        <span class="fine-row-icon">⚠️</span>
+        <div>
+          <div class="fine-row-title">קנס חריגה — הפרה שנייה</div>
+          <div class="fine-row-val">₪800 לכל שעה + התראה רשמית</div>
+        </div>
+      </div>
+      <div class="fine-row">
+        <span class="fine-row-icon">🚛</span>
+        <div>
+          <div class="fine-row-title">גרירת רכב — הפרה שלישית ומעלה</div>
+          <div class="fine-row-val">₪1,200 קנס + ₪400–₪800 גרר + מחסן לילה</div>
+        </div>
+      </div>
+      <div class="fine-row">
+        <span class="fine-row-icon">📵</span>
+        <div>
+          <div class="fine-row-title">חסימת חשבון</div>
+          <div class="fine-row-val">חסימה אוטומטית לאחר 2 חריגות</div>
+        </div>
+      </div>
+      <div class="fine-row">
+        <span class="fine-row-icon">⛔</span>
+        <div>
+          <div class="fine-row-title">הסרה מהפלטפורמה</div>
+          <div class="fine-row-val">אחרי 3 חריגות — הסרה לצמיתות</div>
+        </div>
+      </div>
+      <div class="fine-note">
+        כל הקנסות מחויבים אוטומטית לכרטיס האשראי הרשום.<br/>
+        בעל החניה רשאי לאשר גרירה לאחר 15 דק׳ של חריגה.<br/>
+        <strong>עמלת NitPark: 15% מכל עסקה.</strong>
+      </div>
+      <button class="fine-close-btn" onclick="closeFinePolicy()">הבנתי</button>
+    </div>
+  </div>
+</div>
+
 <!-- BOOKING MODAL (bottom sheet) -->
 <div id="booking-sheet" class="booking-sheet">
   <div class="booking-sheet-handle"></div>
@@ -1055,9 +1326,33 @@
 </div>
 <div id="booking-overlay" class="booking-overlay" onclick="closeBooking()"></div>
 
+<!-- CHATBOT WIDGET -->
+<div id="chatbot-widget" class="chatbot-widget" style="display:none">
+  <div class="chatbot-header">
+    <div class="chatbot-avatar">🤖</div>
+    <div>
+      <div class="chatbot-name">ParkBot</div>
+      <div class="chatbot-status"><span class="cb-dot"></span> מחובר תמיד</div>
+    </div>
+    <button class="chatbot-close" onclick="toggleChatbot()">✕</button>
+  </div>
+  <div class="chatbot-messages" id="chatbot-messages"></div>
+  <div class="chatbot-quick" id="chatbot-quick"></div>
+  <div class="chatbot-input-row">
+    <input type="text" id="chatbot-input" class="chatbot-input" placeholder="שאל אותי משהו..." onkeydown="if(event.key==='Enter')sendChatMessage()" />
+    <button class="chatbot-send" onclick="sendChatMessage()">➤</button>
+  </div>
+</div>
+<button id="chatbot-btn" class="chatbot-fab" onclick="toggleChatbot()" style="display:none">
+  💬
+  <span class="chatbot-badge" id="chatbot-badge">1</span>
+</button>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
 <script>
   firebase.initializeApp({
     apiKey: "AIzaSyC4lgkPwQWLBDPWEGComfS636oLlIJAgZY",
@@ -1068,16 +1363,19 @@
     appId: "1:789519548650:web:8930690887d3a86bf2d793"
   });
 </script>
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 <!-- reCAPTCHA container (invisible) -->
 <div id="recaptcha-container"></div>
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/parkit/sw.js')
-      .then(() => console.log('ParkIt SW registered'))
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('NitPark SW registered'))
       .catch(e => console.log('SW error:', e));
   }
 </script>

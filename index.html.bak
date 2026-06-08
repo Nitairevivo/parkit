@@ -1,0 +1,1331 @@
+﻿<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#e91e8c" />
+  <meta name="description" content="ParkIt ג€” ׳₪׳׳˜׳₪׳•׳¨׳׳× ׳”׳—׳ ׳™׳” ׳”׳₪׳¨׳˜׳™׳× ׳‘׳™׳©׳¨׳׳. ׳׳¦׳ ׳—׳ ׳™׳” ׳׳• ׳”׳¨׳•׳•׳™׳— ׳׳”׳—׳ ׳™׳” ׳©׳׳." />
+  <title>ParkIt ג€” ׳—׳ ׳™׳” ׳₪׳¨׳˜׳™׳× ׳‘׳§׳׳•׳×</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ParkIt" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css?v=1780575689" />
+</head>
+<body>
+
+<!-- ========== APP LOADER ========== -->
+<div id="app-loader" style="
+  position:fixed;inset:0;z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:#fff;gap:16px">
+  <div style="font-size:2.5rem;font-weight:900;background:linear-gradient(135deg,#e91e8c,#764ba2);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent">P</div>
+  <div style="width:40px;height:40px;border:3px solid #f3e8ff;border-top-color:#e91e8c;
+    border-radius:50%;animation:spin .8s linear infinite"></div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
+<!-- ========== AUTH SCREEN ========== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-inner">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">P</div>
+      <div class="auth-logo-text">ParkIt</div>
+    </div>
+    <h1 class="auth-title">׳‘׳¨׳•׳ ׳”׳‘׳ נ‘‹</h1>
+    <p class="auth-subtitle">׳₪׳׳˜׳₪׳•׳¨׳׳× ׳”׳—׳ ׳™׳” ׳”׳₪׳¨׳˜׳™׳× ׳‘׳™׳©׳¨׳׳</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="atab-phone" onclick="switchAuthTab('phone')">נ“± ׳˜׳׳₪׳•׳</button>
+      <button class="auth-tab" id="atab-email" onclick="switchAuthTab('email')">נ“§ ׳׳™׳׳™׳™׳</button>
+    </div>
+
+    <div id="auth-form-phone" class="auth-form">
+      <div class="auth-input-wrap">
+        <span class="auth-flag">נ‡®נ‡± +972</span>
+        <input type="tel" id="auth-phone" placeholder="05X-XXXXXXX"
+          maxlength="11" oninput="formatAuthPhone(this)"
+          class="auth-input" />
+      </div>
+      <button class="auth-submit-btn" onclick="submitAuth('phone')">
+        ׳”׳׳©׳ ׳¢׳ SMS ג†
+      </button>
+    </div>
+
+    <div id="auth-form-email" class="auth-form" style="display:none">
+      <div class="auth-input-wrap">
+        <span class="auth-field-icon">@</span>
+        <input type="email" id="auth-email" placeholder="your@email.com"
+          class="auth-input" />
+      </div>
+      <button class="auth-submit-btn" onclick="submitAuth('email')">
+        ׳”׳׳©׳ ׳¢׳ ׳׳™׳׳™׳™׳ ג†
+      </button>
+    </div>
+
+    <!-- OTP step (shown after submit) -->
+    <div id="auth-otp-step" class="auth-otp-step" style="display:none">
+      <p class="otp-desc" id="otp-desc">׳©׳׳—׳ ׳• ׳§׳•׳“ ׳׳˜׳׳₪׳•׳ ׳©׳׳</p>
+      <div class="otp-inputs">
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,0)" onkeydown="otpBack(this,0,event)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,1)" onkeydown="otpBack(this,1,event)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,2)" onkeydown="otpBack(this,2,event)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,3)" onkeydown="otpBack(this,3,event)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,4)" onkeydown="otpBack(this,4,event)" />
+        <input type="text" inputmode="numeric" pattern="[0-9]*" class="otp-box" maxlength="1" oninput="otpNext(this,5)" onkeydown="otpBack(this,5,event)" />
+      </div>
+      <button class="auth-submit-btn" onclick="verifyOtp()">׳׳׳× ׳§׳•׳“ ג“</button>
+      <button class="auth-resend-btn" onclick="resendOtp()">׳©׳׳— ׳©׳•׳‘</button>
+    </div>
+
+    <div class="auth-divider"><span>׳׳•</span></div>
+    <button class="auth-social-btn" onclick="loginWithGoogle()">
+      <span class="social-icon google-icon">G</span> ׳”׳׳©׳ ׳¢׳ Google
+    </button>
+    <button class="auth-social-btn" onclick="loginWithApple()">
+      <span class="social-icon apple-icon"> </span> ׳”׳׳©׳ ׳¢׳ Apple
+    </button>
+
+    <p class="auth-terms">
+      ׳‘׳”׳׳©׳ ׳׳×׳” ׳׳¡׳›׳™׳ ׳<a href="terms-of-service.html" target="_blank">׳×׳ ׳׳™ ׳”׳©׳™׳׳•׳©</a>
+      ׳•<a href="privacy-policy.html" target="_blank">׳׳“׳™׳ ׳™׳•׳× ׳”׳₪׳¨׳˜׳™׳•׳×</a>
+    </p>
+  </div>
+</div>
+
+<!-- ========== ONBOARDING BOT ========== -->
+<div id="onboarding-screen" class="onboarding-screen" style="display:none">
+  <div class="ob-header">
+    <div class="ob-bot-avatar">נ₪–</div>
+    <div class="ob-bot-name">ParkBot</div>
+    <div class="ob-bot-status"><span class="ob-dot"></span> ׳׳—׳•׳‘׳¨</div>
+  </div>
+  <div class="ob-chat" id="ob-chat"></div>
+  <div class="ob-options" id="ob-options"></div>
+</div>
+
+<!-- ========== TOPBAR (mobile header) ========== -->
+<header class="topbar" id="topbar">
+  <button class="topbar-hamburger" onclick="toggleSidebar()" aria-label="׳×׳₪׳¨׳™׳˜">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="#" class="topbar-logo" onclick="showPage('home')">
+    <span class="logo-icon">P</span>
+    <span class="logo-text">ParkIt</span>
+  </a>
+  <div class="topbar-actions" id="topbar-actions"></div>
+</header>
+
+<!-- ========== SIDEBAR ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-inner">
+
+    <!-- Header -->
+    <div class="sidebar-header">
+      <a href="#" class="sidebar-logo" onclick="showPage('home');closeSidebar()">
+        <span class="logo-icon">P</span>
+        <span class="logo-text">ParkIt</span>
+      </a>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">ג•</button>
+    </div>
+
+    <!-- User Card -->
+    <div class="sidebar-user-card" id="sidebar-user-card">
+      <!-- ׳׳×׳¢׳“׳›׳ ׳¢"׳™ JS -->
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <a class="sidebar-link" id="slink-home" href="#" onclick="sidebarNav('home')">
+        <span class="slink-icon">נ </span><span class="slink-text">׳‘׳™׳×</span>
+      </a>
+      <a class="sidebar-link" id="slink-search" href="#" onclick="sidebarNav('search')">
+        <span class="slink-icon">נ”</span><span class="slink-text">׳—׳™׳₪׳•׳© ׳—׳ ׳™׳”</span>
+      </a>
+      <a class="sidebar-link" id="slink-host" href="#" onclick="sidebarNav('host')">
+        <span class="slink-icon">ג•</span><span class="slink-text">׳₪׳¨׳¡׳ ׳—׳ ׳™׳”</span>
+      </a>
+      <a class="sidebar-link" id="slink-bookings" href="#" onclick="sidebarNav('bookings')">
+        <span class="slink-icon">נ“‹</span><span class="slink-text">׳”׳”׳–׳׳ ׳•׳× ׳©׳׳™</span>
+      </a>
+      <a class="sidebar-link" id="slink-profile" href="#" onclick="sidebarNav('profile')">
+        <span class="slink-icon">נ‘₪</span><span class="slink-text">׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳׳™</span>
+      </a>
+      <a class="sidebar-link" id="slink-how" href="#" onclick="sidebarNav('how')">
+        <span class="slink-icon">ג“</span><span class="slink-text">׳׳™׳ ׳–׳” ׳¢׳•׳‘׳“</span>
+      </a>
+    </nav>
+
+    <!-- Credit Card Button -->
+    <div class="sidebar-card-btn-wrap">
+      <button class="sidebar-card-btn" onclick="openCreditCardPanel();closeSidebar()">
+        <span class="sidebar-card-icon">נ’³</span>
+        <div class="sidebar-card-btn-text">
+          <span class="sidebar-card-btn-title">׳›׳¨׳˜׳™׳¡ ׳׳©׳¨׳׳™</span>
+          <span class="sidebar-card-btn-sub" id="sidebar-card-sub">׳׳ ׳©׳׳•׳¨</span>
+        </div>
+        <span class="sidebar-card-badge" id="sidebar-card-badge" style="display:none">ג“</span>
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="sidebar-divider"></div>
+
+    <!-- Auth Footer -->
+    <div class="sidebar-auth" id="sidebar-auth">
+      <!-- ׳׳×׳¢׳“׳›׳ ׳¢"׳™ JS -->
+    </div>
+
+  </div>
+</aside>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Legacy navbar (hidden, kept for JS references) -->
+<nav class="navbar" id="navbar" style="display:none!important"></nav>
+
+<!-- ========== HOME PAGE ========== -->
+<div id="page-home" class="page active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="container hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        נ€ ׳’׳¨׳¡׳× ׳‘׳˜׳ ג€” ׳”׳¦׳˜׳¨׳£ ׳¨׳׳©׳•׳
+      </div>
+      <h1 class="hero-title">
+        ׳—׳ ׳™׳” ׳₪׳¨׳˜׳™׳×.<br/>
+        <span class="gradient-text">׳‘׳׳™ ׳›׳׳‘ ׳¨׳׳©.</span>
+      </h1>
+      <p class="hero-subtitle">
+        ׳׳¦׳ ׳•׳”׳–׳׳ ׳—׳ ׳™׳” ׳₪׳¨׳˜׳™׳× ׳‘׳›׳ ׳׳§׳•׳ ׳‘׳׳¨׳¥.<br/>
+        ׳׳• ׳”׳¨׳•׳•׳™׳— ׳›׳¡׳£ ׳׳”׳—׳ ׳™׳” ׳©׳׳ ׳›׳©׳׳×׳” ׳׳ ׳׳©׳×׳׳© ׳‘׳”.
+      </p>
+
+      <!-- SEARCH BOX -->
+      <div class="hero-search-box">
+        <div id="find-form" class="search-form">
+          <div class="search-inputs">
+            <div class="search-field">
+              <label>׳׳׳ ׳׳×׳” ׳ ׳•׳¡׳¢?</label>
+              <input type="text" id="searchLocation" placeholder="׳¢׳™׳¨, ׳¨׳—׳•׳‘, ׳׳–׳•׳¨..." />
+            </div>
+            <div class="search-field">
+              <label>׳׳×׳™?</label>
+              <input type="datetime-local" id="searchDate" />
+            </div>
+            <div class="search-field narrow">
+              <label>׳›׳׳” ׳©׳¢׳•׳×?</label>
+              <select id="searchHours">
+                <option value="1">׳©׳¢׳”</option>
+                <option value="2">׳©׳¢׳×׳™׳™׳</option>
+                <option value="3">3 ׳©׳¢׳•׳×</option>
+                <option value="4">4 ׳©׳¢׳•׳×</option>
+                <option value="8">׳™׳•׳ ׳©׳׳</option>
+                <option value="0">׳—׳•׳“׳©׳™</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-search" onclick="doSearch()" style="flex:1">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              ׳—׳₪׳© ׳—׳ ׳™׳”
+            </button>
+            <button id="btn-my-location" class="btn-search" onclick="useMyLocation()"
+              style="flex:0 0 auto;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.5)">
+              נ“ ׳”׳׳™׳§׳•׳ ׳©׳׳™
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-num">׳—׳™׳ ׳</span>
+          <span class="stat-label">׳₪׳¨׳¡׳•׳ ׳—׳ ׳™׳”</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">30 ׳©׳ ׳³</span>
+          <span class="stat-label">׳”׳–׳׳ ׳” ׳׳”׳™׳¨׳”</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-num">24/7</span>
+          <span class="stat-label">׳’׳™׳©׳” ׳׳—׳ ׳™׳”</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#f8f9ff"/></svg>
+    </div>
+  </section>
+
+  <!-- WHY PARKIT -->
+  <section class="section section-light">
+    <div class="container">
+      <div class="section-header">
+        <h2>׳׳׳” ParkIt?</h2>
+        <p>׳₪׳׳˜׳₪׳•׳¨׳׳” ׳׳—׳×. ׳׳׳₪׳™ ׳—׳ ׳™׳•׳×. ׳׳₪׳¡ ׳›׳׳‘ ׳¨׳׳©.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#ff6b9d,#e91e8c)">נ’°</div>
+          <h3>׳׳—׳™׳¨׳™׳ ׳”׳•׳’׳ ׳™׳</h3>
+          <p>׳¢׳“ 60% ׳–׳•׳ ׳™׳•׳×׳¨ ׳׳—׳ ׳™׳•׳ ׳™׳ ׳¦׳™׳‘׳•׳¨׳™׳™׳. ׳×׳©׳׳•׳ ׳׳₪׳™ ׳©׳¢׳”, ׳™׳•׳, ׳׳• ׳—׳•׳“׳©.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">נ›¡ן¸</div>
+          <h3>׳׳׳•׳‘׳˜׳— ׳•׳׳‘׳•׳˜׳—</h3>
+          <p>׳›׳ ׳”׳—׳ ׳™׳•׳× ׳׳׳•׳׳×׳•׳× ׳¢׳ ׳™׳“׳™׳ ׳•. ׳‘׳™׳˜׳•׳— ׳׳׳ ׳׳›׳ ׳¢׳¡׳§׳” ׳׳©׳§׳˜ ׳ ׳₪׳©׳™.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c)">ג¡</div>
+          <h3>׳”׳–׳׳ ׳” ׳‘-30 ׳©׳ ׳™׳•׳×</h3>
+          <p>׳׳¦׳, ׳”׳–׳׳, ׳¡׳¢. ׳‘׳׳™ ׳˜׳₪׳¡׳™׳, ׳‘׳׳™ ׳”׳׳×׳ ׳”. ׳”׳›׳ ׳‘׳׳₪׳׳™׳§׳¦׳™׳”.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">נ—÷ן¸</div>
+          <h3>׳ ׳™׳•׳•׳˜ ׳׳•׳˜׳•׳׳˜׳™</h3>
+          <p>׳׳׳—׳¨ ׳”׳”׳–׳׳ ׳” ג€” ׳ ׳™׳•׳•׳˜ ׳™׳©׳™׳¨ ׳׳—׳ ׳™׳” ׳¢׳ ׳₪׳×׳™׳—׳× ׳©׳¢׳¨ ׳׳•׳˜׳•׳׳˜׳™׳×.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">ג­</div>
+          <h3>׳“׳™׳¨׳•׳’׳™׳ ׳•׳׳׳•׳</h3>
+          <p>׳›׳ ׳׳©׳×׳׳© ׳׳“׳•׳¨׳’. ׳§׳”׳™׳׳” ׳©׳ ׳©׳•׳›׳¨׳™׳ ׳•׳׳©׳›׳™׳¨׳™׳ ׳׳”׳™׳׳ ׳™׳.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:linear-gradient(135deg,#fa709a,#fee140)">נ“±</div>
+          <h3>׳¢׳•׳‘׳“ ׳¢׳ ׳›׳ ׳׳›׳©׳™׳¨</h3>
+          <p>׳׳׳•׳‘׳™׳™׳ ׳•׳¢׳“ ׳׳—׳©׳‘. PWA ג€” ׳׳₪׳©׳¨ ׳׳”׳×׳§׳™׳ ׳™׳©׳¨ ׳׳”׳“׳₪׳“׳₪׳.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CATEGORIES SECTION ========== -->
+  <section class="section" style="padding-top:32px;padding-bottom:16px">
+    <div class="container">
+      <div class="section-header" style="margin-bottom:20px">
+        <h2>חפש לפי קטגוריה</h2>
+        <p>בחר סוג יעד — נציג לך חניות בסביבה עם מפה</p>
+      </div>
+      <div class="home-categories-grid">
+        <button class="home-cat-card" onclick="searchByCategory('beach')">
+          <div class="home-cat-icon">🏖️</div>
+          <div class="home-cat-label">חוף ים</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('hospital')">
+          <div class="home-cat-icon">🏥</div>
+          <div class="home-cat-label">בית חולים</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('mall')">
+          <div class="home-cat-icon">🛍️</div>
+          <div class="home-cat-label">קניון</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('events')">
+          <div class="home-cat-icon">🎭</div>
+          <div class="home-cat-label">אירועים</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('office')">
+          <div class="home-cat-icon">🏢</div>
+          <div class="home-cat-label">אזור עסקים</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('restaurant')">
+          <div class="home-cat-icon">🍽️</div>
+          <div class="home-cat-label">מסעדות</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('university')">
+          <div class="home-cat-icon">🎓</div>
+          <div class="home-cat-label">אוניברסיטה</div>
+        </button>
+        <button class="home-cat-card" onclick="searchByCategory('ev')">
+          <div class="home-cat-icon">⚡</div>
+          <div class="home-cat-label">טעינת EV</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- POPULAR LISTINGS -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>׳—׳ ׳™׳•׳× ׳₪׳•׳₪׳•׳׳¨׳™׳•׳×</h2>
+        <p>׳”׳׳•׳׳׳¦׳•׳× ׳‘׳™׳•׳×׳¨ ׳”׳©׳‘׳•׳¢</p>
+        <button class="btn-link" onclick="showPage('search')">׳¨׳׳” ׳”׳›׳ ג†</button>
+      </div>
+      <div class="listings-grid" id="home-listings"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS (MINI) -->
+  <section class="section section-pink">
+    <div class="container">
+      <div class="section-header light">
+        <h2>׳׳™׳ ׳–׳” ׳¢׳•׳‘׳“?</h2>
+        <p>׳©׳׳•׳©׳” ׳¦׳¢׳“׳™׳ ׳₪׳©׳•׳˜׳™׳</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <div class="step-icon">נ”</div>
+          <h3>׳—׳₪׳©</h3>
+          <p>׳”׳›׳ ׳¡ ׳™׳¢׳“ ׳•׳–׳׳. ׳§׳‘׳ ׳¨׳©׳™׳׳× ׳—׳ ׳™׳•׳× ׳–׳׳™׳ ׳•׳× ׳‘׳׳–׳•׳¨ ׳¢׳ ׳׳—׳™׳¨׳™׳ ׳‘׳¨׳•׳¨׳™׳.</p>
+        </div>
+        <div class="step-arrow">ג†’</div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <div class="step-icon">ג…</div>
+          <h3>׳”׳–׳׳</h3>
+          <p>׳‘׳—׳¨ ׳—׳ ׳™׳”, ׳©׳׳ ׳‘׳¦׳•׳¨׳” ׳׳׳•׳‘׳˜׳—׳×. ׳×׳§׳‘׳ ׳׳™׳©׳•׳¨ ׳•׳₪׳¨׳˜׳™ ׳’׳™׳©׳” ׳׳™׳™׳“׳™׳×.</p>
+        </div>
+        <div class="step-arrow">ג†’</div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <div class="step-icon">נ—</div>
+          <h3>׳—׳ ׳”</h3>
+          <p>׳ ׳¡׳” ׳׳—׳ ׳™׳”. ׳”׳©׳¢׳¨ ׳ ׳₪׳×׳— ׳׳•׳˜׳•׳׳˜׳™׳×. ׳—׳ ׳” ׳‘׳׳™ ׳“׳׳’׳•׳×.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOST CTA -->
+  <section class="section">
+    <div class="container">
+      <div class="host-cta-card">
+        <div class="host-cta-content">
+          <div class="host-cta-badge">נ’¸ ׳”׳›׳ ׳¡׳” ׳₪׳¡׳™׳‘׳™׳×</div>
+          <h2>׳”׳—׳ ׳™׳” ׳©׳׳ = ׳›׳¡׳£ ׳‘׳›׳™׳¡</h2>
+          <p>׳™׳© ׳׳ ׳—׳ ׳™׳” ׳₪׳ ׳•׳™׳”? ׳₪׳¨׳¡׳ ׳׳•׳×׳” ׳‘-ParkIt ׳•׳”׳¨׳•׳•׳™׳— ׳”׳›׳ ׳¡׳” ׳₪׳¡׳™׳‘׳™׳× ג€” ׳׳×׳” ׳§׳•׳‘׳¢ ׳׳× ׳”׳׳—׳™׳¨ ׳•׳”׳–׳׳™׳ ׳•׳×.</p>
+          <ul class="host-benefits">
+            <li>ג“ ׳₪׳¨׳¡׳•׳ ׳—׳™׳ ׳׳™ ג€” ׳׳׳ ׳¢׳׳׳” ׳¢׳ ׳”׳¨׳©׳׳”</li>
+            <li>ג“ ׳×׳©׳׳•׳ ׳™׳©׳™׳¨ ׳׳—׳©׳‘׳•׳ ׳”׳‘׳ ׳§ ׳©׳׳</li>
+            <li>ג“ ׳׳×׳” ׳§׳•׳‘׳¢ ׳׳× ׳”׳–׳׳™׳ ׳•׳× ׳•׳”׳׳—׳™׳¨</li>
+            <li>ג“ ׳‘׳™׳˜׳•׳— ׳׳׳ ׳‘׳›׳ ׳”׳–׳׳ ׳”</li>
+          </ul>
+          <button class="btn-primary-large" onclick="showPage('host')">
+            ׳₪׳¨׳¡׳ ׳—׳ ׳™׳” ׳¢׳›׳©׳™׳• ג†’
+          </button>
+        </div>
+        <div class="host-cta-visual">
+          <div class="earning-card">
+            <div class="earning-month">׳”׳›׳ ׳¡׳” ׳₪׳¡׳™׳‘׳™׳×</div>
+            <div class="earning-amount">נ’¸</div>
+            <div class="earning-label">׳׳”׳—׳ ׳™׳” ׳©׳׳</div>
+            <div class="earning-bar-container">
+              <div class="earning-days">
+                <div class="e-day filled"></div><div class="e-day filled"></div><div class="e-day filled"></div>
+                <div class="e-day filled"></div><div class="e-day filled"></div><div class="e-day empty"></div>
+                <div class="e-day filled"></div>
+              </div>
+              <div class="earning-legend">׳™׳׳™׳ ׳׳׳׳™׳ / ׳₪׳ ׳•׳™׳™׳</div>
+            </div>
+            <div class="earning-tip">נ”’ ׳×׳©׳׳•׳ ׳׳׳•׳‘׳˜׳— ֲ· ׳׳—׳™׳¨ ׳©׳׳×׳” ׳§׳•׳‘׳¢</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EARLY ADOPTERS CTA (replacing testimonials) -->
+  <section class="section section-light">
+    <div class="container">
+      <div class="section-header">
+        <h2>׳”׳™׳” ׳‘׳™׳ ׳”׳¨׳׳©׳•׳ ׳™׳ נ€</h2>
+        <p>ParkIt ׳‘׳©׳׳‘׳™ ׳”׳©׳§׳” ג€” ׳”׳¦׳˜׳¨׳£ ׳¢׳›׳©׳™׳• ׳•׳§׳‘׳ ׳’׳™׳©׳” ׳׳•׳§׳“׳׳×</p>
+      </div>
+      <div class="early-adopters-card">
+        <div class="ea-item">
+          <div class="ea-icon">נ†</div>
+          <h3>׳×׳’ "׳׳™׳™׳¡׳“"</h3>
+          <p>׳׳©׳×׳׳©׳™׳ ׳©׳ ׳¨׳©׳׳™׳ ׳‘׳©׳׳‘ ׳”׳‘׳˜׳ ׳™׳§׳‘׳׳• ׳×׳’ ׳׳™׳™׳¡׳“ ׳‘׳₪׳¨׳•׳₪׳™׳ ׳׳¦׳׳™׳×׳•׳×</p>
+        </div>
+        <div class="ea-item">
+          <div class="ea-icon">נ’°</div>
+          <h3>׳¢׳׳׳” ׳׳•׳₪׳—׳×׳×</h3>
+          <p>׳׳©׳›׳™׳¨׳™׳ ׳©׳׳¦׳˜׳¨׳₪׳™׳ ׳‘-Early Access ׳™׳™׳”׳ ׳• ׳׳¢׳׳׳” ׳׳•׳₪׳—׳×׳× ׳׳×׳§׳•׳₪׳× ׳”׳”׳©׳§׳”</p>
+        </div>
+        <div class="ea-item">
+          <div class="ea-icon">נ“£</div>
+          <h3>׳”׳©׳₪׳¢ ׳¢׳ ׳”׳׳•׳¦׳¨</h3>
+          <p>׳׳©׳×׳׳©׳™ ׳”׳‘׳˜׳ ׳׳§׳‘׳׳™׳ ׳’׳™׳©׳” ׳™׳©׳™׳¨׳” ׳׳¦׳•׳•׳× ׳•׳™׳›׳•׳׳™׳ ׳׳”׳©׳₪׳™׳¢ ׳¢׳ ׳₪׳™׳¦׳³׳¨׳™׳</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP INSTALL BANNER -->
+  <section class="section section-gradient">
+    <div class="container app-banner">
+      <div class="app-banner-text">
+        <h2>׳§׳‘׳ ׳׳× ParkIt ׳‘׳›׳ ׳׳§׳•׳</h2>
+        <p>׳”׳×׳§׳ ׳›׳׳₪׳׳™׳§׳¦׳™׳” ׳¢׳ ׳”׳׳•׳‘׳™׳™׳ ׳©׳׳ ג€” ׳—׳™׳ ׳, ׳׳׳ ׳—׳ ׳•׳× ׳׳₪׳׳™׳§׳¦׳™׳•׳×.</p>
+        <button class="btn-white" onclick="showInstallPrompt()">׳”׳×׳§׳ ׳¢׳›׳©׳™׳•</button>
+      </div>
+      <div class="app-phone-mockup">
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="phone-app-icon">P</div>
+            <div class="phone-app-name">ParkIt</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ========== SEARCH PAGE ========== -->
+<div id="page-search" class="page">
+
+  <!-- TOP BAR -->
+  <div class="search-topbar">
+    <div class="search-topbar-inner">
+      <div class="search-topbar-input">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInline" placeholder="׳¢׳™׳¨, ׳¨׳—׳•׳‘, ׳׳–׳•׳¨..." onkeydown="if(event.key==='Enter')doSearchInline()" />
+        <button class="search-topbar-btn" onclick="doSearchInline()">׳—׳₪׳©</button>
+        <button class="search-topbar-btn" onclick="useMyLocation()" title="׳”׳׳™׳§׳•׳ ׳©׳׳™"
+          style="background:none;border:none;font-size:1.2rem;cursor:pointer;padding:6px">נ“</button>
+      </div>
+
+      <!-- QUICK FILTERS -->
+      <div class="search-quick-filters">
+        <!-- Categories -->
+        <div class="cat-pills" id="cat-pills">
+          <button class="cat-pill active" onclick="filterByCategory('all',this)">נ…°ן¸ ׳”׳›׳</button>
+          <button class="cat-pill" onclick="filterByCategory('beach',this)">נ–ן¸ ׳—׳•׳£ ׳™׳</button>
+          <button class="cat-pill" onclick="filterByCategory('hospital',this)">נ¥ ׳‘׳™׳× ׳—׳•׳׳™׳</button>
+          <button class="cat-pill" onclick="filterByCategory('mall',this)">נ›ן¸ ׳§׳ ׳™׳•׳</button>
+          <button class="cat-pill" onclick="filterByCategory('events',this)">נ­ ׳׳™׳¨׳•׳¢׳™׳</button>
+          <button class="cat-pill" onclick="filterByCategory('office',this)">נ¢ ׳׳–׳•׳¨ ׳¢׳¡׳§׳™׳</button>
+          <button class="cat-pill" onclick="filterByCategory('restaurant',this)">נ½ן¸ ׳׳¡׳¢׳“׳•׳×</button>
+          <button class="cat-pill" onclick="filterByCategory('university',this)">נ“ ׳׳•׳ ׳™׳‘׳¨׳¡׳™׳˜׳”</button>
+          <button class="cat-pill" onclick="filterByCategory('ev',this)">ג¡ EV</button>
+        </div>
+
+        <!-- Rental type + period -->
+        <div class="filter-row2">
+          <div class="rental-type-btns">
+            <label class="rental-type-btn">
+              <input type="radio" name="rental-type" value="all" checked onchange="filterListings()" />
+              <span>נ• ׳©׳¢׳×׳™</span>
+            </label>
+            <label class="rental-type-btn">
+              <input type="radio" name="rental-type" value="longterm" onchange="filterListings()" />
+              <span>נ“… ׳˜׳•׳•׳— ׳׳¨׳•׳</span>
+            </label>
+          </div>
+          <div id="longterm-options" class="longterm-options-inline" style="display:none">
+            <label class="lt-pill"><input type="radio" name="lt-period" value="week" onchange="filterListings()"><span>׳©׳‘׳•׳¢</span></label>
+            <label class="lt-pill"><input type="radio" name="lt-period" value="twoweeks" onchange="filterListings()"><span>׳©׳‘׳•׳¢׳™׳™׳</span></label>
+            <label class="lt-pill"><input type="radio" name="lt-period" value="month" checked onchange="filterListings()"><span>׳—׳•׳“׳©</span></label>
+            <label class="lt-pill"><input type="radio" name="lt-period" value="year" onchange="filterListings()"><span>׳©׳ ׳”</span></label>
+          </div>
+          <select class="sort-pill" onchange="sortListings(this.value)">
+            <option value="rating">ג˜… ׳“׳™׳¨׳•׳’</option>
+            <option value="price_asc">ג‚× ׳׳—׳™׳¨ ׳¢׳•׳׳”</option>
+            <option value="price_desc">ג‚× ׳׳—׳™׳¨ ׳™׳•׳¨׳“</option>
+          </select>
+          <span id="results-count" class="results-count-pill">׳˜׳•׳¢׳...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- רשימת תוצאות — תמיד ראשון -->
+  <div id="search-results-wrap">
+    <div id="search-active-category" style="display:none"></div>
+    <div id="search-results" class="search-cards-list"></div>
+  </div>
+
+  <!-- מפה — למטה אחרי הרשימה -->
+  <div id="search-map-wrap">
+    <div class="search-map-label">🗺️ מפת חניות</div>
+    <div id="leaflet-map"></div>
+  </div>
+
+</div>
+
+<!-- ========== PARKING DETAIL PAGE ========== -->
+<div id="page-detail" class="page">
+  <div class="container detail-container" id="detail-content"></div>
+</div>
+
+<!-- ========== HOST PAGE ========== -->
+<div id="page-host" class="page">
+  <div class="host-hero">
+    <div class="container">
+      <div class="host-hero-content">
+        <h1>׳”׳¨׳•׳•׳™׳— ׳׳”׳—׳ ׳™׳” ׳©׳׳</h1>
+        <p>׳₪׳¨׳¡׳ ׳—׳ ׳™׳” ׳‘-5 ׳“׳§׳•׳×. ׳§׳‘׳ ׳×׳©׳׳•׳ ׳™׳©׳™׳¨ ׳׳—׳©׳‘׳•׳.</p>
+        <div class="host-hero-stats">
+          <div class="host-stat">
+            <strong>׳—׳™׳ ׳</strong>
+            <span>׳¢׳׳׳” ׳¢׳ ׳¨׳™׳©׳•׳</span>
+          </div>
+          <div class="host-stat">
+            <strong>100%</strong>
+            <span>׳©׳׳™׳˜׳” ׳¢׳ ׳”׳–׳׳™׳ ׳•׳×</span>
+          </div>
+          <div class="host-stat">
+            <strong>80%</strong>
+            <span>׳׳›׳ ׳”׳–׳׳ ׳” ׳׳׳™׳</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container host-form-container">
+    <div class="host-form-card">
+      <div class="form-steps-indicator">
+        <div class="form-step active" id="fs1">1. ׳₪׳¨׳˜׳™ ׳”׳—׳ ׳™׳”</div>
+        <div class="form-step-arrow">ג€÷</div>
+        <div class="form-step" id="fs2">2. ׳–׳׳™׳ ׳•׳× ׳•׳׳—׳™׳¨</div>
+        <div class="form-step-arrow">ג€÷</div>
+        <div class="form-step" id="fs3">3. ׳₪׳¨׳¡׳•׳</div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div id="host-step-1" class="host-step active">
+        <h2>׳₪׳¨׳˜׳™ ׳”׳—׳ ׳™׳” ׳©׳׳</h2>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>׳›׳×׳•׳‘׳× ׳׳“׳•׳™׳§׳× *</label>
+            <input type="text" id="h-address" placeholder="׳¨׳—׳•׳‘, ׳׳¡׳₪׳¨ ׳‘׳™׳×, ׳¢׳™׳¨" />
+          </div>
+          <div class="form-group">
+            <label>׳¡׳•׳’ ׳—׳ ׳™׳” *</label>
+            <div class="type-selector" id="type-selector">
+              <div class="type-option selected" onclick="selectType(this,'׳₪׳¨׳˜׳™׳× ׳‘׳‘׳ ׳™׳™׳')">
+                <span class="type-icon">נ¢</span>
+                <span>׳₪׳¨׳˜׳™׳× ׳‘׳‘׳ ׳™׳™׳</span>
+              </div>
+              <div class="type-option" onclick="selectType(this,'׳×׳×-׳§׳¨׳§׳¢׳™׳×')">
+                <span class="type-icon">נ”½</span>
+                <span>׳×׳×-׳§׳¨׳§׳¢׳™׳×</span>
+              </div>
+              <div class="type-option" onclick="selectType(this,'׳—׳™׳¦׳•׳ ׳™׳×')">
+                <span class="type-icon">ג˜€ן¸</span>
+                <span>׳—׳™׳¦׳•׳ ׳™׳×</span>
+              </div>
+              <div class="type-option" onclick="selectType(this,'׳—׳¦׳¨ ׳₪׳¨׳˜׳™׳×')">
+                <span class="type-icon">נ¿</span>
+                <span>׳—׳¦׳¨ ׳₪׳¨׳˜׳™׳×</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>׳’׳•׳“׳ ׳¨׳›׳‘ ׳׳§׳¡׳™׳׳׳™</label>
+            <select id="h-size">
+              <option>׳§׳˜׳ (׳™׳•׳ ׳“׳׳™ i10)</option>
+              <option>׳‘׳™׳ ׳•׳ ׳™ (׳׳׳–׳“׳” 3)</option>
+              <option>׳’׳“׳•׳ (׳§׳™׳” ׳¡׳₪׳•׳¨׳˜׳׳–׳³)</option>
+              <option>׳•׳׳ / SUV ׳’׳“׳•׳</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>׳×׳™׳׳•׳¨ (׳׳•׳₪׳¦׳™׳•׳ ׳׳™)</label>
+            <textarea id="h-desc" rows="3" placeholder="׳׳™׳“׳¢ ׳ ׳•׳¡׳£ ׳©׳™׳¢׳–׳•׳¨ ׳׳©׳•׳›׳¨: ׳’׳•׳‘׳” ׳›׳ ׳™׳¡׳”, ׳”׳•׳¨׳׳•׳× ׳’׳™׳©׳”, ׳׳” ׳™׳© ׳‘׳¡׳‘׳™׳‘׳”..."></textarea>
+          </div>
+          <div class="form-group full">
+            <label>׳׳׳₪׳™׳™׳ ׳™׳ ׳׳™׳•׳—׳“׳™׳</label>
+            <div class="tags-selector">
+              <label class="tag-opt"><input type="checkbox" value="׳׳§׳•׳¨׳”"> ׳׳§׳•׳¨׳”</label>
+              <label class="tag-opt"><input type="checkbox" value="׳׳׳•׳‘׳˜׳—"> ׳©׳׳™׳¨׳” 24/7</label>
+              <label class="tag-opt"><input type="checkbox" value="׳׳¦׳׳׳•׳×"> ׳׳¦׳׳׳•׳×</label>
+              <label class="tag-opt"><input type="checkbox" value="׳’׳™׳©׳” 24/7"> ׳’׳™׳©׳” 24/7</label>
+              <label class="tag-opt"><input type="checkbox" value="׳˜׳¢׳™׳ ׳× ׳—׳©׳׳" id="host-ev-check" onchange="const cb=document.getElementById('has-ev');if(cb){cb.checked=this.checked;toggleEVFields(cb);}"> ג¡ ׳¢׳׳“׳× ׳˜׳¢׳™׳ ׳” (EV)</label>
+              <label class="tag-opt"><input type="checkbox" value="׳ ׳’׳™׳©"> ׳ ׳’׳™׳© ׳׳ ׳›׳™׳</label>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>׳§׳•׳“ ׳₪׳×׳™׳—׳× ׳©׳¢׳¨ / ׳“׳׳×</label>
+            <div class="gate-code-wrap">
+              <div class="gate-code-type-row">
+                <label class="gate-type-opt selected" id="gtype-pin" onclick="selectGateType(this,'pin')">
+                  <span>נ”¢ ׳§׳•׳“ PIN</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-intercom" onclick="selectGateType(this,'intercom')">
+                  <span>נ“ ׳׳™׳ ׳˜׳¨׳§׳•׳</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-key" onclick="selectGateType(this,'key')">
+                  <span>נ”‘ ׳׳₪׳×׳— ׳₪׳™׳–׳™</span>
+                </label>
+                <label class="gate-type-opt" id="gtype-none" onclick="selectGateType(this,'none')">
+                  <span>נ— ׳׳׳ ׳©׳¢׳¨</span>
+                </label>
+              </div>
+
+              <div id="gate-pin-fields" class="gate-fields">
+                <div class="gate-pin-row">
+                  <input type="password" id="h-gate-code" class="gate-pin-input"
+                    placeholder="1234" maxlength="8"
+                    oninput="this.value=this.value.replace(/[^0-9#*]/g,'')"
+                    autocomplete="off" />
+                  <button type="button" class="gate-show-btn" onclick="toggleGateCode(this)">נ‘ ׳”׳¦׳’</button>
+                </div>
+                <div class="gate-code-note">
+                  <span>נ’¡ ׳”׳§׳•׳“ ׳™׳©׳׳— ׳׳•׳˜׳•׳׳˜׳™׳× ׳׳©׳•׳›׳¨ ׳׳׳—׳¨ ׳”׳–׳׳ ׳” ׳׳׳•׳©׳¨׳×</span>
+                </div>
+                <div class="gate-security-tips">
+                  <strong>׳˜׳™׳₪׳™׳ ׳׳׳‘׳˜׳—׳”:</strong>
+                  <ul>
+                    <li>׳”׳©׳×׳׳© ׳‘-4ג€“6 ׳¡׳₪׳¨׳•׳×</li>
+                    <li>׳©׳ ׳” ׳׳× ׳”׳§׳•׳“ ׳׳—׳× ׳׳›׳׳” ׳—׳•׳“׳©׳™׳</li>
+                    <li>׳׳ ׳׳©׳×׳£ ׳׳× ׳”׳§׳•׳“ ׳׳—׳•׳¥ ׳׳₪׳׳˜׳₪׳•׳¨׳׳”</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div id="gate-intercom-fields" class="gate-fields" style="display:none">
+                <div class="form-group">
+                  <label>׳׳¡׳₪׳¨ ׳“׳™׳¨׳” / ׳›׳₪׳×׳•׳¨ ׳׳™׳ ׳˜׳¨׳§׳•׳</label>
+                  <input type="text" id="h-intercom" class="modal-input" placeholder="׳׳“׳•׳’׳׳”: ׳“׳™׳¨׳” 5, ׳›׳₪׳×׳•׳¨ 12" />
+                </div>
+                <div class="gate-code-note">
+                  <span>נ“ ׳”׳©׳•׳›׳¨ ׳™׳¦׳׳¦׳ ׳¢׳ ׳”׳׳™׳ ׳˜׳¨׳§׳•׳ ג€” ׳‘׳¢׳ ׳”׳—׳ ׳™׳” ׳™׳₪׳×׳— ׳׳¨׳—׳•׳§</span>
+                </div>
+              </div>
+
+              <div id="gate-key-fields" class="gate-fields" style="display:none">
+                <div class="gate-code-note">
+                  <span>נ”‘ ׳™׳© ׳׳×׳׳ ׳׳¡׳™׳¨׳× ׳׳₪׳×׳— ׳¢׳ ׳”׳©׳•׳›׳¨ ׳׳₪׳ ׳™ ׳”׳”׳–׳׳ ׳”</span>
+                </div>
+              </div>
+
+              <div id="gate-none-fields" class="gate-fields" style="display:none">
+                <div class="gate-code-note success">
+                  <span>ג… ׳”׳—׳ ׳™׳” ׳₪׳×׳•׳—׳” ׳׳›׳ ׳™׳¡׳” ׳™׳©׳™׳¨׳” ג€” ׳׳ ׳ ׳“׳¨׳© ׳§׳•׳“</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group full">
+            <label>׳¢׳׳“׳× ׳˜׳¢׳™׳ ׳× ׳¨׳›׳‘ ׳—׳©׳׳׳™ (EV)</label>
+            <label class="ev-toggle-label">
+              <input type="checkbox" id="has-ev" onchange="toggleEVFields(this)" />
+              <span class="ev-toggle-text">׳™׳© ׳׳™ ׳¢׳׳“׳× ׳˜׳¢׳™׳ ׳” ׳‘׳—׳ ׳™׳” ג¡</span>
+            </label>
+            <div id="ev-fields" class="ev-fields-group" style="display:none">
+              <div class="ev-fields-inner">
+                <div class="form-group">
+                  <label>׳¡׳•׳’ ׳¢׳׳“׳”</label>
+                  <select id="h-ev-type">
+                    <option>AC Type 2 (׳¨׳’׳™׳)</option>
+                    <option>DC Fast Charge (׳׳”׳™׳¨)</option>
+                    <option>׳©׳§׳¢ ׳‘׳™׳×׳™ ׳¨׳’׳™׳ (Schuko)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>׳¢׳•׳¦׳׳” (kW)</label>
+                  <select id="h-ev-kw">
+                    <option value="2.3">2.3 kW (׳©׳§׳¢ ׳‘׳™׳×׳™)</option>
+                    <option value="7" selected>7 kW</option>
+                    <option value="11">11 kW</option>
+                    <option value="22">22 kW</option>
+                    <option value="50">50 kW (DC ׳׳”׳™׳¨)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>׳×׳׳—׳•׳¨ ׳˜׳¢׳™׳ ׳”</label>
+                  <select id="h-ev-pricing">
+                    <option value="free">׳›׳׳•׳ ׳‘׳׳—׳™׳¨ ׳”׳—׳ ׳™׳”</option>
+                    <option value="per_kwh">׳׳₪׳™ kWh</option>
+                    <option value="flat">׳×׳•׳¡׳₪׳× ׳§׳‘׳•׳¢׳”</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>׳׳—׳™׳¨ (ג‚×/kWh ׳׳• ג‚×/׳”׳–׳׳ ׳”)</label>
+                  <div class="price-input-wrap">
+                    <span>ג‚×</span>
+                    <input type="number" id="h-ev-price" placeholder="0.85" step="0.05" min="0" />
+                  </div>
+                </div>
+              </div>
+              <div class="ev-info-note">
+                נ’¡ ׳—׳ ׳™׳•׳× ׳¢׳ ׳¢׳׳“׳× ׳˜׳¢׳™׳ ׳” ׳׳¨׳•׳•׳™׳—׳•׳× ׳‘׳׳׳•׳¦׳¢ 35% ׳™׳•׳×׳¨ ׳•׳׳•׳₪׳™׳¢׳•׳× ׳’׳‘׳•׳” ׳™׳•׳×׳¨ ׳‘׳—׳™׳₪׳•׳©.
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group full">
+            <label>׳×׳׳•׳ ׳•׳× ׳”׳—׳ ׳™׳”</label>
+            <div class="upload-area" onclick="this.querySelector('input').click()">
+              <input type="file" accept="image/*" multiple style="display:none" onchange="previewImages(this)" />
+              <div class="upload-icon">נ“·</div>
+              <p>׳׳—׳¥ ׳׳”׳¢׳׳׳× ׳×׳׳•׳ ׳•׳×</p>
+              <small>׳¢׳“ 6 ׳×׳׳•׳ ׳•׳× ֲ· JPG, PNG</small>
+            </div>
+            <div id="image-preview" class="image-preview-grid"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-next" onclick="nextStep(2)">׳”׳‘׳ ג†</button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="host-step-2" class="host-step">
+        <h2>׳–׳׳™׳ ׳•׳× ׳•׳×׳׳—׳•׳¨</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>׳׳—׳™׳¨ ׳׳©׳¢׳” (ג‚×) *</label>
+            <div class="price-input-wrap">
+              <span>ג‚×</span>
+              <input type="number" id="h-price-hour" value="15" min="5" max="100" />
+            </div>
+            <small class="price-hint">׳׳׳•׳¦׳¢ ׳‘׳׳–׳•׳¨׳: ג‚×12ג€“18/׳©׳¢׳”</small>
+          </div>
+          <div class="form-group">
+            <label>׳׳—׳™׳¨ ׳™׳•׳׳™ (ג‚×) ג€” ׳׳•׳₪׳¦׳™׳•׳ ׳׳™</label>
+            <div class="price-input-wrap">
+              <span>ג‚×</span>
+              <input type="number" id="h-price-day" placeholder="80" min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>׳׳—׳™׳¨ ׳—׳•׳“׳©׳™ (ג‚×) ג€” ׳׳•׳₪׳¦׳™׳•׳ ׳׳™</label>
+            <div class="price-input-wrap">
+              <span>ג‚×</span>
+              <input type="number" id="h-price-month" placeholder="800" min="0" />
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>׳™׳׳™ ׳–׳׳™׳ ׳•׳×</label>
+            <div class="days-selector">
+              <button class="day-btn active" onclick="toggleDay(this,'׳׳³')">׳׳³</button>
+              <button class="day-btn active" onclick="toggleDay(this,'׳‘׳³')">׳‘׳³</button>
+              <button class="day-btn active" onclick="toggleDay(this,'׳’׳³')">׳’׳³</button>
+              <button class="day-btn active" onclick="toggleDay(this,'׳“׳³')">׳“׳³</button>
+              <button class="day-btn active" onclick="toggleDay(this,'׳”׳³')">׳”׳³</button>
+              <button class="day-btn" onclick="toggleDay(this,'׳•׳³')">׳•׳³</button>
+              <button class="day-btn" onclick="toggleDay(this,'׳©׳³')">׳©׳³</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>׳©׳¢׳× ׳₪׳×׳™׳—׳”</label>
+            <input type="time" id="h-open" value="08:00" />
+          </div>
+          <div class="form-group">
+            <label>׳©׳¢׳× ׳¡׳’׳™׳¨׳”</label>
+            <input type="time" id="h-close" value="22:00" />
+          </div>
+        </div>
+
+        <div class="earnings-preview">
+          <h4>׳”׳›׳ ׳¡׳” ׳—׳•׳“׳©׳™׳× ׳׳©׳•׳¢׳¨׳×</h4>
+          <div class="earnings-preview-nums">
+            <div class="ep-item">
+              <span class="ep-label">׳׳ ׳׳׳•׳›׳׳¡׳× 50%</span>
+              <span class="ep-num" id="earn-50">ג‚×1,080</span>
+            </div>
+            <div class="ep-item">
+              <span class="ep-label">׳׳ ׳׳׳•׳›׳׳¡׳× 75%</span>
+              <span class="ep-num highlight" id="earn-75">ג‚×1,620</span>
+            </div>
+            <div class="ep-item">
+              <span class="ep-label">׳׳ ׳׳׳•׳›׳׳¡׳× 100%</span>
+              <span class="ep-num" id="earn-100">ג‚×2,160</span>
+            </div>
+          </div>
+          <small>* ׳׳׳—׳¨ ׳¢׳׳׳× ParkIt 20%</small>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-back" onclick="prevStep(1)">ג† ׳—׳–׳•׳¨</button>
+          <button class="btn-next" onclick="nextStep(3)">׳”׳‘׳ ג†</button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="host-step-3" class="host-step">
+        <h2>׳¡׳™׳›׳•׳ ׳•׳₪׳¨׳¡׳•׳</h2>
+        <div class="summary-card" id="host-summary"></div>
+
+        <div class="form-group">
+          <label class="checkbox-label big">
+            <input type="checkbox" id="agree-terms" />
+            ׳§׳¨׳׳×׳™ ׳•׳׳ ׳™ ׳׳¡׳›׳™׳ ׳<a href="#" onclick="openModal('terms')">׳×׳ ׳׳™ ׳”׳©׳™׳׳•׳©</a> ׳•<a href="#" onclick="openModal('privacy')">׳׳“׳™׳ ׳™׳•׳× ׳”׳₪׳¨׳˜׳™׳•׳×</a>
+          </label>
+        </div>
+
+        <div class="legal-note">
+          <strong>ג ן¸ ׳—׳©׳•׳‘ ׳׳“׳¢׳×:</strong>
+          <ul>
+            <li>׳”׳›׳ ׳¡׳” ׳׳”׳©׳›׳¨׳× ׳—׳ ׳™׳” ׳—׳™׳™׳‘׳× ׳‘׳׳¡ ג€” ׳”׳×׳™׳™׳¢׳¥ ׳¢׳ ׳¨׳•׳׳” ׳—׳©׳‘׳•׳.</li>
+            <li>׳‘׳—׳ ׳™׳” ׳‘׳‘׳™׳× ׳׳©׳•׳×׳£ ג€” ׳•׳“׳ ׳©׳™׳© ׳׳ ׳–׳›׳•׳× ׳—׳•׳§׳™׳× ׳׳”׳©׳›׳™׳¨ (׳”׳¦׳׳“׳” ׳׳“׳™׳¨׳”).</li>
+            <li>׳‘׳™׳˜׳•׳— ׳©׳׳ ׳• ׳׳›׳¡׳” ׳ ׳–׳§׳™ ׳¨׳›׳‘ ׳‘׳–׳׳ ׳—׳ ׳™׳”. ׳‘׳™׳˜׳•׳— ׳”׳ ׳›׳¡ ג€” ׳‘׳׳—׳¨׳™׳•׳×׳.</li>
+          </ul>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-back" onclick="prevStep(2)">ג† ׳—׳–׳•׳¨</button>
+          <button class="btn-publish" onclick="publishListing()">
+            נ€ ׳₪׳¨׳¡׳ ׳—׳ ׳™׳” ׳¢׳›׳©׳™׳•
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW PAYMENT WORKS -->
+    <div class="host-sidebar">
+      <div class="sidebar-card">
+        <h3>׳׳™׳ ׳׳§׳‘׳׳™׳ ׳×׳©׳׳•׳?</h3>
+        <div class="payment-steps">
+          <div class="ps-item">
+            <div class="ps-icon">נ“…</div>
+            <p>׳©׳•׳›׳¨ ׳׳–׳׳™׳ ׳•׳׳©׳׳ ׳׳¨׳׳© ׳“׳¨׳ ParkIt</p>
+          </div>
+          <div class="ps-item">
+            <div class="ps-icon">נ”’</div>
+            <p>׳”׳›׳¡׳£ ׳׳•׳—׳–׳§ ׳‘׳ ׳׳׳ ׳•׳× ׳¢׳“ ׳׳¡׳™׳•׳ ׳”׳”׳–׳׳ ׳”</p>
+          </div>
+          <div class="ps-item">
+            <div class="ps-icon">נ’³</div>
+            <p>24 ׳©׳¢׳•׳× ׳׳׳—׳¨ ׳”׳¡׳™׳•׳ ג€” ׳”׳¢׳‘׳¨׳” ׳׳—׳©׳‘׳•׳ ׳”׳‘׳ ׳§ ׳©׳׳</p>
+          </div>
+        </div>
+        <div class="commission-note">
+          ׳¢׳׳׳× ParkIt: <strong>20%</strong> ׳׳›׳ ׳¢׳¡׳§׳”.<br/>
+          ׳׳×׳” ׳׳§׳‘׳: <strong>80%</strong>.
+        </div>
+      </div>
+      <div class="sidebar-card">
+        <h3>׳©׳׳׳•׳× ׳ ׳₪׳•׳¦׳•׳×</h3>
+        <div class="faq">
+          <details><summary>׳”׳׳ ׳׳ ׳™ ׳—׳™׳™׳‘ ׳׳§׳‘׳ ׳›׳ ׳”׳–׳׳ ׳”?</summary><p>׳׳. ׳׳×׳” ׳™׳›׳•׳ ׳׳”׳’׳“׳™׳¨ ׳–׳׳™׳ ׳•׳× ׳׳“׳•׳™׳§׳× ׳•׳׳‘׳˜׳ ׳”׳–׳׳ ׳” ׳¢׳ ׳”׳×׳¨׳׳” ׳׳•׳§׳“׳׳×.</p></details>
+          <details><summary>׳׳” ׳׳ ׳”׳¨׳›׳‘ ׳ ׳™׳–׳•׳§?</summary><p>׳›׳ ׳”׳–׳׳ ׳” ׳׳’׳™׳¢׳” ׳¢׳ ׳‘׳™׳˜׳•׳— ׳׳ ׳–׳§׳™ ׳¨׳›׳‘. ׳”׳’׳© ׳“׳™׳•׳•׳— ׳“׳¨׳ ׳”׳׳₪׳׳™׳§׳¦׳™׳” ׳×׳•׳ 24 ׳©׳¢׳•׳×.</p></details>
+          <details><summary>׳›׳׳” ׳–׳׳ ׳׳•׳§׳— ׳׳™׳©׳•׳¨?</summary><p>׳‘׳“׳¨׳ ׳›׳׳ 24-48 ׳©׳¢׳•׳×. ׳׳ ׳—׳ ׳• ׳׳׳׳×׳™׳ ׳׳× ׳”׳›׳×׳•׳‘׳× ׳•׳₪׳¨׳˜׳™ ׳”׳—׳ ׳™׳”.</p></details>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== HOW IT WORKS PAGE ========== -->
+<div id="page-how" class="page">
+  <div class="container how-container">
+    <div class="section-header">
+      <h1>׳׳™׳ ParkIt ׳¢׳•׳‘׳“?</h1>
+      <p>׳׳¦׳ ׳—׳ ׳™׳” ׳׳• ׳₪׳¨׳¡׳ ׳—׳ ׳™׳” ג€” ׳×׳”׳׳™׳ ׳₪׳©׳•׳˜ ׳•׳׳׳•׳‘׳˜׳—</p>
+    </div>
+
+    <div class="how-sections">
+      <div class="how-section">
+        <h2 class="how-section-title"><span class="how-icon">נ”</span> ׳׳©׳•׳›׳¨׳™׳ ג€” ׳׳¦׳ ׳—׳ ׳™׳”</h2>
+        <div class="how-timeline">
+          <div class="ht-item">
+            <div class="ht-num">1</div>
+            <div class="ht-content">
+              <h3>׳—׳₪׳© ׳׳₪׳™ ׳׳™׳§׳•׳ ׳•׳–׳׳</h3>
+              <p>׳”׳›׳ ׳¡ ׳׳× ׳”׳™׳¢׳“ ׳©׳׳ ׳•׳׳×׳™ ׳׳×׳” ׳¦׳¨׳™׳. ׳”׳׳¢׳¨׳›׳× ׳׳¦׳™׳’׳” ׳—׳ ׳™׳•׳× ׳₪׳¨׳˜׳™׳•׳× ׳–׳׳™׳ ׳•׳× ׳‘׳¡׳‘׳™׳‘׳” ׳¢׳ ׳׳—׳™׳¨׳™׳ ׳‘׳¨׳•׳¨׳™׳.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">2</div>
+            <div class="ht-content">
+              <h3>׳‘׳—׳¨ ׳•׳©׳׳</h3>
+              <p>׳§׳¨׳ ׳‘׳™׳§׳•׳¨׳•׳×, ׳¨׳׳” ׳×׳׳•׳ ׳•׳×, ׳•׳‘׳—׳¨. ׳×׳©׳׳•׳ ׳׳׳•׳‘׳˜׳— ׳‘׳›׳¨׳˜׳™׳¡ ׳׳©׳¨׳׳™, Apple Pay, ׳׳• Google Pay.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">3</div>
+            <div class="ht-content">
+              <h3>׳§׳‘׳ ׳§׳•׳“ ׳’׳™׳©׳”</h3>
+              <p>׳׳™׳“ ׳׳׳—׳¨ ׳”׳×׳©׳׳•׳ ג€” ׳×׳§׳‘׳ ׳§׳•׳“ ׳₪׳×׳™׳—׳” ׳©׳¢׳¨, ׳ ׳™׳•׳•׳˜ ׳׳“׳•׳™׳§, ׳•׳׳¡׳₪׳¨ ׳—׳ ׳™׳”. ׳‘׳׳™ ׳׳”׳×׳§׳©׳¨ ׳׳׳£ ׳׳—׳“.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">4</div>
+            <div class="ht-content">
+              <h3>׳—׳ ׳” ׳•׳“׳¨׳’</h3>
+              <p>׳—׳ ׳” ׳‘׳ ׳—׳×. ׳‘׳¡׳™׳•׳ ג€” ׳“׳¨׳’ ׳׳× ׳”׳—׳ ׳™׳” ׳•׳¢׳–׳•׳¨ ׳׳§׳”׳™׳׳” ׳׳‘׳—׳•׳¨ ׳˜׳•׳‘ ׳™׳•׳×׳¨.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="how-section">
+        <h2 class="how-section-title"><span class="how-icon">נ </span> ׳׳׳©׳›׳™׳¨׳™׳ ג€” ׳”׳¨׳•׳•׳™׳— ׳׳”׳—׳ ׳™׳” ׳©׳׳</h2>
+        <div class="how-timeline">
+          <div class="ht-item">
+            <div class="ht-num">1</div>
+            <div class="ht-content">
+              <h3>׳₪׳¨׳¡׳ ׳‘-5 ׳“׳§׳•׳×</h3>
+              <p>׳×׳׳•׳ ׳•׳×, ׳›׳×׳•׳‘׳×, ׳׳—׳™׳¨, ׳©׳¢׳•׳× ׳–׳׳™׳ ׳•׳×. ׳–׳”׳•. ׳׳ ׳—׳ ׳• ׳׳׳׳×׳™׳ ׳•׳׳₪׳¨׳¡׳׳™׳ ׳×׳•׳ 48 ׳©׳¢׳•׳×.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">2</div>
+            <div class="ht-content">
+              <h3>׳§׳‘׳ ׳”׳–׳׳ ׳•׳× ׳׳•׳˜׳•׳׳˜׳™׳×</h3>
+              <p>׳©׳•׳›׳¨׳™׳ ׳׳•׳¦׳׳™׳ ׳׳•׳×׳, ׳׳©׳׳׳™׳, ׳•׳׳§׳‘׳׳™׳ ׳’׳™׳©׳” ׳׳•׳˜׳•׳׳˜׳™׳×. ׳׳×׳” ׳׳ ׳¦׳¨׳™׳ ׳׳¢׳©׳•׳× ׳›׳׳•׳.</p>
+            </div>
+          </div>
+          <div class="ht-item">
+            <div class="ht-num">3</div>
+            <div class="ht-content">
+              <h3>׳×׳©׳׳•׳ ׳™׳©׳™׳¨ ׳׳—׳©׳‘׳•׳</h3>
+              <p>24 ׳©׳¢׳•׳× ׳׳׳—׳¨ ׳›׳ ׳—׳ ׳™׳” ג€” ׳”׳›׳¡׳£ ׳׳•׳¢׳‘׳¨ ׳׳—׳©׳‘׳•׳ ׳”׳‘׳ ׳§ ׳©׳׳. ׳׳׳ ׳”׳׳×׳ ׳”, ׳׳׳ ׳‘׳™׳¨׳•׳§׳¨׳˜׳™׳”.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="trust-section">
+      <h2>׳׳” ׳¢׳•׳©׳” ׳׳•׳×׳ ׳• ׳׳׳•׳‘׳˜׳—׳™׳?</h2>
+      <div class="trust-grid">
+        <div class="trust-item">
+          <div class="trust-icon">נ†”</div>
+          <h3>׳׳™׳׳•׳× ׳–׳”׳•׳×</h3>
+          <p>׳›׳ ׳׳©׳×׳׳© ׳׳׳׳× ׳×׳¢׳•׳“׳× ׳–׳”׳•׳×. ׳›׳ ׳—׳ ׳™׳” ׳׳׳•׳׳×׳× ׳¢׳ ׳™׳“׳™ ׳”׳¦׳•׳•׳× ׳©׳׳ ׳•.</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">נ›¡ן¸</div>
+          <h3>׳‘׳™׳˜׳•׳— ׳׳׳</h3>
+          <p>׳‘׳™׳˜׳•׳— ׳ ׳–׳§׳™ ׳¨׳›׳‘ ׳‘׳›׳ ׳”׳–׳׳ ׳”. ׳¢׳“ ג‚×50,000 ׳›׳™׳¡׳•׳™ ׳׳ ׳–׳§ ׳™׳©׳™׳¨.</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">ג­</div>
+          <h3>׳׳¢׳¨׳›׳× ׳“׳™׳¨׳•׳’׳™׳</h3>
+          <p>׳›׳ ׳¢׳¡׳§׳” ׳׳“׳•׳¨׳’׳× ׳׳©׳ ׳™ ׳”׳¦׳“׳“׳™׳. ׳©׳•׳›׳¨׳™׳ ׳•׳׳©׳›׳™׳¨׳™׳ ׳¢׳ ׳”׳™׳¡׳˜׳•׳¨׳™׳” ׳©׳§׳•׳₪׳”.</p>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">נ’³</div>
+          <h3>׳×׳©׳׳•׳ ׳׳׳•׳‘׳˜׳—</h3>
+          <p>׳׳•׳₪׳¢׳ ׳¢׳ ׳™׳“׳™ Stripe. ׳₪׳¨׳˜׳™ ׳›׳¨׳˜׳™׳¡ ׳׳ ׳ ׳©׳׳¨׳™׳ ׳׳¦׳׳ ׳• ׳׳£ ׳₪׳¢׳.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <div class="logo">
+        <span class="logo-icon">P</span>
+        <span class="logo-text">ParkIt</span>
+      </div>
+      <p>׳₪׳׳˜׳₪׳•׳¨׳׳× ׳”׳—׳ ׳™׳•׳× ׳”׳₪׳¨׳˜׳™׳•׳× ׳©׳ ׳™׳©׳¨׳׳.</p>
+      <div class="social-links">
+        <a href="#" title="Facebook">f</a>
+        <a href="#" title="Instagram">ig</a>
+        <a href="#" title="TikTok">tt</a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h4>׳ ׳™׳•׳•׳˜</h4>
+      <a href="#" onclick="showPage('search')">׳—׳₪׳© ׳—׳ ׳™׳”</a>
+      <a href="#" onclick="showPage('host')">׳₪׳¨׳¡׳ ׳—׳ ׳™׳”</a>
+      <a href="#" onclick="showPage('how')">׳׳™׳ ׳–׳” ׳¢׳•׳‘׳“</a>
+    </div>
+    <div class="footer-links">
+      <h4>׳—׳‘׳¨׳”</h4>
+      <a href="#">׳׳•׳“׳•׳×</a>
+      <a href="#">׳‘׳׳•׳’</a>
+      <a href="#">׳§׳¨׳™׳™׳¨׳”</a>
+      <a href="#">׳¢׳™׳×׳•׳ ׳•׳×</a>
+    </div>
+    <div class="footer-links">
+      <h4>׳×׳׳™׳›׳”</h4>
+      <a href="#">׳׳¨׳›׳– ׳¢׳–׳¨׳”</a>
+      <a href="#">׳¦׳•׳¨ ׳§׳©׳¨</a>
+      <a href="terms-of-service.html" target="_blank">׳×׳§׳ ׳•׳</a>
+      <a href="privacy-policy.html" target="_blank">׳₪׳¨׳˜׳™׳•׳×</a>
+    </div>
+    <div class="footer-contact">
+      <h4>׳¦׳¨׳• ׳§׳©׳¨</h4>
+      <p>נ“§ support@parkit.co.il</p>
+      <p>נ“ 03-1234567</p>
+      <p>ג° ׳׳³ג€“׳”׳³ 9:00ג€“18:00</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>ֲ© 2026 ParkIt. ׳›׳ ׳”׳–׳›׳•׳™׳•׳× ׳©׳׳•׳¨׳•׳×.</p>
+  </div>
+</footer>
+
+<!-- ========== MODALS ========== -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">ג•</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- ========== BOOKINGS PAGE ========== -->
+<div id="page-bookings" class="page">
+  <div class="container" style="padding:40px 20px;max-width:700px">
+    <div id="bookings-content">
+      <div style="text-align:center;padding:60px 20px;background:var(--gray-50);border-radius:20px;border:2px dashed var(--gray-200)">
+        <div style="font-size:3rem;margin-bottom:16px">נ…¿ן¸</div>
+        <h3 style="font-weight:700;margin-bottom:8px">׳¢׳“׳™׳™׳ ׳׳™׳ ׳”׳–׳׳ ׳•׳×</h3>
+        <p style="color:var(--gray-500);margin-bottom:24px">׳”׳–׳׳ ׳•׳× ׳©׳×׳‘׳¦׳¢ ׳™׳•׳₪׳™׳¢׳• ׳›׳׳</p>
+        <button class="btn-primary" style="padding:12px 28px" onclick="sidebarNav('search')">׳—׳₪׳© ׳—׳ ׳™׳” ׳¢׳›׳©׳™׳•</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PROFILE PAGE ========== -->
+<div id="page-profile" class="page">
+  <div class="container" style="padding:40px 20px;max-width:600px">
+    <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:32px">נ‘₪ ׳”׳₪׳¨׳•׳₪׳™׳ ׳©׳׳™</h2>
+    <div id="profile-content">
+      <!-- ׳׳×׳¢׳“׳›׳ ׳¢"׳™ JS -->
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- ========== SUPPORT CHAT BOT ========== -->
+<div id="chat-bubble" class="chat-bubble" onclick="toggleChat()">
+  <span class="chat-bubble-icon" id="chat-bubble-icon">נ’¬</span>
+  <span class="chat-unread" id="chat-unread" style="display:none">1</span>
+</div>
+
+<div id="chat-panel" class="chat-panel">
+  <div class="chat-panel-header">
+    <div class="chat-bot-info">
+      <div class="chat-bot-avatar">נ₪–</div>
+      <div>
+        <div class="chat-bot-name">ParkBot</div>
+        <div class="chat-bot-status"><span class="chat-status-dot"></span>׳׳—׳•׳‘׳¨ ֲ· ׳¢׳•׳ ׳” ׳׳™׳“</div>
+      </div>
+    </div>
+    <button class="chat-close-btn" onclick="toggleChat()">ג•</button>
+  </div>
+
+  <div class="chat-messages" id="chat-messages"></div>
+
+  <div class="chat-quick-replies" id="chat-quick-replies"></div>
+
+  <div class="chat-input-row">
+    <input
+      type="text"
+      id="chat-input"
+      class="chat-input"
+      placeholder="׳©׳׳ ׳׳•׳×׳™ ׳›׳ ׳©׳׳׳”..."
+      onkeydown="if(event.key==='Enter')sendChatMessage()"
+      autocomplete="off"
+    />
+    <button class="chat-send-btn" onclick="sendChatMessage()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+<div class="chat-overlay" id="chat-overlay" onclick="toggleChat()"></div>
+
+<!-- ========== SMART GATE CONTROLLER ========== -->
+<div id="gate-overlay" class="gate-overlay">
+  <div class="gate-screen">
+
+    <!-- Header -->
+    <div class="gate-header">
+      <button class="gate-back" onclick="closeGate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="gate-header-info">
+        <div class="gate-parking-name" id="gate-parking-name">ג€”</div>
+        <div class="gate-parking-addr" id="gate-parking-addr">ג€”</div>
+      </div>
+      <div class="gate-status-dot" id="gate-status-dot"></div>
+    </div>
+
+    <!-- Gate Visual -->
+    <div class="gate-visual-wrap">
+      <div class="gate-visual" id="gate-visual">
+        <!-- Background: wall/frame -->
+        <div class="gate-wall gate-wall-right"></div>
+        <div class="gate-wall gate-wall-left"></div>
+
+        <!-- Gate panels -->
+        <div class="gate-panel gate-panel-right" id="gate-panel-right">
+          <div class="gate-bar"></div>
+          <div class="gate-bar"></div>
+          <div class="gate-bar"></div>
+          <div class="gate-bar"></div>
+          <div class="gate-logo-panel">P</div>
+        </div>
+        <div class="gate-panel gate-panel-left" id="gate-panel-left">
+          <div class="gate-bar"></div>
+          <div class="gate-bar"></div>
+          <div class="gate-bar"></div>
+          <div class="gate-bar"></div>
+        </div>
+
+        <!-- Ground line -->
+        <div class="gate-ground"></div>
+
+        <!-- Car -->
+        <div class="gate-car" id="gate-car">נ—</div>
+
+        <!-- Status badge on gate -->
+        <div class="gate-state-badge" id="gate-state-badge">׳ ׳¢׳•׳ נ”’</div>
+      </div>
+
+      <!-- Progress ring (shown when open) -->
+      <div class="gate-ring-wrap" id="gate-ring-wrap" style="display:none">
+        <svg class="gate-ring-svg" viewBox="0 0 120 120">
+          <circle class="gate-ring-bg" cx="60" cy="60" r="52"/>
+          <circle class="gate-ring-progress" id="gate-ring-progress" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="gate-ring-inner">
+          <div class="gate-ring-seconds" id="gate-ring-seconds">30</div>
+          <div class="gate-ring-label">׳©׳ ׳™׳•׳×</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Status -->
+    <div class="gate-location-bar" id="gate-location-bar">
+      <div class="gate-loc-icon">נ“</div>
+      <div class="gate-loc-text" id="gate-loc-text">׳‘׳•׳“׳§ ׳׳™׳§׳•׳...</div>
+      <div class="gate-loc-badge" id="gate-loc-badge"></div>
+    </div>
+
+    <!-- Main Action Button -->
+    <div class="gate-action-wrap">
+      <button class="gate-btn" id="gate-btn" onclick="triggerGate()" disabled>
+        <span class="gate-btn-icon" id="gate-btn-icon">נ”“</span>
+        <span class="gate-btn-label" id="gate-btn-label">׳₪׳×׳— ׳©׳¢׳¨</span>
+      </button>
+      <div class="gate-btn-hint" id="gate-btn-hint">׳”׳×׳§׳¨׳‘ ׳׳—׳ ׳™׳” ׳›׳“׳™ ׳׳₪׳×׳•׳—</div>
+    </div>
+
+    <!-- Backup Code -->
+    <div class="gate-backup">
+      <div class="gate-backup-label">׳§׳•׳“ ׳’׳™׳‘׳•׳™ ׳™׳“׳ ׳™</div>
+      <div class="gate-backup-code" id="gate-backup-code">
+        <span>4</span><span>7</span><span>2</span><span>1</span>
+      </div>
+      <div class="gate-backup-note">׳”׳§׳׳“ ׳‘׳׳•׳— ׳”׳׳§׳©׳™׳ ׳©׳׳™׳“ ׳”׳©׳¢׳¨</div>
+    </div>
+
+    <!-- Log -->
+    <div class="gate-log" id="gate-log"></div>
+
+  </div>
+</div>
+
+<!-- ========== BOTTOM NAVIGATION (mobile only) ========== -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item" id="bn-home" onclick="bottomNav('home')">
+    <span class="bn-icon">נ </span>
+    <span class="bn-label">׳‘׳™׳×</span>
+  </button>
+  <button class="bn-item" id="bn-bookings" onclick="bottomNav('bookings')">
+    <span class="bn-icon">📋</span>
+    <span class="bn-label">הזמנות</span>
+  </button>
+  <button class="bn-item bn-center" id="bn-host" onclick="bottomNav('host')">
+    <span class="bn-center-inner">
+      <span class="bn-center-icon">ג•</span>
+    </span>
+    <span class="bn-label">׳₪׳¨׳¡׳</span>
+  </button>
+  <button class="bn-item" id="bn-favorites" onclick="bottomNav('favorites')">
+    <span class="bn-icon">נ’–</span>
+    <span class="bn-label">׳©׳׳•׳¨׳™׳</span>
+  </button>
+  <button class="bn-item" id="bn-profile" onclick="bottomNav('profile')">
+    <span class="bn-icon">נ‘₪</span>
+    <span class="bn-label">׳₪׳¨׳•׳₪׳™׳</span>
+  </button>
+</nav>
+
+<!-- ========== FAVORITES PAGE ========== -->
+<div id="page-favorites" class="page">
+  <div class="fav-header">
+    <h2>נ’– ׳—׳ ׳™׳•׳× ׳©׳׳•׳¨׳•׳×</h2>
+    <p>׳”׳—׳ ׳™׳•׳× ׳©׳¡׳™׳׳ ׳× ׳›׳׳•׳¢׳“׳₪׳•׳×</p>
+  </div>
+  <div class="container" style="padding:0 16px 100px">
+    <div id="favorites-content"></div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL (bottom sheet) -->
+<div id="booking-sheet" class="booking-sheet">
+  <div class="booking-sheet-handle"></div>
+  <div id="booking-sheet-content"></div>
+</div>
+<div id="booking-overlay" class="booking-overlay" onclick="closeBooking()"></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    apiKey: "AIzaSyC4lgkPwQWLBDPWEGComfS636oLlIJAgZY",
+    authDomain: "prkint-749da.firebaseapp.com",
+    projectId: "prkint-749da",
+    storageBucket: "prkint-749da.firebasestorage.app",
+    messagingSenderId: "789519548650",
+    appId: "1:789519548650:web:8930690887d3a86bf2d793"
+  });
+</script>
+<!-- Stripe.js ג€” real card payments -->
+<script src="https://js.stripe.com/v3/"></script>
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- App modules (order matters: data ג†’ db ג†’ stripe ג†’ ui ג†’ then rest ג†’ app last) -->
+<script src="data.js?v=1780575689"></script>
+<script src="app.js?v=1780575689"></script>
+<!-- reCAPTCHA container (invisible, managed by Firebase) -->
+<div id="recaptcha-container" style="display:none"></div>
+<script>
+  // ׳ ׳§׳” ׳§׳׳© ׳™׳©׳ ׳•׳¨׳©׳•׳ SW ׳—׳“׳©
+  if ('serviceWorker' in navigator) {
+    // ׳¨׳©׳•׳ SW ג€” skipWaiting+claim ׳׳•׳’׳“׳¨׳™׳ ׳‘-sw.js, ׳›׳ ׳¢׳“׳›׳•׳ ׳™׳ ׳׳×׳§׳™׳ ׳™׳ ׳׳›׳•׳׳ ׳׳•׳˜׳•׳׳˜׳™׳×
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      // ׳‘׳“׳•׳§ ׳¢׳“׳›׳•׳ ׳›׳ 60 ׳©׳ ׳™׳•׳×
+      setInterval(() => reg.update().catch(()=>{}), 60000);
+
+      // ׳›׳©SW ׳—׳“׳© ׳׳•׳₪׳¢׳ ג€” ׳˜׳¢׳ ׳׳—׳“׳© ׳׳›׳ ׳”׳׳©׳×׳׳©׳™׳
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'activated' && navigator.serviceWorker.controller) {
+            // ׳”׳¦׳’ ׳”׳•׳“׳¢׳” ׳•׳¨׳¢׳ ׳
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        });
+      });
+    }).catch(() => {});
+
+    // ׳¨׳¢׳ ׳ ׳׳•׳˜׳•׳׳˜׳™׳× ׳›׳©׳”-SW ׳׳©׳×׳׳˜ (controllerchange)
+    let firstController = true;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (firstController) { firstController = false; return; } // ׳”׳×׳§׳ ׳” ׳¨׳׳©׳•׳ ׳” ג€” ׳׳ ׳×׳¨׳¢׳ ׳
+      window.location.reload();
+    });
+  }
+</script>
+</body>
+</html>
+

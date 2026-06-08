@@ -1,0 +1,52 @@
+﻿{
+  "appId": "il.co.nitpark.app",
+  "appName": "NitPark",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#e91e8c",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true,
+      "layoutName": "launch_screen",
+      "useDialog": true
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#e91e8c",
+      "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK",
+      "resizeOnFullScreen": true
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#e91e8c",
+    "allowsLinkPreview": false,
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": true,
+    "appendUserAgent": "NitPark-iOS"
+  },
+  "android": {
+    "backgroundColor": "#e91e8c",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "appendUserAgent": "NitPark-Android",
+    "loggingBehavior": "none"
+  }
+}
