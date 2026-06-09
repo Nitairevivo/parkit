@@ -39,12 +39,85 @@ let userName = '';
 let userPhone = '';
 let userEmail = '';
 let isLoggedIn = false;
+let userIsPremium = false;
+let userPremiumUntil = null;
+let userPremiumCancelAtEnd = false;
+let userStarBalance = 0;
+let userFcmToken = null;
+
+// ── Stars / Credits constants ────────────────────────────────────
+const STARS_RATE = 0.40;            // 1 star = ₪0.40 when paying
+const STARS_PER_ILS_BUY = 2.5;     // baseline: 1 ₪ = 2.5 stars (no bonus)
+function ilsToStars(ils) { return Math.ceil(ils / STARS_RATE); }
+function starsToIls(stars) { return Math.floor(stars * STARS_RATE * 100) / 100; }
+
+// Hardcoded fallback packages (overridden by Firestore credit_packages collection)
+const DEFAULT_CREDIT_PACKAGES = [
+  { id: 'starter', name: 'Starter',     price: 10,  stars: 30,  bonus: 20, badge: null,          color: '#6366f1', emoji: '⭐' },
+  { id: 'popular', name: 'Popular',     price: 25,  stars: 80,  bonus: 28, badge: '🔥 מומלץ',    color: '#e91e8c', emoji: '⭐⭐' },
+  { id: 'pro',     name: 'Pro',         price: 50,  stars: 175, bonus: 40, badge: '🏆 הכי משתלם', color: '#f59e0b', emoji: '⭐⭐⭐' },
+  { id: 'max',     name: 'Max',         price: 100, stars: 400, bonus: 60, badge: null,          color: '#10b981', emoji: '⭐⭐⭐⭐' },
+];
+let _creditPackages = null; // cached from Firestore
+
+async function loadCreditPackages() {
+  if (_creditPackages) return _creditPackages;
+  try {
+    const snap = await firebase.firestore().collection('credit_packages').orderBy('price').get();
+    if (!snap.empty) {
+      _creditPackages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      return _creditPackages;
+    }
+  } catch(e) {}
+  _creditPackages = DEFAULT_CREDIT_PACKAGES;
+  return _creditPackages;
+}
+let userFavorites = new Set(); // set of listing IDs the user has favorited
 
 function hideSplash() {
   const splash = document.getElementById('splash-screen');
   if (!splash) return;
   splash.style.opacity = '0';
   setTimeout(() => { splash.style.display = 'none'; }, 420);
+}
+
+async function loadPremiumStatus() {
+  const uid = firebase.auth().currentUser?.uid || localStorage.getItem('nitpark_user');
+  if (!uid || uid.startsWith('local_')) { userIsPremium = false; return; }
+  try {
+    const db   = firebase.firestore();
+    const doc  = await db.collection('users').doc(uid).get();
+    const data = doc.data() || {};
+    const until = data.premiumUntil ? data.premiumUntil.toDate() : null;
+    userIsPremium          = data.isPremium === true && (until ? until > new Date() : false);
+    userPremiumUntil       = until;
+    userPremiumCancelAtEnd = data.premiumCancelAtPeriodEnd === true;
+    userStarBalance        = data.starBalance || 0;
+    // Load favorites
+    const favSnap = await db.collection('users').doc(uid).collection('favorites').get();
+    userFavorites = new Set(favSnap.docs.map(d => d.id));
+    // Request push notification permission for premium users
+    if (userIsPremium) requestPushPermission(uid);
+    // Show premium filter row in search
+    const pfRow = document.getElementById('premium-filter-row');
+    if (pfRow) pfRow.style.display = userIsPremium ? 'flex' : 'none';
+    // Update stars balance display
+    if (typeof updateStarsBalanceDisplay === 'function') updateStarsBalanceDisplay();
+  } catch (e) { userIsPremium = false; userStarBalance = 0; }
+}
+
+async function requestPushPermission(uid) {
+  try {
+    if (!('Notification' in window) || !firebase.messaging) return;
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+    const messaging = firebase.messaging();
+    const token = await messaging.getToken({ vapidKey: window.FIREBASE_VAPID_KEY });
+    if (token && token !== userFcmToken) {
+      userFcmToken = token;
+      await firebase.firestore().collection('users').doc(uid).set({ fcmToken: token }, { merge: true });
+    }
+  } catch (e) { /* messaging not configured or blocked */ }
 }
 
 function initApp() {
@@ -60,6 +133,7 @@ function initApp() {
   if (loggedIn) {
     isLoggedIn = true;
     userName = localStorage.getItem('nitpark_name') || '';
+    loadPremiumStatus();
     hideAuthScreens();
   } else {
     const tb = document.getElementById('topbar'); if (tb) tb.style.display = 'none';
@@ -216,6 +290,7 @@ async function verifyOtp() {
     localStorage.setItem('nitpark_phone', user.phoneNumber || userPhone);
     isLoggedIn = true;
     document.getElementById('auth-screen').style.display = 'none';
+    loadPremiumStatus();
     startOnboarding();
 
   } catch (err) {
@@ -473,6 +548,9 @@ function finishOnboarding(destination) {
   }
   if (userEmail) localStorage.setItem('nitpark_email', userEmail);
   isLoggedIn = true;
+  loadPremiumStatus();
+  // Show stars promo banner 5s after login (once per session)
+  setTimeout(showStarsBanner, 5000);
 
   const ob = document.getElementById('onboarding-screen');
   ob.style.opacity = '0';
@@ -575,7 +653,7 @@ function showPage(name) {
 
   if (name === 'profile') { isLoggedIn ? openModal('profile') : openModal('login'); return; }
   if (name === 'search') {
-    setSearchView('list');
+    setSearchView('map');
     renderSearchResults(filteredListings);
     setTimeout(async () => {
       initLeafletMap();
@@ -584,6 +662,7 @@ function showPage(name) {
   }
   if (name === 'host') renderHostSummary();
   if (name === 'bookings') loadUserBookings('active');
+  if (name === 'stars') { if (typeof renderStarsPage === 'function') renderStarsPage(); }
 }
 
 function toggleMenu() {
@@ -698,7 +777,11 @@ function renderCard(p) {
           ${p.status === 'pending' ? '<span class="listing-tag" style="color:#f59e0b;border-color:#fde68a">ממתין לאישור</span>' : ''}
         </div>
         <div class="listing-footer">
-          <div class="listing-price">₪${p.price_hour}<span>/שעה</span></div>
+          <div class="listing-price">
+            <span class="lp-ils">₪${p.price_hour}<span>/שעה</span></span>
+            <span class="lp-sep">|</span>
+            <span class="lp-stars">${typeof ilsToStars==='function' ? ilsToStars(p.price_hour) : Math.ceil(p.price_hour/0.4)} ⭐/שעה</span>
+          </div>
           <button class="btn-view">צפה</button>
         </div>
       </div>
@@ -744,6 +827,13 @@ function filterListings() {
 
   const ltPeriod = document.querySelector('input[name="lt-period"]:checked')?.value || 'month';
 
+  // Premium exclusive filters
+  const guardedOnly   = document.getElementById('filter-guarded')?.checked && userIsPremium;
+  const coveredOnly   = document.getElementById('filter-covered')?.checked && userIsPremium;
+  const camerasOnly   = document.getElementById('filter-cameras')?.checked && userIsPremium;
+  const newOnly       = document.getElementById('filter-new')?.checked && userIsPremium;
+
+  const now = new Date();
   filteredListings = visibleParkings().filter(p => {
     if (p.price_hour < min || p.price_hour > max) return false;
     if (minRating > 0 && (p.rating || 0) < minRating) return false;
@@ -751,6 +841,11 @@ function filterListings() {
     if (rentalType === 'longterm' && !p.price_month) return false;
     if (activeCategory === 'ev' && !p.ev_charger) return false;
     if (activeCategory !== 'all' && activeCategory !== 'ev' && !(p.categories || []).includes(activeCategory)) return false;
+    // Premium exclusive filters
+    if (guardedOnly && !(p.tags || []).includes('שמירה')) return false;
+    if (coveredOnly && !(p.tags || []).includes('מקורה')) return false;
+    if (camerasOnly && !p.hasCameras) return false;
+    if (newOnly && !(p.premiumAccessUntil && p.premiumAccessUntil > now)) return false;
     return true;
   });
 
@@ -819,7 +914,6 @@ function filterByCategory(cat, btn) {
   document.getElementById('ev-highlight-pill')?.classList.remove('active');
   btn.classList.add('active');
   filterListings();
-  setSearchView('list');
 }
 
 function setMinRating(r, btn) {
@@ -844,8 +938,21 @@ function renderSearchResults(list, rentalType = 'all', ltPeriod = 'month') {
   const countEl = document.getElementById('results-count');
   if (countEl && countEl.textContent === 'טוען...') countEl.textContent = `${list.length} חניות נמצאו`;
   if (!el) return;
+
+  // Upsell strip for non-premium users when there are early-access listings
+  const earlyCount = earlyAccessCount();
+  const upsellStrip = (!userIsPremium && earlyCount > 0) ? `
+    <div onclick="openPremiumModal()" style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;border-radius:14px;padding:12px 16px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:right">
+      <span style="font-size:1.4rem">⚡</span>
+      <div style="flex:1">
+        <div style="font-weight:800;font-size:.88rem;color:#92400e">${earlyCount} חניות חדשות זמינות לפרימיום בלבד</div>
+        <div style="font-size:.78rem;color:#b45309;margin-top:2px">משתמשי פרימיום רואים חניות חדשות 30 דקות לפני כולם</div>
+      </div>
+      <span style="font-size:.8rem;font-weight:700;color:#92400e;white-space:nowrap">שדרג →</span>
+    </div>` : '';
+
   if (list.length === 0) {
-    el.innerHTML = `<div class="search-empty-state">
+    el.innerHTML = upsellStrip + `<div class="search-empty-state">
       <div class="empty-icon">🅿️</div>
       <h3>אין חניות באזור זה עדיין</h3>
       <p>היה הראשון לפרסם חניה!</p>
@@ -870,8 +977,12 @@ function renderSearchResults(list, rentalType = 'all', ltPeriod = 'month') {
     }
   }
 
-  el.innerHTML = list.map(p => {
+  const now = new Date();
+  el.innerHTML = upsellStrip + list.map(p => {
     const lt = ltPrice(p);
+    const isNew = p.premiumAccessUntil && p.premiumAccessUntil > now;
+    const isFav = userFavorites.has(String(p.id));
+    const minsLeft = isNew ? Math.ceil((p.premiumAccessUntil - now) / 60000) : 0;
     return `
     <div class="search-card" id="card-${p.id}"
          onclick="openDetail('${safeId(p.id)}')"
@@ -881,13 +992,18 @@ function renderSearchResults(list, rentalType = 'all', ltPeriod = 'month') {
         <span class="sc-emoji">${p.emoji || '🅿️'}</span>
         <span class="sc-type">${p.type || 'פרטית'}</span>
         ${p.ev_charger ? '<span class="sc-ev">⚡ EV</span>' : ''}
+        ${isNew && userIsPremium ? `<span class="sc-ev" style="background:#f59e0b;color:#fff">⚡ חדש! ${minsLeft} דק'</span>` : ''}
+        ${isFav ? '<span class="sc-ev" style="background:#e91e8c;color:#fff">❤️</span>' : ''}
       </div>
       <div class="sc-body">
         <div class="sc-top">
           <div class="sc-title">${p.title || p.address}</div>
-          <div class="sc-price">${isLongTerm
-            ? `₪${lt.price.toLocaleString()}<span>/${lt.label}</span>`
-            : `₪${(p.price_hour_tiers && p.price_hour_tiers[0]) || p.price_hour}<span>/שעה</span>`}</div>
+          <div class="sc-price">
+            ${isLongTerm
+              ? `₪${lt.price.toLocaleString()}<span>/${lt.label}</span>`
+              : `₪${(p.price_hour_tiers && p.price_hour_tiers[0]) || p.price_hour}<span>/שעה</span>`}
+            ${!isLongTerm ? `<span class="sc-price-stars">${typeof ilsToStars==='function' ? ilsToStars((p.price_hour_tiers && p.price_hour_tiers[0]) || p.price_hour) : Math.ceil(((p.price_hour_tiers && p.price_hour_tiers[0]) || p.price_hour)/0.4)} ⭐</span>` : ''}
+          </div>
         </div>
         <div class="sc-loc">📍 ${p.address}</div>
         <div class="sc-rating">
@@ -1061,11 +1177,16 @@ function openDetail(id) {
         <span style="color:var(--gray-400)">·</span>
         <span style="color:var(--gray-600);font-size:.9rem">📍 ${p.address}</span>
       </div>
-      <!-- Waze navigation -->
-      <a href="${wazeUrl}" target="_blank" rel="noopener" class="waze-nav-btn">
-        <img src="https://www.waze.com/favicon.ico" width="20" height="20" alt="Waze" style="border-radius:4px"/>
-        נווט עם Waze
-      </a>
+      <!-- Waze navigation + Favorite -->
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <a href="${wazeUrl}" target="_blank" rel="noopener" class="waze-nav-btn">
+          <img src="https://www.waze.com/favicon.ico" width="20" height="20" alt="Waze" style="border-radius:4px"/>
+          נווט עם Waze
+        </a>
+        ${userIsPremium ? `<button id="fav-btn-${safeId(p.id)}" onclick="toggleFavorite('${safeId(p.id)}')" style="background:${userFavorites.has(String(p.id)) ? 'linear-gradient(135deg,#fce7f3,#f9a8d4)' : 'var(--gray-100)'};border:1.5px solid ${userFavorites.has(String(p.id)) ? '#e91e8c' : 'var(--gray-300)'};border-radius:10px;padding:8px 14px;cursor:pointer;font-size:.85rem;font-weight:700;color:${userFavorites.has(String(p.id)) ? '#be185d' : 'var(--gray-600)'};display:flex;align-items:center;gap:6px">
+          ${userFavorites.has(String(p.id)) ? '❤️ שמור במועדפים' : '🤍 הוסף למועדפים'}
+        </button>` : ''}
+      </div>
     </div>
 
     <div class="gallery">
@@ -1222,6 +1343,7 @@ function openDetail(id) {
           <div class="booking-summary" id="booking-summary">
             <div class="bs-row"><span id="bs-rate-label">מחיר לשעה</span><span id="bs-rate">₪${(p.price_hour_tiers && p.price_hour_tiers[0]) || p.price_hour}</span></div>
             <div class="bs-row"><span id="bs-qty-label">מספר שעות</span><span id="bs-hours">—</span></div>
+            <div class="bs-row" id="bs-stars-row" style="display:none;color:#f59e0b;font-weight:700"><span id="bs-stars-label">⭐ הנחת כוכבים</span><span id="bs-stars-discount">—</span></div>
             <div class="bs-row"><span>עמלת שירות (15%)</span><span id="bs-fee">—</span></div>
             <div class="bs-row total"><span>סה"כ לתשלום</span><span id="bs-total">—</span></div>
           </div>
@@ -1367,7 +1489,18 @@ function myUid() {
 // since you obviously can't park in (or pay for) your own parking.
 function visibleParkings() {
   const uid = myUid();
-  return uid ? PARKINGS.filter(p => p.ownerId !== uid) : PARKINGS;
+  const now = new Date();
+  return PARKINGS.filter(p => {
+    if (uid && p.ownerId === uid) return false; // hide own listings
+    if (!userIsPremium && p.premiumAccessUntil && p.premiumAccessUntil > now) return false; // early-access
+    return true;
+  });
+}
+
+// Count how many listings are currently in the premium early-access window
+function earlyAccessCount() {
+  const now = new Date();
+  return PARKINGS.filter(p => p.premiumAccessUntil && p.premiumAccessUntil > now).length;
 }
 
 // ── "Publish" CTA ⇄ "My Parking" toggle ───────────────────────────────────────
@@ -1433,17 +1566,38 @@ function openMyListings() {
 function openMyListingDetail(id) {
   const p = PARKINGS.find(x => String(x.id) === String(id));
   if (!p) return;
+
+  const sched = p.weeklySchedule;
+  const schedHtml = sched
+    ? Object.entries(sched).filter(([,v]) => v.enabled)
+        .map(([day,v]) => `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--gray-100)"><span style="font-weight:600">${day}</span><span style="color:var(--gray-600)">${v.open} – ${v.close}</span></div>`).join('')
+        || '<div style="color:var(--gray-400);font-size:.85rem">אין ימים פעילים</div>'
+    : '<div style="color:var(--gray-400);font-size:.85rem">לא הוגדר לוח זמינות</div>';
+
+  const durLabel = { unlimited:'ללא הגבלה', '1d':'יום אחד', '1w':'שבוע', '1m':'חודש' };
+  const durText = p.publishDuration
+    ? (p.publishDuration.type === 'custom' ? 'עד ' + (p.publishDuration.until||'—') : durLabel[p.publishDuration.type] || '—')
+    : 'ללא הגבלה';
+
   openModal('my-listing-detail');
   document.getElementById('modal-content').innerHTML = `
-    <button onclick="openMyListings()" style="background:none;border:none;color:var(--gray-500);font-size:.85rem;cursor:pointer;margin-bottom:6px">→ חזרה לחניות שלי</button>
-    <h2 class="modal-title">${p.emoji || '🅿️'} ${p.title}</h2>
+    <button onclick="openMyListings()" style="background:none;border:none;color:var(--gray-500);font-size:.85rem;cursor:pointer;margin-bottom:6px">← חזרה לחניות שלי</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 class="modal-title" style="margin:0">${p.emoji || '🅿️'} ${p.title}</h2>
+      <button onclick="openEditListing('${safeId(p.id)}')" style="background:var(--gray-100);border:none;border-radius:10px;padding:8px 14px;font-size:.82rem;font-weight:700;cursor:pointer;color:var(--gray-700)">✏️ ערוך</button>
+    </div>
     <p class="modal-subtitle">📍 ${p.address}</p>
-    <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:14px;padding:16px;margin:14px 0;text-align:right">
+    <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:14px;padding:16px;margin:12px 0;text-align:right">
       <div class="summary-row"><span>סוג חניה</span><span>${p.type || '—'}</span></div>
       <div class="summary-row"><span>מחיר לשעה</span><span>₪${p.price_hour}</span></div>
       <div class="summary-row"><span>מחיר יומי</span><span>${p.price_day ? '₪'+p.price_day : '—'}</span></div>
       <div class="summary-row"><span>מחיר חודשי</span><span>${p.price_month ? '₪'+p.price_month : '—'}</span></div>
-      <div class="summary-row"><span>סטטוס</span><span style="color:var(--green,#16a34a);font-weight:700">פעילה ✓</span></div>
+      <div class="summary-row"><span>משך פרסום</span><span>${durText}</span></div>
+      <div class="summary-row"><span>סטטוס</span><span style="color:#16a34a;font-weight:700">פעילה ✓</span></div>
+    </div>
+    <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:14px;padding:14px;margin-bottom:14px">
+      <h4 style="font-size:.88rem;font-weight:700;margin-bottom:10px">📅 לוח זמינות שבועי</h4>
+      ${schedHtml}
     </div>
     <h4 style="font-size:.95rem;font-weight:700;margin-bottom:10px">🚗 מי נכנס ומי הזמין</h4>
     <div id="my-listing-bookings" style="display:flex;flex-direction:column;gap:10px">
@@ -1451,6 +1605,116 @@ function openMyListingDetail(id) {
     </div>
   `;
   loadMyListingBookings(p);
+}
+
+// ── Edit a published listing ──────────────────────────────────────────────────
+function openEditListing(id) {
+  const p = PARKINGS.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const fid = p.firestoreId || p.id;
+
+  const sched = p.weeklySchedule || {};
+  const DAYS = [
+    { key:'א׳', label:'א׳ ראשון' }, { key:'ב׳', label:'ב׳ שני' },
+    { key:'ג׳', label:'ג׳ שלישי' }, { key:'ד׳', label:'ד׳ רביעי' },
+    { key:'ה׳', label:'ה׳ חמישי' }, { key:'ו׳', label:'ו׳ שישי' },
+    { key:'ש׳', label:'ש׳ שבת' }
+  ];
+
+  const durLabels = { unlimited:'ללא הגבלה', '1d':'יום אחד', '1w':'שבוע', '1m':'חודש' };
+  const curDur = p.publishDuration?.type || 'unlimited';
+  const durBtns = Object.entries(durLabels).map(([k, lbl]) =>
+    `<button type="button" class="dur-btn${curDur===k?' active':''}" data-dur="${k}" onclick="this.closest('.edit-dur-row').querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${lbl}</button>`
+  ).join('') + `<button type="button" class="dur-btn${curDur==='custom'?' active':''}" data-dur="custom" onclick="this.closest('.edit-dur-row').querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('edit-dur-custom').style.display='block'">תאריך מדויק</button>`;
+
+  const schedRows = DAYS.map(({ key, label }) => {
+    const d = sched[key] || { enabled: false, open:'07:00', close:'19:00' };
+    return `
+      <div class="sched-row" data-day="${key}">
+        <span class="sched-day-name">${label}</span>
+        <label class="sched-toggle">
+          <input type="checkbox" ${d.enabled?'checked':''} onchange="toggleSchedDay(this)"/>
+          <span class="sched-toggle-track"></span>
+        </label>
+        <input type="time" class="sched-time sched-open"  value="${d.open}"  ${d.enabled?'':'disabled'}/>
+        <input type="time" class="sched-time sched-close" value="${d.close}" ${d.enabled?'':'disabled'}/>
+      </div>`;
+  }).join('');
+
+  openModal('edit-listing');
+  document.getElementById('modal-content').innerHTML = `
+    <button onclick="openMyListingDetail('${safeId(id)}')" style="background:none;border:none;color:var(--gray-500);font-size:.85rem;cursor:pointer;margin-bottom:8px">← חזרה לפרטים</button>
+    <h2 class="modal-title">✏️ עריכת חניה</h2>
+    <p class="modal-subtitle">📍 ${p.address}</p>
+
+    <div class="modal-form" style="gap:14px">
+      <label style="font-weight:700;font-size:.88rem">מחיר לשעה (₪)</label>
+      <div class="price-input-wrap"><span>₪</span>
+        <input type="number" id="edit-price-hour" class="modal-input" value="${p.price_hour}" min="0" />
+      </div>
+
+      <label style="font-weight:700;font-size:.88rem">מחיר יומי (₪)</label>
+      <div class="price-input-wrap"><span>₪</span>
+        <input type="number" id="edit-price-day" class="modal-input" value="${p.price_day||''}" min="0" placeholder="אופציונלי" />
+      </div>
+
+      <label style="font-weight:700;font-size:.88rem">מחיר חודשי (₪)</label>
+      <div class="price-input-wrap"><span>₪</span>
+        <input type="number" id="edit-price-month" class="modal-input" value="${p.price_month||''}" min="0" placeholder="אופציונלי" />
+      </div>
+
+      <label style="font-weight:700;font-size:.88rem">⏱️ משך פרסום</label>
+      <div class="publish-duration-row edit-dur-row">${durBtns}</div>
+      <div id="edit-dur-custom" style="display:${curDur==='custom'?'block':'none'};margin-top:6px">
+        <input type="date" id="edit-dur-until" class="modal-input" value="${p.publishDuration?.until||''}" />
+      </div>
+
+      <label style="font-weight:700;font-size:.88rem">📅 לוח זמינות שבועי</label>
+      <div class="weekly-schedule" id="edit-weekly-schedule">${schedRows}</div>
+
+      <button class="btn-modal-primary" style="margin-top:8px" onclick="saveListingEdit('${fid}','${safeId(id)}')">💾 שמור שינויים</button>
+    </div>
+  `;
+}
+
+async function saveListingEdit(firestoreId, localId) {
+  const btn = document.querySelector('#modal-content .btn-modal-primary');
+  if (btn) { btn.textContent = 'שומר...'; btn.disabled = true; }
+
+  // Read new weekly schedule from the edit modal
+  const rows = document.querySelectorAll('#edit-weekly-schedule .sched-row:not(.header-row)');
+  const newSched = {};
+  rows.forEach(row => {
+    const day = row.dataset.day;
+    const enabled = row.querySelector('input[type=checkbox]')?.checked || false;
+    newSched[day] = { enabled, open: row.querySelector('.sched-open')?.value||'07:00', close: row.querySelector('.sched-close')?.value||'19:00' };
+  });
+
+  // Read duration from edit modal
+  const activeDur = document.querySelector('.edit-dur-row .dur-btn.active');
+  const durType = activeDur?.dataset.dur || 'unlimited';
+  const newDur = durType === 'custom'
+    ? { type:'custom', until: document.getElementById('edit-dur-until')?.value||null }
+    : { type: durType };
+
+  const updates = {
+    priceHour:  parseFloat(document.getElementById('edit-price-hour')?.value)  || 0,
+    priceDay:   parseFloat(document.getElementById('edit-price-day')?.value)   || null,
+    priceMonth: parseFloat(document.getElementById('edit-price-month')?.value) || null,
+    weeklySchedule: newSched,
+    publishDuration: newDur,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await firebase.firestore().collection('listings').doc(firestoreId).update(updates);
+    showToast('✅ השינויים נשמרו בהצלחה!', 'success');
+    closeModal();
+  } catch (err) {
+    console.error('[edit-listing] save failed:', err);
+    showToast('שגיאה בשמירה — נסה שוב', 'error');
+    if (btn) { btn.textContent = '💾 שמור שינויים'; btn.disabled = false; }
+  }
 }
 
 async function loadMyListingBookings(p) {
@@ -1589,8 +1853,20 @@ function calcTotal() {
     }
   }
 
-  const fee = Math.round(subtotal * 0.15);
-  const total = subtotal + fee;
+  // Stars redemption preview — update live as user adjusts the stars slider
+  const starsInput  = document.getElementById('stars-redeem-input');
+  const starsToUse  = starsInput ? Math.min(parseInt(starsInput.value) || 0, userStarBalance) : 0;
+  const starDiscount = Math.floor(starsToUse / 10) * 4; // 10 stars = ₪4
+  const discountedBase = subtotal - starDiscount;
+  const fee   = Math.round(Math.max(0, discountedBase) * 0.15);
+  const total = Math.max(0, discountedBase) + fee;
+
+  const starsRow   = document.getElementById('bs-stars-row');
+  const starsDisEl = document.getElementById('bs-stars-discount');
+  const starsLabel = document.getElementById('bs-stars-label');
+  if (starsRow) starsRow.style.display = starDiscount > 0 ? '' : 'none';
+  if (starsDisEl) starsDisEl.textContent = '-₪' + starDiscount.toLocaleString();
+  if (starsLabel) starsLabel.textContent = `⭐ ${starsToUse} כוכבים`;
 
   const rateEl = document.getElementById('bs-rate');
   const rateLabelEl = document.getElementById('bs-rate-label');
@@ -1640,6 +1916,21 @@ function openBookingSheet() {
 
   const total = subtotal + Math.round(subtotal * 0.15);
 
+  // Stars section HTML — shown only if user has stars
+  const starsSection = userStarBalance > 0 ? `
+    <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:12px;padding:12px 14px;margin-bottom:12px;border:1.5px solid #fde68a">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-weight:700;font-size:.88rem;color:#92400e">⭐ יתרת כוכבים: <strong>${userStarBalance}</strong> (= ₪${(Math.floor(userStarBalance/10)*4).toLocaleString()})</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="font-size:.82rem;color:#a16207;font-weight:600">השתמש בכוכבים:</label>
+        <input id="stars-redeem-input" type="range" min="0" max="${Math.floor(userStarBalance/10)*10}" step="10" value="0"
+          style="flex:1;accent-color:#f59e0b"
+          oninput="document.getElementById('stars-redeem-val').textContent=this.value+' כוכבים = ₪'+(Math.floor(this.value/10)*4);calcTotal()" />
+        <span id="stars-redeem-val" style="font-size:.82rem;font-weight:700;color:#92400e;white-space:nowrap;min-width:70px">0 כוכבים</span>
+      </div>
+    </div>` : '';
+
   document.getElementById('booking-sheet-content').innerHTML = `
     <h2 class="bs-title">הזמנה · ${typeLabel}</h2>
 
@@ -1652,10 +1943,13 @@ function openBookingSheet() {
       </div>
     </div>
 
-    <div class="bs-breakdown">
+    ${starsSection}
+
+    <div class="bs-breakdown" id="bs-breakdown-live">
       <div class="bsb-row"><span>${summaryLine}</span><span>₪${subtotal.toLocaleString()}</span></div>
-      <div class="bsb-row"><span>עמלת שירות (15%)</span><span>₪${Math.round(subtotal*0.15).toLocaleString()}</span></div>
-      <div class="bsb-row total"><span>סה"כ לתשלום</span><span>₪${total.toLocaleString()}</span></div>
+      <div class="bsb-row" id="bsb-stars-row" style="display:none;color:#f59e0b;font-weight:700"><span id="bsb-stars-label">⭐ כוכבים</span><span id="bsb-stars-val">—</span></div>
+      <div class="bsb-row"><span>עמלת שירות (15%)</span><span id="bsb-fee-live">₪${Math.round(subtotal*0.15).toLocaleString()}</span></div>
+      <div class="bsb-row total"><span>סה"כ לתשלום</span><span id="bsb-total-live">₪${total.toLocaleString()}</span></div>
     </div>
 
     <div class="pay-section">
@@ -1675,6 +1969,9 @@ function openBookingSheet() {
         </button>
         <button class="pay-method" onclick="selectPayMethod(this,'card')">
           <span class="pm-logo pm-card">💳</span><span class="pm-name">כרטיס</span>
+        </button>
+        <button class="pay-method pay-method--stars" onclick="selectPayMethod(this,'stars')">
+          <span class="pm-logo pm-stars">⭐</span><span class="pm-name">כוכבים</span>
         </button>
       </div>
 
@@ -1724,9 +2021,28 @@ function openBookingSheet() {
           </div>
         </div>
       </div>
+
+      <div id="pay-form-stars" class="pay-form">
+        ${(() => {
+          const starsNeeded = typeof ilsToStars === 'function' ? ilsToStars(total) : Math.ceil(total / 0.5);
+          const balance     = typeof userStars !== 'undefined' ? userStars : 0;
+          const hasEnough   = balance >= starsNeeded;
+          return `
+            <div class="pay-stars-panel">
+              <div class="psp-icon">⭐</div>
+              <div class="psp-cost">${starsNeeded.toLocaleString()} כוכבים</div>
+              <div class="psp-value">שווה ₪${total.toLocaleString()}</div>
+              <div class="psp-balance ${hasEnough ? 'psp-ok' : 'psp-low'}">
+                יתרה שלך: ${balance.toLocaleString()} ⭐
+                ${!hasEnough ? `<br/><small>חסרים ${(starsNeeded - balance).toLocaleString()} כוכבים</small>` : ''}
+              </div>
+              ${!hasEnough ? `<button class="psp-buy-btn" onclick="closeBooking();setTimeout(showStarsShop,200)">קנה כוכבים ⭐</button>` : ''}
+            </div>`;
+        })()}
+      </div>
     </div>
 
-    <button class="btn-book" onclick="showBookingWarning()" style="margin-top:18px">
+    <button class="btn-book" id="booking-pay-btn" onclick="confirmBookingPay()" style="margin-top:18px">
       🔒 שלם ₪${total.toLocaleString()}
     </button>
     <div class="pay-security-row">
@@ -1738,20 +2054,89 @@ function openBookingSheet() {
 
   document.getElementById('booking-sheet').classList.add('open');
   document.getElementById('booking-overlay').classList.add('open');
+
+  // Wire up the stars slider to update the breakdown live
+  const slider = document.getElementById('stars-redeem-input');
+  if (slider) {
+    slider.addEventListener('input', () => {
+      const used       = Math.min(parseInt(slider.value) || 0, userStarBalance);
+      const disc       = Math.floor(used / 10) * 4;
+      const base       = Math.max(0, subtotal - disc);
+      const fee        = Math.round(base * 0.15);
+      const newTotal   = base + fee;
+      const starsRowEl = document.getElementById('bsb-stars-row');
+      if (starsRowEl) starsRowEl.style.display = disc > 0 ? '' : 'none';
+      const starsLbl   = document.getElementById('bsb-stars-label');
+      const starsVal   = document.getElementById('bsb-stars-val');
+      if (starsLbl) starsLbl.textContent = `⭐ ${used} כוכבים`;
+      if (starsVal) starsVal.textContent = `-₪${disc.toLocaleString()}`;
+      const feeEl  = document.getElementById('bsb-fee-live');
+      const totEl  = document.getElementById('bsb-total-live');
+      if (feeEl) feeEl.textContent = `₪${fee.toLocaleString()}`;
+      if (totEl) totEl.textContent = `₪${newTotal.toLocaleString()}`;
+      // Update pay button text
+      const payBtn = document.querySelector('#booking-sheet-content .btn-book');
+      if (payBtn) payBtn.textContent = `🔒 שלם ₪${newTotal.toLocaleString()}`;
+    });
+  }
 }
 
 function selectPayMethod(btn, method) {
+  selectedPayMethod = method;
   document.querySelectorAll('.pay-method').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.pay-form').forEach(f => f.classList.remove('active'));
   const form = document.getElementById('pay-form-' + method);
   if (form) form.classList.add('active');
-  // Update pay button text
-  const payBtn = document.getElementById('confirm-pay-btn');
+
+  const payBtn = document.getElementById('booking-pay-btn');
   if (payBtn) {
-    const labels = { bit:'שלח בקשה ב-Bit', paybox:'שלח בקשה ב-PayBox', apple:' Pay', google:'G Pay', card:'שלם עם כרטיס' };
-    payBtn.textContent = '🔒 ' + (labels[method] || 'שלם');
+    if (method === 'stars') {
+      const totalEl = document.querySelector('.bsb-row.total span:last-child');
+      const totalILS = parseFloat((totalEl?.textContent || '0').replace(/[₪,]/g,'')) || 0;
+      const starsNeeded = typeof ilsToStars === 'function' ? ilsToStars(totalILS) : Math.ceil(totalILS / 0.5);
+      payBtn.textContent = `⭐ שלם ${starsNeeded.toLocaleString()} כוכבים`;
+    } else {
+      const totalEl = document.querySelector('.bsb-row.total span:last-child');
+      payBtn.textContent = `🔒 שלם ${totalEl?.textContent || ''}`;
+    }
   }
+}
+
+async function confirmBookingPay() {
+  if (selectedPayMethod === 'stars') {
+    const totalEl  = document.querySelector('.bsb-row.total span:last-child');
+    const totalILS = parseFloat((totalEl?.textContent || '0').replace(/[₪,]/g,'')) || 0;
+    const starsNeeded = typeof ilsToStars === 'function' ? ilsToStars(totalILS) : Math.ceil(totalILS / 0.5);
+    const balance     = typeof userStars !== 'undefined' ? userStars : 0;
+
+    if (balance < starsNeeded) {
+      showToast(`אין מספיק כוכבים — חסרים ${(starsNeeded - balance).toLocaleString()} ⭐`);
+      return;
+    }
+    if (!firebase.auth().currentUser) { showToast('יש להתחבר תחילה'); return; }
+
+    const btn = document.getElementById('booking-pay-btn');
+    if (btn) { btn.textContent = '⏳ מעבד...'; btn.disabled = true; }
+
+    try {
+      const uid = firebase.auth().currentUser.uid;
+      await firebase.firestore().collection('users').doc(uid).set(
+        { stars: firebase.firestore.FieldValue.increment(-starsNeeded) },
+        { merge: true }
+      );
+      if (typeof userStars !== 'undefined') { userStars -= starsNeeded; updateStarsDisplay(); }
+      closeBooking();
+      showBookingSuccess();
+      showToast(`שולם ${starsNeeded.toLocaleString()} ⭐ — הזמנה אושרה!`);
+      if (typeof unlockAchievement === 'function') unlockAchievement('first_booking');
+    } catch (e) {
+      showToast('שגיאה — נסה שנית');
+      if (btn) { btn.textContent = `⭐ שלם ${starsNeeded.toLocaleString()} כוכבים`; btn.disabled = false; }
+    }
+    return;
+  }
+  showBookingWarning();
 }
 
 function closeBooking() {
@@ -1818,8 +2203,12 @@ async function confirmBooking() {
     amountILS = months * (p?.price_month || 800);
   }
 
-  // Service fee (15%)
-  const totalWithFee = Math.ceil(amountILS * 1.15);
+  // Stars redemption
+  const starsSlider  = document.getElementById('stars-redeem-input');
+  const starsToRedeem = starsSlider ? Math.min(parseInt(starsSlider.value) || 0, userStarBalance) : 0;
+  const starDiscount  = Math.floor(starsToRedeem / 10) * 4;
+  const discountedBase = Math.max(1, amountILS - starDiscount);
+  const totalWithFee   = Math.ceil(discountedBase * 1.15);
 
   // Show processing overlay
   showToast('⏳ מעבד תשלום...', '');
@@ -1831,11 +2220,14 @@ async function confirmBooking() {
       // Call Firebase Function to create PaymentIntent
       const createPI = firebase.functions().httpsCallable('createPaymentIntent');
       const result = await createPI({
-        amountILS: totalWithFee,
-        parkingId: p?.id || p?.firestoreId || 'unknown',
+        amountILS:      totalWithFee,
+        parkingId:      p?.id || p?.firestoreId || 'unknown',
         bookingType,
-        description: `חניה: ${p?.address || p?.title || 'NitPark'}`
+        starsToRedeem,
+        description:    `חניה: ${p?.address || p?.title || 'NitPark'}`
       });
+      // Deduct stars from local state immediately (server already deducted)
+      if (starsToRedeem > 0) userStarBalance = Math.max(0, userStarBalance - starsToRedeem);
       const { clientSecret } = result.data;
 
       // Confirm payment with the saved (tokenized) card on file
@@ -2005,6 +2397,53 @@ function toggleDay(btn) {
   updateEarningsPreview();
 }
 
+// ── Publish duration ──────────────────────────────────────────────────────────
+let publishDuration = 'unlimited';
+
+function setPublishDuration(btn) {
+  publishDuration = btn.dataset.dur;
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('h-duration-custom-wrap').style.display =
+    publishDuration === 'custom' ? 'block' : 'none';
+}
+
+function getPublishDuration() {
+  if (publishDuration === 'custom') {
+    const until = document.getElementById('h-duration-until')?.value;
+    return { type: 'custom', until: until || null };
+  }
+  const map = { unlimited: null, '1d': 1, '1w': 7, '1m': 30 };
+  return { type: publishDuration, days: map[publishDuration] };
+}
+
+// ── Weekly schedule ───────────────────────────────────────────────────────────
+function toggleSchedDay(cb) {
+  const row = cb.closest('.sched-row');
+  row.querySelectorAll('.sched-time').forEach(t => t.disabled = !cb.checked);
+}
+
+function getWeeklySchedule() {
+  const rows = document.querySelectorAll('#weekly-schedule .sched-row:not(.header-row)');
+  const schedule = {};
+  rows.forEach(row => {
+    const day = row.dataset.day;
+    const enabled = row.querySelector('input[type=checkbox]')?.checked || false;
+    const open  = row.querySelector('.sched-open')?.value  || '07:00';
+    const close = row.querySelector('.sched-close')?.value || '19:00';
+    schedule[day] = { enabled, open, close };
+  });
+  return schedule;
+}
+
+function scheduleText(schedule) {
+  if (!schedule) return '—';
+  const days = Object.entries(schedule)
+    .filter(([, v]) => v.enabled)
+    .map(([day, v]) => `${day} ${v.open}–${v.close}`);
+  return days.length ? days.join(' · ') : 'לא נבחרו ימים';
+}
+
 // ===== PER-HOUR PRICING TIERS (publish form) =====
 const HOUR_TIER_LABELS = ['ראשונה', 'שנייה', 'שלישית', 'רביעית', 'חמישית', 'שישית'];
 
@@ -2111,21 +2550,27 @@ function renderHostSummary() {
   const pd = document.getElementById('h-price-day')?.value || '—';
   const pw = document.getElementById('h-price-week')?.value || '—';
   const pm = document.getElementById('h-price-month')?.value || '—';
-  const open = document.getElementById('h-open')?.value || '08:00';
-  const close = document.getElementById('h-close')?.value || '22:00';
-  const availFromVal = document.getElementById('h-available-from')?.value;
-  const availText = availabilityMode === 'later'
-    ? 'החל מ־' + (availFromVal ? new Date(availFromVal).toLocaleString('he-IL') : '—')
-    : 'זמינה מיד';
+
+  const durLabels = { unlimited: 'ללא הגבלה', '1d': 'יום אחד', '1w': 'שבוע', '1m': 'חודש' };
+  const dur = publishDuration === 'custom'
+    ? 'עד ' + (document.getElementById('h-duration-until')?.value || '—')
+    : (durLabels[publishDuration] || '—');
+
+  const sched = getWeeklySchedule();
+  const schedRows = Object.entries(sched)
+    .filter(([, v]) => v.enabled)
+    .map(([day, v]) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--gray-100)"><span>${day}</span><span style="color:var(--gray-600);font-size:.82rem">${v.open} – ${v.close}</span></div>`)
+    .join('') || '<div style="color:var(--gray-400);font-size:.85rem">לא נבחרו ימים</div>';
+
   el.innerHTML = `
     <div class="summary-row"><span>כתובת</span><span>${addr}</span></div>
-    <div class="summary-row"><span>זמינה החל מ</span><span>${availText}</span></div>
     <div class="summary-row"><span>סוג חניה</span><span>${selectedType}</span></div>
+    <div class="summary-row"><span>משך פרסום</span><span>${dur}</span></div>
     <div class="summary-row"><span>מחירון שעות</span><span style="font-size:.8rem">${tiersText}</span></div>
     <div class="summary-row"><span>מחיר יומי</span><span>${pd !== '—' ? '₪'+pd : '—'}</span></div>
     <div class="summary-row"><span>מחיר שבועי</span><span>${pw !== '—' ? '₪'+pw : '—'}</span></div>
     <div class="summary-row"><span>מחיר חודשי</span><span>${pm !== '—' ? '₪'+pm : '—'}</span></div>
-    <div class="summary-row"><span>שעות זמינות</span><span>${open} – ${close}</span></div>
+    <div class="summary-row" style="align-items:flex-start"><span>לוח זמינות</span><div style="flex:1;text-align:right">${schedRows}</div></div>
     <div class="summary-row"><span>עמלת NitPark</span><span>20%</span></div>
   `;
 }
@@ -2202,9 +2647,18 @@ function publishListing() {
     hasEV: hasEV,
     evType: hasEV ? (document.getElementById('h-ev-type')?.value || '') : '',
     evKw: hasEV ? (parseFloat(document.getElementById('h-ev-kw')?.value) || 7) : null,
-    availableFrom: availabilityMode === 'later' ? (document.getElementById('h-available-from')?.value || null) : null,
+    weeklySchedule: getWeeklySchedule(),
+    publishDuration: getPublishDuration(),
     status: 'active', // listings go live immediately — no manual approval needed
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    // Premium early-access window: non-premium users see this listing 30 min after creation
+    premiumAccessUntil: new Date(Date.now() + 30 * 60 * 1000)
+  }).then(docRef => {
+    // Notify premium users about the new listing (non-blocking)
+    if (docRef) {
+      const notify = firebase.functions().httpsCallable('notifyPremiumUsersAboutListing');
+      notify({ listingId: docRef.id, address: addr, priceHour: ph }).catch(() => {});
+    }
   }).catch(err => console.error('[host] Firestore save failed:', err.code))
     .finally(() => {
       _publishInProgress = false;
@@ -2326,6 +2780,27 @@ function openModal(type) {
         ${displayEmail ? `<p style="color:var(--gray-500);font-size:.85rem;margin-bottom:2px">📧 ${displayEmail}</p>` : ''}
         ${savedPhone ? `<p style="color:var(--gray-500);font-size:.85rem;margin-bottom:2px">📱 ${savedPhone}</p>` : ''}
         <span style="background:var(--pink-light);color:var(--pink);font-size:.75rem;font-weight:700;padding:3px 12px;border-radius:100px;display:inline-block;margin-top:8px">✓ חבר NitPark מאומת</span>
+        ${userIsPremium
+          ? `<span style="background:linear-gradient(135deg,#fef3c7,#fde68a);color:#92400e;font-size:.75rem;font-weight:800;padding:3px 14px;border-radius:100px;display:inline-block;margin-top:6px;margin-right:6px">👑 פרימיום פעיל</span>`
+          : ''}
+      </div>
+      <div style="margin-bottom:14px">
+        ${userIsPremium ? `
+          <div style="background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1.5px solid #fde68a;border-radius:14px;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:800;font-size:.9rem;color:#92400e">👑 NitPark Premium פעיל</div>
+              <div style="font-size:.78rem;color:#a16207;margin-top:2px">${userPremiumUntil ? 'פעיל עד ' + userPremiumUntil.toLocaleDateString('he-IL') : ''}${userPremiumCancelAtEnd ? ' · יבוטל בסוף התקופה' : ''}</div>
+            </div>
+            <button onclick="openPremiumModal()" style="background:white;border:1.5px solid #fde68a;color:#92400e;border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:700;font-size:.78rem">ניהול</button>
+          </div>` : `
+          <button onclick="openPremiumModal()" style="width:100%;background:linear-gradient(135deg,#fef3c7,#fde68a);border:none;border-radius:14px;padding:14px 16px;cursor:pointer;text-align:right;display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.5rem">👑</span>
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:.92rem;color:#92400e">שדרג לפרימיום</div>
+              <div style="font-size:.78rem;color:#a16207;margin-top:1px">40 כוכבים/חודש · ביטול מאוחר · עדיפות · גישה מוקדמת</div>
+            </div>
+            <span style="font-weight:800;color:#92400e;font-size:.85rem">₪29/חודש ←</span>
+          </button>`}
       </div>
       ${cardSection}
       <div style="background:var(--gray-50);border-radius:14px;overflow:hidden;margin-bottom:16px">
@@ -2372,6 +2847,8 @@ function openModal(type) {
     loadAndRenderSavedCard();
     // Load bookings summary in profile
     loadProfileBookingsSummary();
+  } else if (type === 'premium') {
+    _renderPremiumModal(content);
   } else if (type === 'privacy') {
     content.innerHTML = `
       <h2 class="modal-title">מדיניות פרטיות</h2>
@@ -2484,7 +2961,8 @@ function updateNavbar() {
   const topbarActions = document.getElementById('topbar-actions');
   if (topbarActions) {
     topbarActions.innerHTML = isLoggedIn
-      ? `<button class="topbar-profile-btn" onclick="openModal('profile')">
+      ? `<button class="topbar-stars-btn" onclick="showStarsShop()">⭐ <span class="stars-balance">${userStarBalance}</span></button>
+         <button class="topbar-profile-btn" onclick="openModal('profile')">
            <span class="topbar-avatar">${(userName||'מ').charAt(0).toUpperCase()}</span>
          </button>`
       : `<button class="btn-ghost" style="font-size:.85rem;padding:7px 14px" onclick="openModal('login')">כניסה</button>`;
@@ -3113,14 +3591,27 @@ function initFirestoreListings() {
           categories: d.categories || [],
           tags: Array.isArray(d.tags) ? d.tags : [],
           hasCameras: !!d.hasCameras,
-          wheelchairAccessible: !!d.wheelchairAccessible
+          wheelchairAccessible: !!d.wheelchairAccessible,
+          premiumAccessUntil: d.premiumAccessUntil instanceof Date ? d.premiumAccessUntil
+            : d.premiumAccessUntil?.toDate ? d.premiumAccessUntil.toDate() : null
         });
       });
       filteredListings = [...visibleParkings()];
       renderHomeListings();
+      updateHostCta();
       if (currentPage === 'search') {
         renderSearchResults(filteredListings);
         renderLeafletMarkers(filteredListings);
+      }
+      // Remind user once per session if they have an active listing
+      if (!sessionStorage.getItem('_hostReminderShown')) {
+        const mine = myListings();
+        if (mine.length > 0) {
+          sessionStorage.setItem('_hostReminderShown', '1');
+          setTimeout(() => {
+            showToast(`🅿️ יש לך ${mine.length > 1 ? mine.length + ' חניות פעילות' : 'חניה פעילה'}! לחץ על "החניה שלי" לניהול`, 'success');
+          }, 1500);
+        }
       }
     }, () => {});
   } catch(e) {}
@@ -3448,4 +3939,463 @@ async function loadProfileBookingsSummary() {
         </div>
       </div>`;
   } catch(e) { console.error('שגיאה בטעינת סיכום הזמנות:', e); }
+}
+
+// ===== PREMIUM MODULE =====
+
+let _premiumPlan           = 'monthly';
+let _premiumStripeElements = null;
+let _premiumCardEl         = null;
+
+function openPremiumModal() {
+  if (!isLoggedIn) { openModal('login'); return; }
+  openModal('premium');
+}
+
+function _renderPremiumModal(content) {
+  if (!content) content = document.getElementById('modal-content');
+  if (!content) return;
+
+  if (userIsPremium) {
+    const until = userPremiumUntil ? userPremiumUntil.toLocaleDateString('he-IL') : '—';
+    content.innerHTML = `
+      <div style="text-align:center;padding:10px 0">
+        <div style="font-size:3rem;margin-bottom:8px">👑</div>
+        <h2 style="font-size:1.25rem;font-weight:800;margin-bottom:6px">NitPark Premium פעיל!</h2>
+        <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;padding:14px;margin:12px 0;font-size:.9rem;color:#92400e">
+          <strong>פעיל עד:</strong> ${until}
+          ${userPremiumCancelAtEnd ? '<br/><span style="color:#ef4444;font-size:.82rem">יבוטל בסוף התקופה הנוכחית</span>' : ''}
+        </div>
+        <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:12px;padding:12px;margin:12px 0;text-align:right">
+          <div style="font-weight:800;font-size:.85rem;color:#92400e;margin-bottom:8px">⭐ יתרת כוכבים: ${userStarBalance} (= ₪${Math.floor(userStarBalance/10)*4})</div>
+        </div>
+        <div style="text-align:right;margin:16px 0;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gray-50);border-radius:10px"><span>⭐</span><span style="font-size:.88rem"><strong>40 כוכבים/חודש</strong> = ₪16 ערך להמרה בהזמנות</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gray-50);border-radius:10px"><span>🔝</span><span style="font-size:.88rem"><strong>עדיפות בהזמנות</strong> — ראשון לקבל מקום חניה נדרש</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gray-50);border-radius:10px"><span>🕐</span><span style="font-size:.88rem"><strong>ביטול מאוחר</strong> עד 15 דק׳ לפני — ללא קנס (3×/חודש)</span></div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gray-50);border-radius:10px"><span>🎯</span><span style="font-size:.88rem"><strong>גישה מוקדמת</strong> לחניות חדשות לפני כולם</span></div>
+        </div>
+        ${!userPremiumCancelAtEnd
+          ? `<button onclick="cancelPremiumFlow()" style="width:100%;padding:11px;background:none;border:1.5px solid #fecaca;border-radius:12px;cursor:pointer;color:#ef4444;font-weight:700;font-size:.88rem;margin-bottom:10px">ביטול מנוי</button>`
+          : `<p style="font-size:.82rem;color:var(--gray-400);margin-bottom:10px">המנוי לא יתחדש אוטומטית.</p>`}
+        <button class="btn-modal-primary" onclick="closeModal()">סגור</button>
+      </div>`;
+    return;
+  }
+
+  content.innerHTML = `
+    <div style="padding:4px 0">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:2.4rem;margin-bottom:6px">👑</div>
+        <h2 style="font-size:1.25rem;font-weight:800;margin-bottom:4px">NitPark Premium</h2>
+        <p style="color:var(--gray-500);font-size:.88rem">חסוך כסף בכל הזמנה וקבל יתרונות בלעדיים</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <button id="plan-monthly" onclick="selectPremiumPlan('monthly')"
+          style="position:relative;padding:14px;border:2px solid var(--pink);border-radius:14px;background:var(--pink-light);cursor:pointer;transition:.2s">
+          <div style="font-size:.75rem;color:var(--gray-500);margin-bottom:2px">חודשי</div>
+          <div style="font-size:1.5rem;font-weight:900;color:var(--pink)">₪29</div>
+          <div style="font-size:.72rem;color:var(--gray-400)">לחודש</div>
+        </button>
+        <button id="plan-yearly" onclick="selectPremiumPlan('yearly')"
+          style="position:relative;padding:14px;border:2px solid var(--gray-200);border-radius:14px;background:white;cursor:pointer;transition:.2s">
+          <div style="position:absolute;top:-10px;right:50%;transform:translateX(50%);background:#16a34a;color:white;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">חסוך 28%</div>
+          <div style="font-size:.75rem;color:var(--gray-500);margin-bottom:2px">שנתי</div>
+          <div style="font-size:1.5rem;font-weight:900;color:var(--pink)">₪249</div>
+          <div style="font-size:.72rem;color:var(--gray-400)">לשנה</div>
+        </button>
+      </div>
+
+      <div style="background:var(--gray-50);border-radius:12px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.86rem"><span>⭐</span><span><strong>40 כוכבים/חודש</strong> — כל 10 כוכבים = ₪4 הנחה בהזמנה</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.86rem"><span>🔝</span><span><strong>עדיפות בהזמנות</strong> — ראשון לקבל מקום חניה פופולרי</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.86rem"><span>🕐</span><span><strong>ביטול מאוחר</strong> עד 15 דק׳ לפני — ללא קנס (3×/חודש)</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.86rem"><span>🎯</span><span><strong>גישה מוקדמת</strong> לחניות חדשות לפני כולם</span></div>
+      </div>
+
+      <div style="font-size:.8rem;color:var(--gray-500);margin-bottom:8px;text-align:center">🔒 תשלום מאובטח · Stripe PCI DSS Level 1</div>
+      <div id="premium-card-wrap" style="padding:14px;border:1.5px solid var(--gray-200);border-radius:12px;background:white;min-height:46px;margin-bottom:8px"></div>
+      <div id="premium-card-error" style="color:#ef4444;font-size:.82rem;min-height:18px;text-align:center;margin-bottom:8px"></div>
+
+      <button id="premium-subscribe-btn" class="btn-modal-primary" onclick="confirmPremiumSubscription()" style="width:100%;padding:14px">
+        👑 הפוך לפרימיום — ₪29/חודש
+      </button>
+      <p style="text-align:center;font-size:.75rem;color:var(--gray-400);margin-top:8px">ניתן לביטול בכל עת · ללא התחייבות</p>
+    </div>`;
+
+  _premiumPlan = 'monthly';
+  setTimeout(_mountPremiumCard, 80);
+}
+
+function selectPremiumPlan(plan) {
+  _premiumPlan = plan;
+  const monthly = document.getElementById('plan-monthly');
+  const yearly  = document.getElementById('plan-yearly');
+  if (monthly) {
+    monthly.style.border        = plan === 'monthly' ? '2px solid var(--pink)' : '2px solid var(--gray-200)';
+    monthly.style.background    = plan === 'monthly' ? 'var(--pink-light)' : 'white';
+  }
+  if (yearly) {
+    yearly.style.border         = plan === 'yearly' ? '2px solid var(--pink)' : '2px solid var(--gray-200)';
+    yearly.style.background     = plan === 'yearly' ? 'var(--pink-light)' : 'white';
+  }
+  const btn = document.getElementById('premium-subscribe-btn');
+  if (btn) btn.textContent = `👑 הפוך לפרימיום — ${plan === 'yearly' ? '₪249/שנה' : '₪29/חודש'}`;
+}
+
+function _mountPremiumCard() {
+  if (_premiumCardEl) return;
+  const s = window.Stripe ? window.Stripe(STRIPE_PK) : null;
+  if (!s) return;
+
+  const container = document.getElementById('premium-card-wrap');
+  if (!container || container.offsetParent === null) {
+    setTimeout(_mountPremiumCard, 100);
+    return;
+  }
+
+  _premiumStripeElements = s.elements({
+    locale: 'he',
+    appearance: {
+      theme: 'stripe',
+      variables: { colorPrimary: '#e91e8c', fontFamily: 'Heebo, sans-serif', borderRadius: '12px' },
+    },
+  });
+
+  _premiumCardEl = _premiumStripeElements.create('card', {
+    hidePostalCode: true,
+    style: { base: { fontSize: '16px', fontFamily: 'Heebo, sans-serif', color: '#1e293b', '::placeholder': { color: '#94a3b8' } } },
+  });
+  _premiumCardEl.mount('#premium-card-wrap');
+  _premiumCardEl.on('change', e => {
+    const err = document.getElementById('premium-card-error');
+    if (err) err.textContent = e.error ? e.error.message : '';
+  });
+}
+
+async function confirmPremiumSubscription() {
+  const btn  = document.getElementById('premium-subscribe-btn');
+  const errEl = document.getElementById('premium-card-error');
+  if (!_premiumCardEl) { if (errEl) errEl.textContent = 'Stripe לא נטען — רענן את הדף'; return; }
+
+  btn.textContent = '⏳ מעבד...';
+  btn.disabled    = true;
+  if (errEl) errEl.textContent = '';
+
+  try {
+    const s = window.Stripe ? window.Stripe(STRIPE_PK) : null;
+    if (!s) throw new Error('Stripe not loaded');
+
+    // Step 1: Get SetupIntent from backend
+    const createSI = firebase.functions().httpsCallable('createSetupIntent');
+    const { data: siData } = await createSI({ email: userEmail, name: userName });
+
+    // Step 2: Confirm card with Stripe
+    const result = await s.confirmCardSetup(siData.clientSecret, {
+      payment_method: {
+        card:            _premiumCardEl,
+        billing_details: { name: userName || 'NitPark User', email: userEmail || undefined },
+      },
+    });
+    if (result.error) throw new Error(result.error.message);
+    const paymentMethodId = result.setupIntent.payment_method;
+
+    // Step 3: Create subscription on backend
+    const createSub = firebase.functions().httpsCallable('createPremiumSubscription');
+    await createSub({ plan: _premiumPlan, paymentMethodId, email: userEmail, name: userName });
+
+    // Step 4: Update local state
+    userIsPremium = true;
+
+    if (_premiumCardEl) { try { _premiumCardEl.unmount(); } catch(e){} _premiumCardEl = null; }
+    _premiumStripeElements = null;
+
+    closeModal();
+    showToast('👑 ברוך הבא לפרימיום! ההנחה פעילה מיד.', 'success');
+    await loadPremiumStatus();
+
+  } catch (err) {
+    if (errEl) errEl.textContent = err.message || 'שגיאה — נסה שנית';
+    btn.textContent = `👑 הפוך לפרימיום`;
+    btn.disabled    = false;
+  }
+}
+
+// ── Favorites ──────────────────────────────────────────────────────
+async function toggleFavorite(listingId) {
+  if (!userIsPremium) { openPremiumModal(); return; }
+  const uid = myUid();
+  if (!uid) return;
+  const db  = firebase.firestore();
+  const ref = db.collection('users').doc(uid).collection('favorites').doc(String(listingId));
+  const isFav = userFavorites.has(String(listingId));
+  if (isFav) {
+    await ref.delete();
+    userFavorites.delete(String(listingId));
+    showToast('הוסר מהמועדפים', '');
+  } else {
+    const p = PARKINGS.find(x => String(x.id) === String(listingId));
+    await ref.set({
+      listingId: String(listingId),
+      address: p?.address || '',
+      addedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    userFavorites.add(String(listingId));
+    showToast('❤️ נשמר במועדפים!', 'success');
+  }
+  // Refresh the button in the detail view if open
+  const btn = document.getElementById('fav-btn-' + listingId);
+  if (btn) {
+    const nowFav = userFavorites.has(String(listingId));
+    btn.style.background = nowFav ? 'linear-gradient(135deg,#fce7f3,#f9a8d4)' : 'var(--gray-100)';
+    btn.style.border     = `1.5px solid ${nowFav ? '#e91e8c' : 'var(--gray-300)'}`;
+    btn.style.color      = nowFav ? '#be185d' : 'var(--gray-600)';
+    btn.innerHTML        = nowFav ? '❤️ שמור במועדפים' : '🤍 הוסף למועדפים';
+  }
+}
+
+async function openFavoritesModal() {
+  if (!userIsPremium) { openPremiumModal(); return; }
+  const uid = myUid();
+  if (!uid) return;
+  const db       = firebase.firestore();
+  const snap     = await db.collection('users').doc(uid).collection('favorites').orderBy('addedAt', 'desc').get();
+  const favItems = snap.docs.map(d => d.data());
+  openModal('favorites');
+  document.getElementById('modal-content').innerHTML = `
+    <h2 class="modal-title">❤️ חניות מועדפות</h2>
+    <p class="modal-subtitle">החניות שסימנת כמועדפות — לגישה מהירה</p>
+    ${favItems.length === 0
+      ? `<p style="text-align:center;color:var(--gray-500);padding:24px 0">עדיין לא הוספת מועדפים.<br/>לחץ 🤍 בעמוד חניה כדי לשמור אותה.</p>`
+      : `<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+          ${favItems.map(f => `
+            <div onclick="closeModal();openDetail('${safeId(f.listingId)}')" style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--gray-200);border-radius:14px;cursor:pointer;background:white">
+              <span style="font-size:1.5rem">🅿️</span>
+              <div style="flex:1;text-align:right">
+                <div style="font-weight:700;font-size:.9rem">${f.address || f.listingId}</div>
+                <div style="color:var(--gray-400);font-size:.78rem">לחץ לפרטים</div>
+              </div>
+              <span style="color:var(--gray-400)">›</span>
+            </div>`).join('')}
+        </div>`}
+    <button class="btn-secondary" style="width:100%;margin-top:16px;padding:12px" onclick="closeModal()">סגור</button>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ── STARS / CREDITS SHOP ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+
+let _starsStripeElements = null;
+let _starsCardEl         = null;
+let _selectedStarsPkg    = null;
+
+function openShopFromBanner() { dismissStarsBanner(); showStarsShop(); }
+
+function showStarsBanner() {
+  const b = document.getElementById('stars-promo-banner');
+  if (!b || sessionStorage.getItem('nitpark_stars_banner_dismissed')) return;
+  b.style.transform = 'translateY(0)';
+  b.style.opacity   = '1';
+  b.style.pointerEvents = 'auto';
+}
+
+function dismissStarsBanner() {
+  const b = document.getElementById('stars-promo-banner');
+  if (b) { b.style.transform = 'translateY(120px)'; b.style.opacity = '0'; b.style.pointerEvents = 'none'; }
+  sessionStorage.setItem('nitpark_stars_banner_dismissed', '1');
+}
+
+async function showStarsShop() {
+  if (!isLoggedIn) { openModal('login'); return; }
+
+  const pkgs = await loadCreditPackages();
+  openModal('stars-shop');
+
+  const content = document.getElementById('modal-content');
+  if (!content) return;
+
+  const balance = userStarBalance;
+  const balanceIls = starsToIls(balance).toFixed(2);
+
+  content.innerHTML = `
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:2rem;margin-bottom:4px">⭐</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin:0 0 4px">חנות הכוכבים</h2>
+      <p style="color:var(--gray-500);font-size:.85rem;margin:0">קנה קרדיטים ושלם בחניות — חסוך עד 60%</p>
+      ${balance > 0 ? `
+        <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1.5px solid #fde68a;border-radius:12px;padding:10px 16px;margin-top:12px;display:inline-flex;align-items:center;gap:8px">
+          <span style="font-size:1.1rem">⭐</span>
+          <span style="font-weight:800;font-size:.95rem;color:#92400e">יתרה: ${balance} כוכבים</span>
+          <span style="color:#a16207;font-size:.82rem">(= ₪${balanceIls})</span>
+        </div>` : ''}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px" id="stars-packages-list">
+      ${pkgs.map(pkg => {
+        const valueIls = starsToIls(pkg.stars).toFixed(0);
+        return `
+        <div id="spkg-${pkg.id}" onclick="selectStarsPkg('${pkg.id}')"
+          style="border:2px solid var(--gray-200);border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;position:relative;transition:all .2s;background:white">
+          ${pkg.badge ? `<div style="position:absolute;top:-10px;right:14px;background:${pkg.color};color:white;font-size:.72rem;font-weight:800;padding:3px 10px;border-radius:20px">${pkg.badge}</div>` : ''}
+          <div style="font-size:1.6rem;min-width:36px;text-align:center">${pkg.emoji || '⭐'}</div>
+          <div style="flex:1;text-align:right">
+            <div style="font-weight:800;font-size:.95rem">${pkg.stars} כוכבים</div>
+            <div style="font-size:.8rem;color:var(--gray-500)">ערך ₪${valueIls} · חיסכון ${pkg.bonus}%</div>
+          </div>
+          <div style="text-align:left">
+            <div style="font-weight:800;font-size:1.05rem;color:#1e293b">₪${pkg.price}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div id="stars-payment-section" style="display:none">
+      <div style="font-weight:700;font-size:.88rem;color:var(--gray-700);margin-bottom:8px;text-align:right">פרטי כרטיס אשראי:</div>
+      <div id="stars-card-wrap" style="padding:14px;border:1.5px solid var(--gray-200);border-radius:12px;background:white;min-height:46px;margin-bottom:8px"></div>
+      <div id="stars-card-error" style="color:#ef4444;font-size:.82rem;min-height:18px;text-align:center;margin-bottom:8px"></div>
+    </div>
+
+    <button id="stars-buy-btn" class="btn-modal-primary" onclick="confirmStarsPurchase()"
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#e91e8c,#8b5cf6);border:none;border-radius:14px;color:white;font-size:1rem;font-weight:800;cursor:pointer;opacity:.5;pointer-events:none">
+      בחר חבילה לרכישה ⭐
+    </button>
+
+    <div style="text-align:center;margin-top:10px;font-size:.76rem;color:var(--gray-400)">
+      1 כוכב = ₪0.40 בתשלום חניה · תוקף: 12 חודשים
+    </div>
+  `;
+}
+
+function selectStarsPkg(pkgId) {
+  _selectedStarsPkg = (_creditPackages || DEFAULT_CREDIT_PACKAGES).find(p => p.id === pkgId);
+  if (!_selectedStarsPkg) return;
+
+  // Reset all borders
+  document.querySelectorAll('[id^="spkg-"]').forEach(el => {
+    el.style.border = '2px solid var(--gray-200)';
+    el.style.background = 'white';
+  });
+
+  // Highlight selected
+  const selected = document.getElementById('spkg-' + pkgId);
+  if (selected) {
+    selected.style.border = `2px solid ${_selectedStarsPkg.color}`;
+    selected.style.background = `${_selectedStarsPkg.color}10`;
+  }
+
+  // Show payment section
+  const paySection = document.getElementById('stars-payment-section');
+  if (paySection) paySection.style.display = 'block';
+
+  // Update buy button
+  const btn = document.getElementById('stars-buy-btn');
+  if (btn) {
+    btn.textContent = `קנה ${_selectedStarsPkg.stars} כוכבים ב-₪${_selectedStarsPkg.price} ⭐`;
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    btn.style.background = `linear-gradient(135deg,${_selectedStarsPkg.color},${_selectedStarsPkg.color}cc)`;
+  }
+
+  // Mount Stripe card
+  setTimeout(_mountStarsCard, 80);
+}
+
+function _mountStarsCard() {
+  if (_starsCardEl) return;
+  const s = window.Stripe ? window.Stripe(STRIPE_PK) : null;
+  if (!s) return;
+
+  const container = document.getElementById('stars-card-wrap');
+  if (!container || container.offsetParent === null) {
+    setTimeout(_mountStarsCard, 100);
+    return;
+  }
+
+  _starsStripeElements = s.elements({
+    locale: 'he',
+    appearance: { theme: 'stripe', variables: { colorPrimary: '#e91e8c', fontFamily: 'Heebo, sans-serif', borderRadius: '12px' } },
+  });
+  _starsCardEl = _starsStripeElements.create('card', {
+    hidePostalCode: true,
+    style: { base: { fontSize: '16px', fontFamily: 'Heebo, sans-serif', color: '#1e293b', '::placeholder': { color: '#94a3b8' } } },
+  });
+  _starsCardEl.mount('#stars-card-wrap');
+  _starsCardEl.on('change', e => {
+    const err = document.getElementById('stars-card-error');
+    if (err) err.textContent = e.error ? e.error.message : '';
+  });
+}
+
+async function confirmStarsPurchase() {
+  if (!_selectedStarsPkg) return;
+  const btn   = document.getElementById('stars-buy-btn');
+  const errEl = document.getElementById('stars-card-error');
+  if (!_starsCardEl) { if (errEl) errEl.textContent = 'Stripe לא נטען — רענן את הדף'; return; }
+
+  btn.textContent = '⏳ מעבד...';
+  btn.disabled    = true;
+  if (errEl) errEl.textContent = '';
+
+  try {
+    const s = window.Stripe ? window.Stripe(STRIPE_PK) : null;
+    if (!s) throw new Error('Stripe not loaded');
+
+    // Step 1: Create PaymentIntent on backend
+    const purchaseFn = firebase.functions().httpsCallable('purchaseCredits');
+    const { data: piData } = await purchaseFn({
+      packageId:  _selectedStarsPkg.id,
+      amountILS:  _selectedStarsPkg.price,
+      stars:      _selectedStarsPkg.stars,
+      email:      userEmail,
+      name:       userName,
+    });
+
+    // Step 2: Confirm card
+    const result = await s.confirmCardPayment(piData.clientSecret, {
+      payment_method: {
+        card:            _starsCardEl,
+        billing_details: { name: userName || 'NitPark User', email: userEmail || undefined },
+      },
+    });
+    if (result.error) throw new Error(result.error.message);
+
+    // Step 3: Update local balance (Firestore webhook will set the real value)
+    userStarBalance += _selectedStarsPkg.stars;
+    updateStarsBalanceDisplay();
+
+    if (_starsCardEl) { try { _starsCardEl.unmount(); } catch(e){} _starsCardEl = null; }
+    _starsStripeElements = null;
+    _selectedStarsPkg = null;
+
+    closeModal();
+    showToast(`🎉 נוספו ${piData.stars} כוכבים לחשבון שלך!`, 'success');
+    await loadPremiumStatus(); // refresh balance from Firestore
+
+  } catch (err) {
+    if (errEl) errEl.textContent = err.message || 'שגיאה — נסה שנית';
+    btn.textContent = `קנה ${_selectedStarsPkg.stars} כוכבים ב-₪${_selectedStarsPkg.price} ⭐`;
+    btn.disabled    = false;
+  }
+}
+
+function updateStarsBalanceDisplay() {
+  document.querySelectorAll('.stars-balance').forEach(el => {
+    el.textContent = userStarBalance;
+  });
+}
+
+async function cancelPremiumFlow() {
+  if (!confirm('לבטל את מנוי הפרימיום? הוא יישאר פעיל עד סוף התקופה.')) return;
+  try {
+    const cancelSub = firebase.functions().httpsCallable('cancelPremiumSubscription');
+    await cancelSub({});
+    userPremiumCancelAtEnd = true;
+    closeModal();
+    showToast('המנוי בוטל — יישאר פעיל עד סוף התקופה הנוכחית', 'success');
+    await loadPremiumStatus();
+  } catch (err) {
+    showToast('שגיאה בביטול: ' + (err.message || 'נסה שנית'), 'error');
+  }
 }

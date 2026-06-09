@@ -146,6 +146,11 @@
       <a class="sidebar-link" id="slink-bookings" href="#" onclick="sidebarNav('bookings')">
         <span class="slink-icon">📋</span><span class="slink-text">ההזמנות שלי</span>
       </a>
+      <a class="sidebar-link sidebar-link--stars" id="slink-stars" href="#" onclick="sidebarNav('stars')">
+        <span class="slink-icon">⭐</span>
+        <span class="slink-text">NitPark Stars</span>
+        <span class="slink-stars-badge" id="slink-stars-balance">0</span>
+      </a>
       <a class="sidebar-link" id="slink-profile" href="#" onclick="closeSidebar();setTimeout(()=>isLoggedIn?openModal('profile'):openModal('login'),200)">
         <span class="slink-icon">👤</span><span class="slink-text">הפרופיל שלי</span>
       </a>
@@ -156,6 +161,13 @@
         <span class="slink-icon">📋</span><span class="slink-text">מדיניות</span>
       </a>
     </nav>
+
+    <!-- Stars Pill -->
+    <div class="sidebar-stars-pill" onclick="closeSidebar();setTimeout(showStarsShop,200)">
+      <span>⭐</span>
+      <span id="sidebar-stars-pill">0 כוכבים</span>
+      <small>לחץ לקנות / לצבור →</small>
+    </div>
 
     <!-- Credit Card Button -->
     <div class="sidebar-card-btn-wrap">
@@ -313,7 +325,7 @@
         <div class="feature-card feature-card-link" onclick="showPage('how')">
           <div class="feature-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">🛡️</div>
           <h3>מאובטח ומבוטח</h3>
-          <p>כל החניות מאומתות על ידינו. ביטוח מלא לכל עסקה לשקט נפשי.</p>
+          <p>כל החניות מאומתות על ידינו. תהליך בטוח ופשוט לשקט נפשי.</p>
           <span class="feature-arrow">איך זה עובד ←</span>
         </div>
         <div class="feature-card feature-card-link" onclick="showPage('search')">
@@ -388,6 +400,23 @@
     </div>
   </section>
 
+  <!-- STORE BANNER -->
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="store-banner-card" onclick="showStarsShop()">
+        <div class="store-banner-bg"></div>
+        <div class="store-banner-left">
+          <div class="store-banner-icon">⭐</div>
+          <div>
+            <div class="store-banner-title">חנות הכוכבים</div>
+            <div class="store-banner-sub">קנה קרדיטים • שלם בחניות • חסוך כסף</div>
+          </div>
+        </div>
+        <div class="store-banner-cta">לחנות ←</div>
+      </div>
+    </div>
+  </section>
+
   <!-- HOST CTA -->
   <section class="section">
     <div class="container">
@@ -400,7 +429,7 @@
             <li>✓ פרסום חינמי — ללא עמלה על הרשמה</li>
             <li>✓ תשלום ישיר לחשבון הבנק שלך</li>
             <li>✓ אתה קובע את הזמינות והמחיר</li>
-            <li>✓ ביטוח מלא בכל הזמנה</li>
+            <li>✓ תהליך מאובטח ופשוט</li>
           </ul>
           <button class="btn-primary-large" id="host-cta-btn" onclick="showPage('host')">
             פרסם חניה עכשיו →
@@ -430,6 +459,47 @@
     </div>
   </section>
 
+</div>
+
+<!-- ========== PREMIUM WELCOME POPUP ========== -->
+<div id="premium-welcome-overlay" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center">
+  <div id="premium-welcome-sheet" style="background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:520px;padding:0 0 env(safe-area-inset-bottom)">
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:12px 0 4px">
+      <div style="width:40px;height:4px;border-radius:100px;background:#e2e8f0"></div>
+    </div>
+    <!-- Close -->
+    <button onclick="closePremiumWelcome()" style="position:absolute;top:18px;left:18px;width:32px;height:32px;border-radius:50%;border:none;background:#f1f5f9;color:#64748b;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit">✕</button>
+
+    <!-- Hero -->
+    <div style="text-align:center;padding:8px 24px 20px">
+      <div style="font-size:2.8rem;margin-bottom:8px">⭐</div>
+      <h2 style="font-size:1.45rem;font-weight:900;color:#1e293b;margin:0 0 6px">ברוך הבא ל-NitPark!</h2>
+      <p style="color:#64748b;font-size:.9rem;margin:0">שדרג לפרמיום וחסוך על כל חניה</p>
+    </div>
+
+    <!-- Benefits -->
+    <div style="background:#fdf4ff;border-radius:16px;margin:0 20px 16px;padding:16px">
+      <div style="font-size:.8rem;font-weight:700;color:#8b5cf6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">✨ מה כלול בפרמיום</div>
+      <div class="prem-benefit"><span class="prem-benefit-icon">💰</span><div><strong>10% הנחה על כל הזמנה</strong><div style="font-size:.82rem;color:#64748b">חסוך על כל חניה שתזמין</div></div></div>
+      <div class="prem-benefit"><span class="prem-benefit-icon">⭐</span><div><strong>200 כוכבים מתנה</strong><div style="font-size:.82rem;color:#64748b">שווה ₪80 — לשימוש מיידי</div></div></div>
+      <div class="prem-benefit"><span class="prem-benefit-icon">🚀</span><div><strong>עדיפות בחיפוש</strong><div style="font-size:.82rem;color:#64748b">הצעות הכי טובות ראשונות</div></div></div>
+      <div class="prem-benefit"><span class="prem-benefit-icon">🆓</span><div><strong>ביטול חניה חינם</strong><div style="font-size:.82rem;color:#64748b">בלי קנסות, בלי דאגות</div></div></div>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:10px">
+      <button onclick="closePremiumWelcome();setTimeout(showStarsShop,200)" style="width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#e91e8c,#8b5cf6);color:white;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;box-shadow:0 4px 20px rgba(233,30,140,.35)">
+        🛒 קנה קרדיטים עכשיו
+      </button>
+      <button onclick="closePremiumWelcome();setTimeout(showStarsShop,200)" style="width:100%;padding:13px;border-radius:14px;border:2px solid #e2e8f0;background:white;color:#475569;font-size:.92rem;font-weight:700;font-family:inherit;cursor:pointer">
+        💎 פתח את החנות →
+      </button>
+      <button onclick="closePremiumWelcome()" style="background:none;border:none;color:#94a3b8;font-size:.82rem;cursor:pointer;font-family:inherit;padding:4px">
+        אולי בפעם אחרת
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ========== SEARCH PAGE ========== -->
@@ -479,6 +549,24 @@
           </button>
         </div>
 
+        <!-- Premium exclusive filters — hidden for non-premium via JS -->
+        <div id="premium-filter-row" style="display:none;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;padding:10px 14px;margin-bottom:6px;gap:8px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:.8rem;font-weight:800;color:#92400e;white-space:nowrap">👑 פרימיום:</span>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem;color:#78350f;font-weight:700">
+            <input type="checkbox" id="filter-guarded" onchange="filterListings()" style="accent-color:#f59e0b"> שמירה
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem;color:#78350f;font-weight:700">
+            <input type="checkbox" id="filter-covered" onchange="filterListings()" style="accent-color:#f59e0b"> מקורה
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem;color:#78350f;font-weight:700">
+            <input type="checkbox" id="filter-cameras" onchange="filterListings()" style="accent-color:#f59e0b"> מצלמות
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem;color:#78350f;font-weight:700">
+            <input type="checkbox" id="filter-new" onchange="filterListings()" style="accent-color:#f59e0b"> ⚡ חדשות בלבד
+          </label>
+          <button onclick="openFavoritesModal()" style="margin-right:auto;background:white;border:1.5px solid #f59e0b;border-radius:8px;padding:4px 10px;font-size:.8rem;font-weight:700;color:#92400e;cursor:pointer">❤️ מועדפים</button>
+        </div>
+
         <!-- Rental type + period -->
         <div class="filter-row2">
           <div class="rental-type-btns">
@@ -504,8 +592,8 @@
           </select>
           <span id="results-count" class="results-count-pill">טוען...</span>
           <div class="view-toggle">
-            <button class="view-toggle-btn active" id="vt-list" onclick="setSearchView('list')">📋 רשימה</button>
-            <button class="view-toggle-btn" id="vt-map" onclick="setSearchView('map')">🗺️ מפה</button>
+            <button class="view-toggle-btn" id="vt-list" onclick="setSearchView('list')">📋 רשימה</button>
+            <button class="view-toggle-btn active" id="vt-map" onclick="setSearchView('map')">🗺️ מפה</button>
           </div>
         </div>
       </div>
@@ -776,16 +864,73 @@
       <div id="host-step-2" class="host-step">
         <h2>זמינות ותמחור</h2>
         <div class="form-grid">
+          <!-- ── כמה זמן מפרסמים ── -->
           <div class="form-group full">
-            <label>מתי החניה תהיה זמינה להזמנה?</label>
-            <div class="days-selector">
-              <button type="button" class="avail-mode-btn active" id="avail-now-btn" onclick="setAvailabilityMode('now', this)">זמינה מיד</button>
-              <button type="button" class="avail-mode-btn" id="avail-later-btn" onclick="setAvailabilityMode('later', this)">ממועד עתידי</button>
+            <label>⏱️ כמה זמן תפרסם את החניה?</label>
+            <small class="price-hint">בחר את משך הפרסום — ניתן לשנות בכל עת מהחניה שלי</small>
+            <div class="publish-duration-row" id="publish-duration-row">
+              <button type="button" class="dur-btn active" data-dur="unlimited" onclick="setPublishDuration(this)">ללא הגבלה</button>
+              <button type="button" class="dur-btn" data-dur="1d" onclick="setPublishDuration(this)">יום אחד</button>
+              <button type="button" class="dur-btn" data-dur="1w" onclick="setPublishDuration(this)">שבוע</button>
+              <button type="button" class="dur-btn" data-dur="1m" onclick="setPublishDuration(this)">חודש</button>
+              <button type="button" class="dur-btn" data-dur="custom" onclick="setPublishDuration(this)">תאריך מדויק</button>
             </div>
-            <div id="avail-date-wrap" style="display:none;margin-top:10px">
-              <label>זמינה החל מ־</label>
-              <input type="datetime-local" id="h-available-from" />
-              <small class="price-hint">הלקוחות יוכלו לראות ולהזמין את החניה, אך הכניסה תיפתח רק החל מהמועד שתבחר.</small>
+            <div id="h-duration-custom-wrap" style="display:none;margin-top:10px">
+              <label>פרסם עד תאריך:</label>
+              <input type="date" id="h-duration-until" />
+            </div>
+          </div>
+
+          <!-- ── לוח זמינות שבועי ── -->
+          <div class="form-group full">
+            <label>📅 שעות זמינות לכל יום</label>
+            <small class="price-hint">סמן את הימים שבהם החניה פנויה וקבע לכל יום את השעות המדויקות</small>
+            <div class="weekly-schedule" id="weekly-schedule">
+              <div class="sched-row header-row">
+                <span>יום</span><span>זמין?</span><span>משעה</span><span>עד שעה</span>
+              </div>
+              <div class="sched-row" data-day="א׳">
+                <span class="sched-day-name">א׳ ראשון</span>
+                <label class="sched-toggle"><input type="checkbox" checked onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="07:00" />
+                <input type="time" class="sched-time sched-close" value="19:00" />
+              </div>
+              <div class="sched-row" data-day="ב׳">
+                <span class="sched-day-name">ב׳ שני</span>
+                <label class="sched-toggle"><input type="checkbox" checked onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="07:00" />
+                <input type="time" class="sched-time sched-close" value="17:00" />
+              </div>
+              <div class="sched-row" data-day="ג׳">
+                <span class="sched-day-name">ג׳ שלישי</span>
+                <label class="sched-toggle"><input type="checkbox" checked onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="07:00" />
+                <input type="time" class="sched-time sched-close" value="19:00" />
+              </div>
+              <div class="sched-row" data-day="ד׳">
+                <span class="sched-day-name">ד׳ רביעי</span>
+                <label class="sched-toggle"><input type="checkbox" checked onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="07:00" />
+                <input type="time" class="sched-time sched-close" value="19:00" />
+              </div>
+              <div class="sched-row" data-day="ה׳">
+                <span class="sched-day-name">ה׳ חמישי</span>
+                <label class="sched-toggle"><input type="checkbox" checked onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="07:00" />
+                <input type="time" class="sched-time sched-close" value="19:00" />
+              </div>
+              <div class="sched-row" data-day="ו׳">
+                <span class="sched-day-name">ו׳ שישי</span>
+                <label class="sched-toggle"><input type="checkbox" onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="07:00" disabled />
+                <input type="time" class="sched-time sched-close" value="13:00" disabled />
+              </div>
+              <div class="sched-row" data-day="ש׳">
+                <span class="sched-day-name">ש׳ שבת</span>
+                <label class="sched-toggle"><input type="checkbox" onchange="toggleSchedDay(this)"/><span class="sched-toggle-track"></span></label>
+                <input type="time" class="sched-time sched-open" value="20:00" disabled />
+                <input type="time" class="sched-time sched-close" value="23:00" disabled />
+              </div>
             </div>
           </div>
           <div class="form-group full">
@@ -814,26 +959,6 @@
               <span>₪</span>
               <input type="number" id="h-price-month" placeholder="800" min="0" />
             </div>
-          </div>
-          <div class="form-group full">
-            <label>ימי זמינות</label>
-            <div class="days-selector">
-              <button class="day-btn active" onclick="toggleDay(this,'א׳')">א׳</button>
-              <button class="day-btn active" onclick="toggleDay(this,'ב׳')">ב׳</button>
-              <button class="day-btn active" onclick="toggleDay(this,'ג׳')">ג׳</button>
-              <button class="day-btn active" onclick="toggleDay(this,'ד׳')">ד׳</button>
-              <button class="day-btn active" onclick="toggleDay(this,'ה׳')">ה׳</button>
-              <button class="day-btn" onclick="toggleDay(this,'ו׳')">ו׳</button>
-              <button class="day-btn" onclick="toggleDay(this,'ש׳')">ש׳</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>שעת פתיחה</label>
-            <input type="time" id="h-open" value="08:00" />
-          </div>
-          <div class="form-group">
-            <label>שעת סגירה</label>
-            <input type="time" id="h-close" value="22:00" />
           </div>
         </div>
 
@@ -879,7 +1004,7 @@
           <ul>
             <li>הכנסה מהשכרת חניה חייבת במס — התייעץ עם רואה חשבון.</li>
             <li>בחניה בבית משותף — ודא שיש לך זכות חוקית להשכיר (הצמדה לדירה).</li>
-            <li>ביטוח שלנו מכסה נזקי רכב בזמן חניה. ביטוח הנכס — באחריותך.</li>
+            <li>הגנה על הנכס — באחריותך.</li>
           </ul>
         </div>
 
@@ -919,7 +1044,7 @@
         <h3>שאלות נפוצות</h3>
         <div class="faq">
           <details><summary>האם אני חייב לקבל כל הזמנה?</summary><p>לא. אתה יכול להגדיר זמינות מדויקת ולבטל הזמנה עם התראה מוקדמת.</p></details>
-          <details><summary>מה אם הרכב ניזוק?</summary><p>כל הזמנה מגיעה עם ביטוח לנזקי רכב. הגש דיווח דרך האפליקציה תוך 24 שעות.</p></details>
+          <details><summary>מה אם הרכב ניזוק?</summary><p>יש לתעד את הנזק בתמונות ולפנות אלינו תוך 24 שעות. נסייע בגישור בין הצדדים.</p></details>
           <details><summary>כמה זמן לוקח אישור?</summary><p>בדרך כלל 24-48 שעות. אנחנו מאמתים את הכתובת ופרטי החניה.</p></details>
         </div>
       </div>
@@ -1008,8 +1133,8 @@
         </div>
         <div class="trust-item">
           <div class="trust-icon">🛡️</div>
-          <h3>ביטוח מלא</h3>
-          <p>ביטוח נזקי רכב בכל הזמנה. עד ₪50,000 כיסוי לנזק ישיר.</p>
+          <h3>פלטפורמה מאובטחת</h3>
+          <p>כל עסקה מאובטחת ומאומתת. תשלומים מוגנים דרך Stripe.</p>
         </div>
         <div class="trust-item">
           <div class="trust-icon">⭐</div>
@@ -1076,6 +1201,13 @@
         <p style="margin:0">אם נתקלת בבעיה (מקום תפוס, שער סגור וכד׳) — פנה לתמיכה מיד דרך האפליקציה. אנחנו זמינים 24/7.</p>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ========== STARS PAGE ========== -->
+<div id="page-stars" class="page">
+  <div class="stars-page-wrap" id="stars-page-content">
+    <!-- rendered by renderStarsPage() -->
   </div>
 </div>
 
@@ -1158,7 +1290,7 @@
     <div class="footer-contact">
       <h4>צרו קשר</h4>
       <p>📧 nitaizx123@gmail.com</p>
-      <p>📞 03-1234567</p>
+      <p>📞 052-6760039</p>
       <p>⏰ א׳–ה׳ 9:00–18:00</p>
     </div>
   </div>
@@ -1194,15 +1326,31 @@
       <span class="mbn-icon">📋</span>
       <span class="mbn-label">הזמנות</span>
     </button>
-    <button class="mbn-btn" id="mbn-profile" onclick="mbnNav('profile')">
-      <span class="mbn-icon">👤</span>
-      <span class="mbn-label">פרופיל</span>
+    <button class="mbn-btn mbn-btn--stars" id="mbn-stars" onclick="mbnNav('stars')">
+      <span class="mbn-icon">⭐</span>
+      <span class="mbn-label">כוכבים</span>
+      <span class="mbn-stars-count" id="mbn-stars-count">0</span>
     </button>
   </div>
 </nav>
 
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
+
+<!-- STARS PROMO BANNER -->
+<div id="stars-promo-banner">
+  <div class="spb-inner">
+    <div class="spb-icon">⭐</div>
+    <div class="spb-text">
+      <div class="spb-title">קנה כוכבים וחסוך!</div>
+      <div class="spb-sub">שלם לחניות בכוכבים — עד 47% הנחה על חבילות</div>
+    </div>
+    <div class="spb-actions">
+      <button class="spb-cta" onclick="openShopFromBanner()">לחנות ⭐</button>
+      <button class="spb-dismiss" onclick="dismissStarsBanner()">לא עכשיו</button>
+    </div>
+  </div>
+</div>
 
 <!-- ACTIVE PARKING SESSION WIDGET (parker) -->
 <div id="parking-session-widget" class="psw" style="display:none">
@@ -1369,6 +1517,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="data.js"></script>
+<script src="js/stars.js"></script>
 <script src="app.js"></script>
 <!-- reCAPTCHA container (invisible) -->
 <div id="recaptcha-container"></div>
